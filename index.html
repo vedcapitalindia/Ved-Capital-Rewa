@@ -8,59 +8,81 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 font-sans">
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans antialiased">
 
-<div id="app" class="relative min-h-screen pb-10">
+<div id="app" class="relative min-h-screen pb-12">
 
     <!-- TOAST NOTIFICATION -->
     <div v-if="showToast" class="fixed top-5 right-5 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all animate-bounce">
-        <span class="w-3 h-3 bg-emerald-400 rounded-full"></span>
+        <span class="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
         <p class="text-sm font-medium">{{ notificationMessage }}</p>
     </div>
 
-    <!-- 1. LOGIN SCREEN -->
-    <div v-if="!isLoggedIn" class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl font-bold text-slate-900">Ved Capital Rewa</h1>
-                <p class="text-sm text-slate-500">Sign in to Access Portal</p>
+    <!-- 1. PREMIUM LOGIN SCREEN -->
+    <div v-if="!isLoggedIn" class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex items-center justify-center p-4">
+        <div class="bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200/50">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-500/30 text-2xl">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight">Ved Capital Rewa</h1>
+                <p class="text-xs font-semibold text-indigo-600 uppercase tracking-widest mt-1">Management Portal Access</p>
             </div>
             
-            <form @submit.prevent="login" class="space-y-4">
+            <form @submit.prevent="login" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Username / Employee Code</label>
-                    <input v-model="loginForm.username" type="text" placeholder="admin or EMP-1001" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-user text-indigo-500"></i> Username / Employee Code
+                    </label>
+                    <input v-model="loginForm.username" type="text" placeholder="e.g. admin or EMP-1001" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all bg-slate-50 focus:bg-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Password / 4-Digit PIN</label>
-                    <input v-model="loginForm.password" type="password" placeholder="••••" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-lock text-indigo-500"></i> Password / 4-Digit PIN
+                    </label>
+                    <input v-model="loginForm.password" type="password" placeholder="••••" required class="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all bg-slate-50 focus:bg-white">
                 </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-all shadow-md">
-                    Login
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Login to Dashboard
                 </button>
             </form>
-            <div class="mt-4 text-xs text-center text-slate-400">
-                Default Admin Login: <span class="font-mono text-slate-600">admin / 123</span>
+            
+            <div class="mt-6 pt-4 border-t border-slate-200 text-center">
+                <p class="text-xs text-slate-500">Demo Logins:</p>
+                <div class="flex justify-center gap-4 mt-1 text-xs font-mono text-slate-700">
+                    <span>Admin: <b>admin / 123</b></span>
+                    <span>EMP: <b>EMP-1001 / 1234</b></span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 2. MAIN DASHBOARD (LOGGED IN) -->
+    <!-- 2. MAIN DASHBOARD -->
     <div v-else class="max-w-7xl mx-auto px-4 py-6">
         
         <!-- HEADER / NAVBAR -->
-        <header class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-xl font-bold text-slate-800">Ved Capital Rewa</h1>
-                <p class="text-xs text-slate-500">Logged in as: <span class="font-semibold text-blue-600">{{ currentUser.name }}</span> ({{ currentUser.role.toUpperCase() }})</p>
+        <header class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl shadow-xl flex justify-between items-center mb-6 border border-slate-800">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-indigo-600/30 border border-indigo-400/30 rounded-xl flex items-center justify-center text-indigo-400 text-xl font-bold">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-wide text-white">Ved Capital Rewa</h1>
+                    <p class="text-xs text-indigo-200/80 flex items-center gap-2">
+                        <span>Logged in as: <strong class="text-indigo-400">{{ currentUser.name }}</strong></span>
+                        <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-indigo-500/30">{{ currentUser.role }}</span>
+                    </p>
+                </div>
             </div>
             <div class="flex items-center gap-3">
-                <button v-if="currentUser.role === 'employee'" @click="showEmpSelfPinModal = true" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg font-medium">
-                    Change PIN
+                <button v-if="currentUser.role === 'employee'" @click="showEmpSelfPinModal = true" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl font-semibold border border-slate-700 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-key text-amber-400"></i> Change PIN
                 </button>
-                <button @click="logout" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-2 rounded-lg font-medium border border-rose-200">
-                    Logout
+                <button @click="logout" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl font-semibold border border-rose-500/30 transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
                 </button>
             </div>
         </header>
@@ -68,82 +90,125 @@
         <!-- ADMIN DASHBOARD -->
         <div v-if="currentUser.role === 'admin'" class="space-y-6">
             
-            <!-- ADMIN NAVIGATION TABS -->
-            <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
-                <button @click="adminTab = 'clients'" :class="adminTab === 'clients' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm">Clients</button>
-                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm">Employees</button>
-                <button @click="adminTab = 'earnings'" :class="adminTab === 'earnings' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm relative">
-                    Claims & Approvals
-                    <span v-if="getPendingLeadClaimsCount() + getPendingExtraWorkCount() > 0" class="ml-2 bg-rose-500 text-white text-xs px-2 py-0.5 rounded-full">
-                        {{ getPendingLeadClaimsCount() + getPendingExtraWorkCount() }}
+            <!-- ADMIN TABS NAVIGATION -->
+            <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+                <button @click="adminTab = 'clients'" :class="adminTab === 'clients' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-users"></i> Clients
+                </button>
+                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-user-gear"></i> Employees
+                </button>
+                <button @click="adminTab = 'earnings'" :class="adminTab === 'earnings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 relative">
+                    <i class="fa-solid fa-sack-dollar"></i> Claims & Approvals
+                    <span v-if="getPendingClaimsCount() > 0" class="bg-rose-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                        {{ getPendingClaimsCount() }}
                     </span>
                 </button>
-                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm">Campaigns</button>
-                <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" class="px-4 py-2 text-sm font-medium rounded-lg shadow-sm">Settings</button>
-                <button @click="exportCSV" class="ml-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-medium rounded-lg shadow-sm">Export Data (CSV)</button>
+                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn"></i> Campaigns
+                </button>
+                <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> Security Settings
+                </button>
+                <button @click="exportCSV" class="ml-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2">
+                    <i class="fa-solid fa-file-csv"></i> Export Data (CSV)
+                </button>
             </div>
 
             <!-- TAB 1: CLIENTS -->
-            <div v-if="adminTab === 'clients'" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-lg font-bold mb-4">Client Management</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
-                            <tr>
-                                <th class="p-3">Code</th>
-                                <th class="p-3">Name</th>
-                                <th class="p-3">Phone</th>
-                                <th class="p-3">Job Category</th>
-                                <th class="p-3">Status</th>
-                                <th class="p-3 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y">
-                            <tr v-for="c in clients" :key="c.code">
-                                <td class="p-3 font-mono text-slate-500">{{ c.code }}</td>
-                                <td class="p-3 font-semibold">{{ c.name }}</td>
-                                <td class="p-3 text-slate-600">{{ c.phone }}</td>
-                                <td class="p-3">
-                                    <select :value="c.jobType" @change="shiftClientJob(c, $event.target.value)" class="border rounded p-1 text-xs">
-                                        <option value="Lead Gen">Lead Gen</option>
-                                        <option value="Data Entry">Data Entry</option>
-                                        <option value="Telecalling">Telecalling</option>
-                                    </select>
-                                </td>
-                                <td class="p-3">
-                                    <span class="px-2 py-1 text-xs rounded-full font-medium" :class="c.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'">
-                                        {{ c.status }}
-                                    </span>
-                                </td>
-                                <td class="p-3 text-right space-x-2">
-                                    <button v-if="!c.isPromoted" @click="promoteClientToEmployee(c)" class="text-xs bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-2 py-1 rounded border border-indigo-200">Promote to EMP</button>
-                                    <button @click="deleteClient(c.code)" class="text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 py-1 rounded border border-rose-200">Delete</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div v-if="adminTab === 'clients'" class="space-y-6">
+                <!-- Add Client Form -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-indigo-500"></i> Register New Client
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input v-model="newClient.name" placeholder="Client Name" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <input v-model="newClient.phone" placeholder="Phone Number" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <select v-model="newClient.jobType" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                            <option value="Lead Gen">Lead Gen</option>
+                            <option value="Data Entry">Data Entry</option>
+                            <option value="Telecalling">Telecalling</option>
+                        </select>
+                        <button @click="addClient" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Add Client
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Client List Table -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h2 class="text-base font-extrabold text-slate-900 mb-4">Client Roster</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold border-b">
+                                <tr>
+                                    <th class="p-3">Code</th>
+                                    <th class="p-3">Name</th>
+                                    <th class="p-3">Phone</th>
+                                    <th class="p-3">Job Category</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr v-for="c in clients" :key="c.code" class="hover:bg-slate-50/50">
+                                    <td class="p-3 font-mono text-xs font-semibold text-slate-500">{{ c.code }}</td>
+                                    <td class="p-3 font-bold text-slate-800">{{ c.name }}</td>
+                                    <td class="p-3 text-slate-600">{{ c.phone }}</td>
+                                    <td class="p-3">
+                                        <select :value="c.jobType" @change="shiftClientJob(c, $event.target.value)" class="border border-slate-300 rounded-lg p-1.5 text-xs font-semibold bg-white outline-none">
+                                            <option value="Lead Gen">Lead Gen</option>
+                                            <option value="Data Entry">Data Entry</option>
+                                            <option value="Telecalling">Telecalling</option>
+                                        </select>
+                                    </td>
+                                    <td class="p-3">
+                                        <span class="px-2.5 py-1 text-[11px] rounded-full font-bold" :class="c.status === 'Active' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'">
+                                            {{ c.status }}
+                                        </span>
+                                    </td>
+                                    <td class="p-3 text-right space-x-1.5">
+                                        <button @click="openClientReviewModal(c)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg font-bold transition-all">
+                                            <i class="fa-solid fa-eye"></i> Campaigns
+                                        </button>
+                                        <button v-if="!c.isPromoted" @click="promoteClientToEmployee(c)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg font-bold border border-indigo-200 transition-all">
+                                            <i class="fa-solid fa-user-shield"></i> Promote to EMP
+                                        </button>
+                                        <button @click="deleteClient(c.code)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold border border-rose-200 transition-all">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <!-- TAB 2: EMPLOYEES -->
             <div v-if="adminTab === 'employees'" class="space-y-6">
-                <!-- Add New Employee -->
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold uppercase text-slate-600 mb-3">Add New Employee</h3>
+                <!-- Add Employee -->
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-indigo-500"></i> Add New Employee
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input v-model="newEmp.name" placeholder="Full Name" class="border rounded px-3 py-2 text-sm outline-none">
-                        <input v-model="newEmp.phone" placeholder="Phone Number" class="border rounded px-3 py-2 text-sm outline-none">
-                        <input v-model="newEmp.position" placeholder="Designation" class="border rounded px-3 py-2 text-sm outline-none">
-                        <button @click="addEmployee" class="bg-blue-600 text-white text-sm font-semibold py-2 rounded hover:bg-blue-700">Add Employee</button>
+                        <input v-model="newEmp.name" placeholder="Full Name" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <input v-model="newEmp.phone" placeholder="Phone Number" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <input v-model="newEmp.position" placeholder="Designation" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <button @click="addEmployee" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Add Employee
+                        </button>
                     </div>
                 </div>
 
                 <!-- Employees List -->
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold mb-4">Employee Roster</h2>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h2 class="text-base font-extrabold text-slate-900 mb-4">Employee Roster</h2>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-slate-600 uppercase text-xs">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold border-b">
                                 <tr>
                                     <th class="p-3">EMP Code</th>
                                     <th class="p-3">Name</th>
@@ -153,17 +218,23 @@
                                     <th class="p-3 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y">
-                                <tr v-for="e in employees" :key="e.id">
-                                    <td class="p-3 font-mono text-slate-500">{{ e.code }}</td>
-                                    <td class="p-3 font-semibold">{{ e.name }}</td>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr v-for="e in employees" :key="e.id" class="hover:bg-slate-50/50">
+                                    <td class="p-3 font-mono text-xs font-bold text-indigo-600">{{ e.code }}</td>
+                                    <td class="p-3 font-bold text-slate-800">{{ e.name }}</td>
                                     <td class="p-3 text-slate-600">{{ e.phone }}</td>
-                                    <td class="p-3">{{ e.position }}</td>
-                                    <td class="p-3 font-semibold text-emerald-600">₹{{ getEmpEarnings(e.code).totalApproved }}</td>
-                                    <td class="p-3 text-right space-x-2">
-                                        <button @click="viewEmployeeWork(e)" class="text-xs bg-slate-100 text-slate-700 hover:bg-slate-200 px-2 py-1 rounded">Reports</button>
-                                        <button @click="openAdminPinModal(e)" class="text-xs bg-amber-50 text-amber-600 hover:bg-amber-100 px-2 py-1 rounded border border-amber-200">Reset PIN</button>
-                                        <button @click="deleteEmployee(e.id)" class="text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 px-2 py-1 rounded border border-rose-200">Remove</button>
+                                    <td class="p-3 text-slate-600">{{ e.position }}</td>
+                                    <td class="p-3 font-black text-emerald-600">₹{{ getEmpEarnings(e.code).totalApproved }}</td>
+                                    <td class="p-3 text-right space-x-1.5">
+                                        <button @click="viewEmployeeWork(e)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 rounded-lg font-bold border border-indigo-200 transition-all">
+                                            <i class="fa-solid fa-file-lines"></i> Reports & Proofs
+                                        </button>
+                                        <button @click="openAdminPinModal(e)" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1.5 rounded-lg font-bold border border-amber-200 transition-all">
+                                            <i class="fa-solid fa-key"></i> Reset PIN
+                                        </button>
+                                        <button @click="deleteEmployee(e.id)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1.5 rounded-lg font-bold border border-rose-200 transition-all">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -173,25 +244,33 @@
             </div>
 
             <!-- TAB 3: CLAIMS & APPROVALS -->
-            <div v-if="adminTab === 'earnings'" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-lg font-bold mb-4">Pending Earning Claims</h2>
-                <div v-if="earningsRequests.filter(r => r.status === 'Pending').length === 0" class="text-slate-400 text-sm py-8 text-center">
-                    No pending earning claims to review.
+            <div v-if="adminTab === 'earnings'" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                <h2 class="text-base font-extrabold text-slate-900 mb-4">Pending Earning Claims & Work Proofs</h2>
+                <div v-if="earningsRequests.filter(r => r.status === 'Pending').length === 0" class="text-slate-400 text-sm py-12 text-center">
+                    <i class="fa-solid fa-circle-check text-4xl text-emerald-400 mb-2 block"></i>
+                    No pending earning claims to review. All caught up!
                 </div>
                 <div v-else class="space-y-4">
-                    <div v-for="req in earningsRequests.filter(r => r.status === 'Pending')" :key="req.id" class="border rounded-xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
+                    <div v-for="req in earningsRequests.filter(r => r.status === 'Pending')" :key="req.id" class="border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50 hover:bg-white transition-all">
+                        <div class="space-y-1">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-100 text-blue-700">{{ req.type }}</span>
-                                <span class="text-xs text-slate-400">{{ req.date }}</span>
+                                <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 uppercase">{{ req.type }}</span>
+                                <span class="text-xs font-semibold text-slate-400"><i class="fa-regular fa-clock"></i> {{ req.date }}</span>
                             </div>
-                            <p class="font-semibold text-sm mt-1">{{ req.empName }} <span class="text-slate-400">({{ req.empCode }})</span></p>
-                            <p v-if="req.description" class="text-xs text-slate-600 mt-1">{{ req.description }}</p>
+                            <p class="font-bold text-slate-900 text-sm">{{ req.empName }} <span class="text-xs font-mono font-normal text-slate-500">({{ req.empCode }})</span></p>
+                            <p v-if="req.description" class="text-xs text-slate-600 font-medium">{{ req.description }}</p>
+                            <button v-if="req.screenshot" @click="previewScreenshot = req.screenshot" class="text-xs text-indigo-600 hover:underline font-bold flex items-center gap-1 mt-1">
+                                <i class="fa-solid fa-image"></i> View Screenshot Proof
+                            </button>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="font-bold text-slate-800">₹{{ req.amount || 10 }}</span>
-                            <button @click="approveLeadClaim(req)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded font-medium">Approve</button>
-                            <button @click="rejectEarningClaim(req)" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-3 py-1.5 rounded font-medium">Reject</button>
+                            <span class="font-black text-lg text-emerald-600">₹{{ req.amount || 10 }}</span>
+                            <button @click="approveLeadClaim(req)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5">
+                                <i class="fa-solid fa-check"></i> Approve
+                            </button>
+                            <button @click="rejectEarningClaim(req)" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-rose-600/20 flex items-center gap-1.5">
+                                <i class="fa-solid fa-xmark"></i> Reject
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -199,43 +278,53 @@
 
             <!-- TAB 4: CAMPAIGNS -->
             <div v-if="adminTab === 'campaigns'" class="space-y-6">
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                    <h3 class="text-sm font-bold uppercase text-slate-600 mb-3">Create New Campaign</h3>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-indigo-500"></i> Create New Campaign Link
+                    </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <input v-model="newCmp.title" placeholder="Campaign Title" class="border rounded px-3 py-2 text-sm outline-none">
-                        <input v-model="newCmp.url" placeholder="Target Link / URL" class="border rounded px-3 py-2 text-sm outline-none">
-                        <button @click="addCampaign" class="bg-blue-600 text-white text-sm font-semibold py-2 rounded hover:bg-blue-700">Add Campaign</button>
+                        <input v-model="newCmp.title" placeholder="Campaign Title (e.g. Demat Account)" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <input v-model="newCmp.url" placeholder="Target Link / URL" class="border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                        <button @click="addCampaign" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bullhorn"></i> Publish Campaign
+                        </button>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold mb-4">Active Campaigns</h2>
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h2 class="text-base font-extrabold text-slate-900 mb-4">Active Campaigns</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div v-for="cmp in campaigns" :key="cmp.id" class="border rounded-xl p-4 flex justify-between items-center">
+                        <div v-for="cmp in campaigns" :key="cmp.id" class="border border-slate-200 rounded-2xl p-4 flex justify-between items-center bg-slate-50/50 hover:bg-white transition-all">
                             <div>
-                                <h4 class="font-semibold text-slate-800">{{ cmp.title }}</h4>
-                                <a :href="cmp.url" target="_blank" class="text-xs text-blue-600 hover:underline break-all">{{ cmp.url }}</a>
+                                <h4 class="font-bold text-slate-800 text-sm">{{ cmp.title }}</h4>
+                                <a :href="cmp.url" target="_blank" class="text-xs text-indigo-600 hover:underline break-all font-mono mt-0.5 inline-block">
+                                    <i class="fa-solid fa-link text-[10px]"></i> {{ cmp.url }}
+                                </a>
                             </div>
-                            <button @click="deleteCampaign(cmp.id)" class="text-xs bg-rose-50 text-rose-600 p-2 rounded hover:bg-rose-100">Delete</button>
+                            <button @click="deleteCampaign(cmp.id)" class="text-xs bg-rose-50 text-rose-600 p-2.5 rounded-xl hover:bg-rose-100 border border-rose-200 transition-all">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- TAB 5: SETTINGS -->
-            <div v-if="adminTab === 'settings'" class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 max-w-lg">
-                <h2 class="text-lg font-bold mb-4">Admin Security Settings</h2>
+            <div v-if="adminTab === 'settings'" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 max-w-lg">
+                <h2 class="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved text-indigo-600"></i> Admin Credentials
+                </h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Username</label>
-                        <input v-model="adminSettingsForm.username" type="text" class="w-full border rounded px-3 py-2 text-sm">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Admin Username</label>
+                        <input v-model="adminSettingsForm.username" type="text" class="w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">Admin Password</label>
-                        <input v-model="adminSettingsForm.password" type="password" class="w-full border rounded px-3 py-2 text-sm">
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Admin Password</label>
+                        <input v-model="adminSettingsForm.password" type="password" class="w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
-                    <button @click="updateAdminCredentials" class="bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded hover:bg-slate-900">
-                        Update Credentials
+                    <button @click="updateAdminCredentials" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-3 rounded-xl transition-all shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Update Security Credentials
                     </button>
                 </div>
             </div>
@@ -247,38 +336,83 @@
             
             <!-- Earnings Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <span class="text-xs font-semibold text-slate-400 uppercase">Approved Earnings</span>
-                    <h3 class="text-2xl font-bold text-emerald-600 mt-1">₹{{ getEmpEarnings(currentUser.code).totalApproved }}</h3>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Approved Earnings</span>
+                        <h3 class="text-2xl font-black text-emerald-600 mt-1">₹{{ getEmpEarnings(currentUser.code).totalApproved }}</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-wallet"></i>
+                    </div>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <span class="text-xs font-semibold text-slate-400 uppercase">Pending Approvals</span>
-                    <h3 class="text-2xl font-bold text-amber-500 mt-1">₹{{ getEmpEarnings(currentUser.code).pendingAmount }}</h3>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Pending Approvals</span>
+                        <h3 class="text-2xl font-black text-amber-500 mt-1">₹{{ getEmpEarnings(currentUser.code).pendingAmount }}</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-hourglass-half"></i>
+                    </div>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                    <span class="text-xs font-semibold text-slate-400 uppercase">Approved Leads</span>
-                    <h3 class="text-2xl font-bold text-blue-600 mt-1">{{ getEmpEarnings(currentUser.code).approvedLeadsCount }}</h3>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Approved Leads</span>
+                        <h3 class="text-2xl font-black text-indigo-600 mt-1">{{ getEmpEarnings(currentUser.code).approvedLeadsCount }}</h3>
+                    </div>
+                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Campaigns Links -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-base font-extrabold text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-indigo-600"></i> Active Campaigns to Work On
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div v-for="cmp in campaigns" :key="cmp.id" class="border border-slate-200 rounded-xl p-3.5 bg-slate-50/50 flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-sm text-slate-800">{{ cmp.title }}</p>
+                            <a :href="cmp.url" target="_blank" class="text-xs text-indigo-600 font-mono hover:underline truncate max-w-xs block mt-0.5">
+                                <i class="fa-solid fa-external-link text-[10px]"></i> Open Link
+                            </a>
+                        </div>
+                        <button @click="submitLeadClaim(cmp)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all shadow-sm">
+                            + Claim Lead ₹10
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <!-- Extra Work Proof Submission -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-base font-bold text-slate-800 mb-3">Submit Extra Work Proof (Earning ₹10)</h3>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-base font-extrabold text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i> Submit Extra Work Proof (Earning ₹10)
+                </h3>
                 <div class="space-y-3">
-                    <textarea v-model="extraWorkForm.description" placeholder="Describe the extra task completed..." class="w-full border rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 h-20"></textarea>
-                    <input type="file" @change="handleExtraWorkFile" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <textarea v-model="extraWorkForm.description" placeholder="Describe the extra task or work completed..." class="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-20 bg-slate-50 focus:bg-white"></textarea>
+                    <div class="flex items-center gap-4">
+                        <input type="file" @change="handleExtraWorkFile" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    </div>
                     <div>
-                        <button @click="submitEmpExtraWork" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Submit Proof</button>
+                        <button @click="submitEmpExtraWork" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Proof for Approval
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Daily Work Feedback -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h3 class="text-base font-bold text-slate-800 mb-3">Submit Daily Work Report</h3>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-base font-extrabold text-slate-900 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-indigo-600"></i> Daily Work Report
+                </h3>
                 <div class="flex gap-2">
-                    <input v-model="employeeFeedbackInput" placeholder="Write today's work summary..." class="flex-1 border rounded-lg px-3 py-2 text-sm outline-none">
-                    <button @click="submitFeedback" class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold px-4 py-2 rounded-lg">Submit</button>
+                    <input v-model="employeeFeedbackInput" placeholder="Write today's work summary..." class="flex-1 border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+                    <button @click="submitFeedback" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition-all shadow-md flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i> Submit Report
+                    </button>
                 </div>
             </div>
 
@@ -286,26 +420,95 @@
 
     </div>
 
+    <!-- MODAL: EMPLOYEE WORK REPORTS & PROOFS (RESTORED) -->
+    <div v-if="selectedEmpWork" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-user text-indigo-600"></i> Work Reports & Claims: {{ selectedEmpWork.name }}
+                </h3>
+                <button @click="selectedEmpWork = null" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Submitted Proofs -->
+            <div>
+                <h4 class="text-xs font-extrabold uppercase text-slate-500 mb-2">Earning Claims & Proofs</h4>
+                <div class="space-y-2">
+                    <div v-for="r in earningsRequests.filter(req => req.empCode === selectedEmpWork.code)" :key="r.id" class="p-3 border rounded-xl text-xs flex justify-between items-center bg-slate-50">
+                        <div>
+                            <span class="font-bold text-slate-800">{{ r.type }} - ₹{{ r.amount }}</span>
+                            <p class="text-slate-500 mt-0.5">{{ r.description || 'No description' }}</p>
+                            <button v-if="r.screenshot" @click="previewScreenshot = r.screenshot" class="text-indigo-600 font-bold hover:underline mt-1 block">
+                                <i class="fa-solid fa-image"></i> View Attachment
+                            </button>
+                        </div>
+                        <span class="px-2 py-1 rounded font-bold text-[10px]" :class="{
+                            'bg-emerald-100 text-emerald-700': r.status === 'Approved',
+                            'bg-amber-100 text-amber-700': r.status === 'Pending',
+                            'bg-rose-100 text-rose-700': r.status === 'Rejected'
+                        }">{{ r.status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submitted Daily Reports -->
+            <div>
+                <h4 class="text-xs font-extrabold uppercase text-slate-500 mb-2">Daily Reports / Feedback</h4>
+                <div class="space-y-2">
+                    <div v-for="f in feedbacks.filter(fb => fb.empCode === selectedEmpWork.code)" :key="f.id" class="p-3 border rounded-xl text-xs bg-slate-50">
+                        <span class="text-slate-400 font-mono">{{ f.date }}:</span>
+                        <p class="text-slate-800 font-semibold mt-1">{{ f.text }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CLIENT CAMPAIGN REVIEW (RESTORED) -->
+    <div v-if="selectedReviewClient" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900">Campaigns for {{ selectedReviewClient.name }}</h3>
+                <button @click="selectedReviewClient = null" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-xs text-slate-500">Assigned job type: <strong class="text-indigo-600">{{ selectedReviewClient.jobType }}</strong></p>
+            <div class="space-y-2">
+                <div v-for="cmp in campaigns" :key="cmp.id" class="p-3 border rounded-xl text-xs flex justify-between items-center">
+                    <span class="font-bold text-slate-800">{{ cmp.title }}</span>
+                    <a :href="cmp.url" target="_blank" class="text-indigo-600 font-bold hover:underline">Link <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: IMAGE SCREENSHOT PREVIEW -->
+    <div v-if="previewScreenshot" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" @click="previewScreenshot = null">
+        <div class="bg-white p-2 rounded-2xl max-w-lg w-full">
+            <img :src="previewScreenshot" class="w-full rounded-xl max-h-[80vh] object-contain">
+            <p class="text-center text-xs text-slate-500 py-2">Click anywhere to close</p>
+        </div>
+    </div>
+
     <!-- MODAL: EMPLOYEE CHANGE PIN -->
-    <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
-            <h3 class="text-base font-bold">Update Security PIN</h3>
-            <input v-model="selfPinInput" type="password" maxlength="4" placeholder="New 4-digit PIN" class="w-full border rounded px-3 py-2 text-sm font-mono text-center text-lg">
+    <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 class="text-base font-bold text-slate-900">Update Security PIN</h3>
+            <input v-model="selfPinInput" type="password" maxlength="4" placeholder="New 4-digit PIN" class="w-full border rounded-xl px-3 py-2 text-sm font-mono text-center text-lg outline-none focus:ring-2 focus:ring-indigo-500">
             <div class="flex justify-end gap-2">
-                <button @click="showEmpSelfPinModal = false" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded">Cancel</button>
-                <button @click="updateSelfPin" class="px-3 py-1.5 text-xs bg-blue-600 text-white font-semibold rounded">Save PIN</button>
+                <button @click="showEmpSelfPinModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                <button @click="updateSelfPin" class="px-4 py-2 text-xs bg-indigo-600 text-white font-bold rounded-xl shadow-md">Save PIN</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: ADMIN RESET PIN -->
-    <div v-if="adminPinModal.show" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl p-6 w-full max-w-sm space-y-4">
-            <h3 class="text-base font-bold">Reset PIN for {{ adminPinModal.empName }}</h3>
-            <input v-model="adminPinModal.newPin" type="text" maxlength="4" class="w-full border rounded px-3 py-2 text-sm font-mono text-center text-lg">
+    <div v-if="adminPinModal.show" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
+            <h3 class="text-base font-bold text-slate-900">Reset PIN for {{ adminPinModal.empName }}</h3>
+            <input v-model="adminPinModal.newPin" type="text" maxlength="4" class="w-full border rounded-xl px-3 py-2 text-sm font-mono text-center text-lg outline-none focus:ring-2 focus:ring-indigo-500">
             <div class="flex justify-end gap-2">
-                <button @click="adminPinModal.show = false" class="px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 rounded">Cancel</button>
-                <button @click="saveAdminEmpPin" class="px-3 py-1.5 text-xs bg-blue-600 text-white font-semibold rounded">Update</button>
+                <button @click="adminPinModal.show = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                <button @click="saveAdminEmpPin" class="px-4 py-2 text-xs bg-indigo-600 text-white font-bold rounded-xl shadow-md">Update PIN</button>
             </div>
         </div>
     </div>
@@ -329,12 +532,14 @@ createApp({
             selfPinInput: '',
             employeeFeedbackInput: '',
             extraWorkForm: { screenshot: null, description: '' },
+            newClient: { name: '', phone: '', jobType: 'Lead Gen' },
             newEmp: { name: '', phone: '', position: '', pin: '1234' },
             newCmp: { title: '', url: '' },
             adminPinModal: { show: false, empId: null, empName: '', empCode: '', newPin: '' },
             adminSettingsForm: { username: 'admin', password: '123' },
             selectedEmpWork: null,
             selectedReviewClient: null,
+            previewScreenshot: null,
             
             // Core Data Storage
             adminSettings: { username: 'admin', password: '123' },
@@ -357,7 +562,7 @@ createApp({
         this.adminSettingsForm = { ...this.adminSettings };
     },
     methods: {
-        // LocalStorage Helpers
+        // LocalStorage Sync
         saveData() {
             localStorage.setItem('ved_clients', JSON.stringify(this.clients));
             localStorage.setItem('ved_employees', JSON.stringify(this.employees));
@@ -380,20 +585,25 @@ createApp({
             setTimeout(() => { this.showToast = false; }, 3000);
         },
 
-        // Auth Logic
+        // Login Logic
         login() {
-            if (this.loginForm.username === this.adminSettings.username && this.loginForm.password === this.adminSettings.password) {
+            const username = this.loginForm.username.trim();
+            const password = this.loginForm.password.trim();
+
+            if (username === this.adminSettings.username && password === this.adminSettings.password) {
                 this.currentUser = { role: 'admin', name: 'Admin', code: 'ADMIN' };
                 this.isLoggedIn = true;
+                this.showNotification('Welcome back, Admin!');
                 return;
             }
-            const emp = this.employees.find(e => e.code === this.loginForm.username && e.pin === this.loginForm.password);
+            const emp = this.employees.find(e => e.code.toLowerCase() === username.toLowerCase() && e.pin === password);
             if (emp) {
                 this.currentUser = { ...emp, role: 'employee' };
                 this.isLoggedIn = true;
+                this.showNotification(`Welcome back, ${emp.name}!`);
                 return;
             }
-            alert('Invalid Username/PIN!');
+            alert('Galat Username ya PIN! Admin default: admin/123, Employee default: EMP-1001/1234');
         },
         logout() {
             this.currentUser = null;
@@ -401,7 +611,25 @@ createApp({
             this.loginForm = { username: '', password: '' };
         },
 
-        // Client & Employee Operations
+        // Client Operations
+        addClient() {
+            if (!this.newClient.name || !this.newClient.phone) {
+                alert('Client Name aur Phone dono zaroori hain!');
+                return;
+            }
+            const code = 'CL-' + String(this.clients.length + 101);
+            this.clients.unshift({
+                code: code,
+                name: this.newClient.name.trim(),
+                phone: this.newClient.phone.trim(),
+                jobType: this.newClient.jobType,
+                status: 'Active',
+                isPromoted: false
+            });
+            this.newClient = { name: '', phone: '', jobType: 'Lead Gen' };
+            this.saveData();
+            this.showNotification('Naya Client add ho gaya!');
+        },
         shiftClientJob(client, newJobType) {
             client.jobType = newJobType;
             this.saveData();
@@ -422,12 +650,17 @@ createApp({
             this.showNotification(`${client.name} promoted to Employee (${newEmpCode})`);
         },
         deleteClient(code) {
-            if (confirm('Are you sure you want to delete this client?')) {
+            if (confirm('Delete this client?')) {
                 this.clients = this.clients.filter(c => c.code !== code);
                 this.saveData();
                 this.showNotification('Client deleted');
             }
         },
+        openClientReviewModal(client) {
+            this.selectedReviewClient = client;
+        },
+
+        // Employee Operations
         addEmployee() {
             if (!this.newEmp.name || !this.newEmp.phone) return;
             const newEmpCode = 'EMP-' + String(this.employees.length + 1001);
@@ -441,20 +674,23 @@ createApp({
             });
             this.newEmp = { name: '', phone: '', position: '', pin: '1234' };
             this.saveData();
-            this.showNotification('New employee added!');
+            this.showNotification('Naya Employee add ho gaya!');
         },
         deleteEmployee(id) {
-            if (confirm('Are you sure you want to delete this employee?')) {
+            if (confirm('Delete this employee?')) {
                 this.employees = this.employees.filter(e => e.id !== id);
                 this.saveData();
                 this.showNotification('Employee removed');
             }
         },
+        viewEmployeeWork(emp) {
+            this.selectedEmpWork = emp;
+        },
 
-        // PIN & Work Handlers
+        // PIN & Extra Work
         updateSelfPin() {
             if (!this.selfPinInput || this.selfPinInput.length !== 4) {
-                alert('Please enter a valid 4-digit PIN!');
+                alert('4-digit PIN dalein!');
                 return;
             }
             const emp = this.employees.find(e => e.code === this.currentUser.code);
@@ -464,7 +700,7 @@ createApp({
                 this.selfPinInput = '';
                 this.showEmpSelfPinModal = false;
                 this.saveData();
-                this.showNotification('Security PIN updated!');
+                this.showNotification('PIN Successfully Updated!');
             }
         },
         openAdminPinModal(emp) {
@@ -472,7 +708,7 @@ createApp({
         },
         saveAdminEmpPin() {
             if (!this.adminPinModal.newPin || this.adminPinModal.newPin.length !== 4) {
-                alert('PIN must be 4 digits!');
+                alert('PIN 4 digits ka hona chahiye!');
                 return;
             }
             const emp = this.employees.find(e => e.id === this.adminPinModal.empId);
@@ -492,12 +728,12 @@ createApp({
         },
         submitEmpExtraWork() {
             if (!this.extraWorkForm.description.trim()) {
-                alert('Please enter a description!');
+                alert('Description likhna zaroori hai!');
                 return;
             }
             this.earningsRequests.unshift({
                 id: Date.now(),
-                type: 'ExtraWork',
+                type: 'Extra Work Proof',
                 empCode: this.currentUser.code,
                 empName: this.currentUser.name,
                 description: this.extraWorkForm.description.trim(),
@@ -508,7 +744,21 @@ createApp({
             });
             this.extraWorkForm = { screenshot: null, description: '' };
             this.saveData();
-            this.showNotification('Extra work proof submitted to Admin!');
+            this.showNotification('Proof submitted to Admin!');
+        },
+        submitLeadClaim(cmp) {
+            this.earningsRequests.unshift({
+                id: Date.now(),
+                type: 'Campaign Lead',
+                empCode: this.currentUser.code,
+                empName: this.currentUser.name,
+                description: `Claimed for ${cmp.title}`,
+                amount: 10,
+                status: 'Pending',
+                date: new Date().toLocaleDateString('en-IN')
+            });
+            this.saveData();
+            this.showNotification('Lead Claim submitted!');
         },
         submitFeedback() {
             if (!this.employeeFeedbackInput.trim()) return;
@@ -521,10 +771,10 @@ createApp({
             });
             this.employeeFeedbackInput = '';
             this.saveData();
-            this.showNotification('Daily report submitted successfully!');
+            this.showNotification('Report submitted successfully!');
         },
 
-        // Earnings & Claims Management
+        // Claims & Earnings
         getEmpEarnings(empCode) {
             const empReqs = this.earningsRequests.filter(r => r.empCode === empCode);
             const approved = empReqs.filter(r => r.status === 'Approved');
@@ -532,28 +782,25 @@ createApp({
 
             const totalApproved = approved.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
             const pendingAmount = pending.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-            const approvedLeadsCount = approved.filter(r => r.type === 'Lead').length;
+            const approvedLeadsCount = approved.length;
 
             return { totalApproved, pendingAmount, approvedLeadsCount };
         },
-        getPendingLeadClaimsCount() {
-            return this.earningsRequests.filter(r => r.type === 'Lead' && r.status === 'Pending').length;
-        },
-        getPendingExtraWorkCount() {
-            return this.earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending').length;
+        getPendingClaimsCount() {
+            return this.earningsRequests.filter(r => r.status === 'Pending').length;
         },
         approveLeadClaim(req) {
             req.status = 'Approved';
             this.saveData();
-            this.showNotification('Claim approved!');
+            this.showNotification('Claim Approved!');
         },
         rejectEarningClaim(req) {
             req.status = 'Rejected';
             this.saveData();
-            this.showNotification('Claim rejected');
+            this.showNotification('Claim Rejected');
         },
 
-        // Campaign Management
+        // Campaigns
         addCampaign() {
             if (!this.newCmp.title || !this.newCmp.url) return;
             this.campaigns.unshift({
@@ -563,17 +810,17 @@ createApp({
             });
             this.newCmp = { title: '', url: '' };
             this.saveData();
-            this.showNotification('New campaign added!');
+            this.showNotification('Campaign Published!');
         },
         deleteCampaign(id) {
-            if (confirm('Delete this campaign?')) {
+            if (confirm('Delete campaign?')) {
                 this.campaigns = this.campaigns.filter(c => c.id !== id);
                 this.saveData();
-                this.showNotification('Campaign deleted');
+                this.showNotification('Campaign Deleted');
             }
         },
 
-        // Settings & Export
+        // Admin Settings & Export
         updateAdminCredentials() {
             this.adminSettings.username = this.adminSettingsForm.username.trim();
             this.adminSettings.password = this.adminSettingsForm.password.trim();
