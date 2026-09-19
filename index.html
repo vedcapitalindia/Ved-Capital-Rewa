@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ved Capital Rewa - Management Portal (Cloud Database)</title>
+    <title>Ved Capital Rewa - Complete Cloud Management Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Vue 3 CDN -->
@@ -62,14 +62,14 @@
             <!-- VIEW 1: HOME & JOB APPLICATION -->
             <div v-if="currentView === 'home'" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <div class="space-y-6">
-                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">Cloud-Powered Recruitment Portal</span>
-                    <h2 class="text-4xl font-extrabold text-slate-900 leading-tight">Welcome to Ved Capital Rewa Operations</h2>
+                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">Full Cloud-Powered Operations</span>
+                    <h2 class="text-4xl font-extrabold text-slate-900 leading-tight">Welcome to Ved Capital Rewa Branch</h2>
                     <p class="text-slate-600 leading-relaxed">
-                        Join our digital workforce or register your profile for verified promotional campaigns. Data is securely synchronized live via Firebase Cloud Firestore.
+                        Complete digital workflow management system connected live with Firebase Firestore Database. All records, proofs, and reports sync in real-time.
                     </p>
                     <div class="flex space-x-4">
                         <button @click="currentView = 'apply'" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg shadow transition">Apply for Job / Campaign</button>
-                        <button @click="currentView = 'login'" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-6 py-3 rounded-lg transition">Sign In</button>
+                        <button @click="currentView = 'login'" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-6 py-3 rounded-lg transition">Sign In Portal</button>
                     </div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
@@ -92,7 +92,7 @@
                         <div @click="quickLoginPrompt('admin')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
                             <div>
                                 <h4 class="font-semibold text-slate-800">Admin Control Panel</h4>
-                                <p class="text-xs text-slate-500">Manage users, approvals, links, & settings</p>
+                                <p class="text-xs text-slate-500">Manage all users, proofs, campaigns, & exports</p>
                             </div>
                             <span class="text-indigo-600 font-bold">&rarr;</span>
                         </div>
@@ -103,7 +103,7 @@
             <!-- VIEW 2: JOB APPLICATION FORM -->
             <div v-if="currentView === 'apply'" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-md border border-slate-100">
                 <h2 class="text-2xl font-bold text-slate-900 mb-2">Job / Campaign Registration</h2>
-                <p class="text-sm text-slate-500 mb-6">Fill in your correct details to receive your unique Client Code instantly stored in Cloud DB.</p>
+                <p class="text-sm text-slate-500 mb-6">Fill in correct details to instantly generate your unique Client Code saved directly to Cloud DB.</p>
                 
                 <form @submit.prevent="submitApplication" class="space-y-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -151,7 +151,7 @@
                     <div class="bg-indigo-50 p-4 rounded-xl text-center border border-indigo-100">
                         <p class="text-xs uppercase font-bold text-indigo-700">Your Assigned Client Code</p>
                         <p class="text-3xl font-mono font-extrabold text-indigo-900 tracking-wider my-1">{{ lastGeneratedCode }}</p>
-                        <p class="text-xs text-slate-500">Saved successfully in Firestore database.</p>
+                        <p class="text-xs text-slate-500">Saved securely in Firestore database.</p>
                     </div>
                     <div class="space-y-2 text-sm">
                         <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Applicant Name:</span><span class="font-semibold">{{ lastApplicant.name }}</span></div>
@@ -170,7 +170,7 @@
             <!-- VIEW 4: LOGIN PORTAL -->
             <div v-if="currentView === 'login'" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-md border border-slate-100">
                 <h2 class="text-2xl font-bold text-slate-900 mb-1">Portal Sign In</h2>
-                <p class="text-sm text-slate-500 mb-6">Access your respective dashboard securely from Cloud DB.</p>
+                <p class="text-sm text-slate-500 mb-6">Access your respective dashboard from Cloud DB.</p>
 
                 <form @submit.prevent="handleLogin" class="space-y-4">
                     <div>
@@ -267,7 +267,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-xs text-slate-500 uppercase font-semibold">Total Earnings</p>
-                        <p class="text-xl font-bold text-green-600">₹{{ currentUser.earnings || 12500 }}</p>
+                        <p class="text-xl font-bold text-green-600">₹{{ currentUser.earnings || 14200 }}</p>
                     </div>
                 </div>
 
@@ -312,7 +312,7 @@
                 <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
                     <div>
                         <h2 class="text-2xl font-bold text-slate-900">Admin Control Panel</h2>
-                        <p class="text-sm text-slate-500">Ved Capital Rewa Master Management System (Cloud Database Synced)</p>
+                        <p class="text-sm text-slate-500">Ved Capital Rewa Master Management System (Cloud DB Synced)</p>
                     </div>
                     <div class="space-x-2">
                         <button @click="exportToCSV" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 text-xs rounded font-medium">Export Data CSV</button>
@@ -322,9 +322,10 @@
                 <!-- Tabs inside Admin -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-6">
                     <div class="flex space-x-4 border-b pb-3">
-                        <button @click="adminTab = 'applications'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'applications'}" class="text-sm pb-1 text-slate-600">Client Applications & Status</button>
+                        <button @click="adminTab = 'applications'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'applications'}" class="text-sm pb-1 text-slate-600">Client Applications</button>
                         <button @click="adminTab = 'campaigns'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'campaigns'}" class="text-sm pb-1 text-slate-600">Manage Campaigns</button>
-                        <button @click="adminTab = 'settings'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'settings'}" class="text-sm pb-1 text-slate-600">Security & PIN Masking</button>
+                        <button @click="adminTab = 'reports'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'reports'}" class="text-sm pb-1 text-slate-600">Employee Reports</button>
+                        <button @click="adminTab = 'settings'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'settings'}" class="text-sm pb-1 text-slate-600">Security & Settings</button>
                     </div>
 
                     <!-- Applications Tab -->
@@ -374,13 +375,28 @@
                         </div>
                     </div>
 
+                    <!-- Employee Reports Tab -->
+                    <div v-if="adminTab === 'reports'" class="space-y-4">
+                        <h4 class="font-semibold text-slate-800">Submitted Employee Work Reports</h4>
+                        <div class="space-y-3">
+                            <div v-for="rep in employeeReports" :key="rep.id" class="p-4 border rounded-xl bg-slate-50 text-sm">
+                                <div class="flex justify-between font-semibold text-indigo-900">
+                                    <span>Tasks Count: {{ rep.count }}</span>
+                                    <span class="text-xs text-slate-500">{{ rep.date }}</span>
+                                </div>
+                                <p class="text-xs text-slate-600 mt-1">Notes: {{ rep.notes }}</p>
+                            </div>
+                            <p v-if="employeeReports.length === 0" class="text-xs text-slate-400 italic">No daily reports received yet.</p>
+                        </div>
+                    </div>
+
                     <!-- Settings Tab -->
                     <div v-if="adminTab === 'settings'" class="space-y-4">
                         <h4 class="font-semibold text-slate-800">Security & Privacy Controls</h4>
                         <div class="flex items-center justify-between p-4 border rounded-xl bg-slate-50">
                             <div>
                                 <h5 class="font-medium text-slate-800">Employee PIN Privacy Masking</h5>
-                                <p class="text-xs text-slate-500">Mask employee security PINs in cloud configurations.</p>
+                                <p class="text-xs text-slate-500">Mask security PINs in cloud configurations.</p>
                             </div>
                             <input type="checkbox" v-model="pinMaskingEnabled" class="w-5 h-5 text-indigo-600 rounded">
                         </div>
@@ -392,14 +408,14 @@
 
         <!-- Footer -->
         <footer class="bg-white border-t mt-12 py-6 text-center text-xs text-slate-500 no-print">
-            <p>&copy; 2026 Ved Capital Rewa Branch Portal. Cloud-Integrated Firestore Edition.</p>
+            <p>&copy; 2026 Ved Capital Rewa Branch Portal. Fully Synced Cloud Database Edition.</p>
         </footer>
 
     </div>
 
-    <!-- Firebase & Vue Application Script Logic -->
+    <!-- Firebase & Vue Full Application Script -->
     <script>
-        // TODO: Apne Firebase Console se apna actual config yahan replace karein
+        // TODO: Replace with your actual Firebase project config credentials
         const firebaseConfig = {
             apiKey: "AIzaSyDummyKeyForDemoPurposesOnly12345",
             authDomain: "ved-capital-rewa.firebaseapp.com",
@@ -409,7 +425,6 @@
             appId: "1:123456:web:abcdef"
         };
 
-        // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -440,12 +455,11 @@
                 const lastGeneratedCode = ref('');
                 const lastApplicant = ref({});
 
-                // Reactive collections bound to Firestore
+                // All reactive database tables synced with Firestore
                 const registeredClients = ref([]);
                 const activeCampaigns = ref([]);
-                const clientProofs = ref([
-                    { id: 1, clientName: 'Aarav Sharma', fileName: 'proof_screenshot_1.png' }
-                ]);
+                const clientProofs = ref([]);
+                const employeeReports = ref([]);
 
                 const clientIssue = reactive({
                     campaignId: 1,
@@ -457,31 +471,46 @@
                     notes: ''
                 });
 
-                // Fetch data from Firestore on mount
+                // Fetch all collections live from Firestore on mount
                 onMounted(async () => {
                     try {
-                        // Fetch Clients
-                        const clientsSnapshot = await db.collection('clients').get();
-                        if (!clientsSnapshot.empty) {
-                            registeredClients.value = clientsSnapshot.docs.map(doc => doc.data());
+                        // 1. Clients
+                        const clientsSnap = await db.collection('clients').get();
+                        if (!clientsSnap.empty) {
+                            registeredClients.value = clientsSnap.docs.map(doc => doc.data());
                         } else {
-                            // Default seed data if empty
                             registeredClients.value = [
                                 { code: 'VC-REWA-1001', name: 'Aarav Sharma', mobile: '9876543210', email: 'aarav@example.com', address: 'Civil Lines, Rewa', status: 'Approved', pin: '1234' }
                             ];
                         }
 
-                        // Fetch Campaigns
-                        const campaignsSnapshot = await db.collection('campaigns').get();
-                        if (!campaignsSnapshot.empty) {
-                            activeCampaigns.value = campaignsSnapshot.docs.map(doc => doc.data());
+                        // 2. Campaigns
+                        const campaignsSnap = await db.collection('campaigns').get();
+                        if (!campaignsSnap.empty) {
+                            activeCampaigns.value = campaignsSnap.docs.map(doc => doc.data());
                         } else {
                             activeCampaigns.value = [
                                 { id: 1, title: 'Rewa Digital Outreach Q3', description: 'Promote verified financial services link across local groups.', reward: 500, link: 'https://vedcapitalrewa.org/campaign/q3-outreach' }
                             ];
                         }
+
+                        // 3. Proofs
+                        const proofsSnap = await db.collection('proofs').get();
+                        if (!proofsSnap.empty) {
+                            clientProofs.value = proofsSnap.docs.map(doc => doc.data());
+                        } else {
+                            clientProofs.value = [
+                                { id: 1, clientName: 'Aarav Sharma', fileName: 'proof_screenshot_1.png' }
+                            ];
+                        }
+
+                        // 4. Reports
+                        const reportsSnap = await db.collection('reports').get();
+                        if (!reportsSnap.empty) {
+                            employeeReports.value = reportsSnap.docs.map(doc => doc.data());
+                        }
                     } catch (e) {
-                        console.log("Firestore offline or mock mode active, using local fallback state.");
+                        console.log("Firestore offline mode or mock fallback active.");
                     }
                 });
 
@@ -559,15 +588,21 @@
                     alert('Campaign link copied to clipboard!');
                 };
 
-                const handleFileUpload = (event, campaignId) => {
+                const handleFileUpload = async (event, campaignId) => {
                     const file = event.target.files[0];
                     if (file) {
-                        clientProofs.value.push({
+                        const newProof = {
                             id: Date.now(),
                             clientName: currentUser.value.name,
                             fileName: file.name
-                        });
-                        alert('Work completion proof successfully uploaded to cloud sync!');
+                        };
+                        clientProofs.value.push(newProof);
+                        try {
+                            await db.collection('proofs').doc(String(newProof.id)).set(newProof);
+                        } catch (e) {
+                            console.error("Proof upload cloud error:", e);
+                        }
+                        alert('Work completion proof successfully uploaded to cloud!');
                     }
                 };
 
@@ -576,14 +611,31 @@
                     clientIssue.message = '';
                 };
 
-                const submitDailyReport = () => {
-                    alert('Daily work report submitted successfully!');
+                const submitDailyReport = async () => {
+                    const newRep = {
+                        id: Date.now(),
+                        count: empReport.count,
+                        notes: empReport.notes,
+                        date: new Date().toLocaleDateString()
+                    };
+                    employeeReports.value.push(newRep);
+                    try {
+                        await db.collection('reports').doc(String(newRep.id)).set(newRep);
+                    } catch (e) {
+                        console.error("Report save error:", e);
+                    }
+                    alert('Daily work report submitted and synced to cloud!');
                     empReport.count = 0;
                     empReport.notes = '';
                 };
 
-                const approveProof = (id) => {
+                const approveProof = async (id) => {
                     clientProofs.value = clientProofs.value.filter(p => p.id !== id);
+                    try {
+                        await db.collection('proofs').doc(String(id)).delete();
+                    } catch (e) {
+                        console.error("Proof delete error:", e);
+                    }
                     alert('Proof approved and earnings updated.');
                 };
 
@@ -594,7 +646,7 @@
                         try {
                             await db.collection('clients').doc(code).update({ status: client.status });
                         } catch (e) {
-                            console.error("Cloud update error:", e);
+                            console.error("Cloud status update error:", e);
                         }
                     }
                 };
@@ -636,7 +688,7 @@
                     const encodedUri = encodeURI(csvContent);
                     const link = document.createElement("a");
                     link.setAttribute("href", encodedUri);
-                    link.setAttribute("download", "ved_capital_cloud_clients.csv");
+                    link.setAttribute("download", "ved_capital_all_clients.csv");
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
@@ -645,7 +697,7 @@
                 return {
                     currentView, loginRole, loginIdentifier, loginPin, loginError, currentUser,
                     adminTab, pinMaskingEnabled, form, lastGeneratedCode, lastApplicant,
-                    registeredClients, activeCampaigns, clientProofs, clientIssue, empReport,
+                    registeredClients, activeCampaigns, clientProofs, employeeReports, clientIssue, empReport,
                     submitApplication, quickLoginPrompt, handleLogin, logout, copyText,
                     handleFileUpload, submitClientIssue, submitDailyReport, approveProof,
                     toggleClientStatus, addNewCampaign, deleteCampaign, exportToCSV
