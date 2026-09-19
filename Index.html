@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ved Capital Rewa - Official App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+<div id="app" class="min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'job_form'">
+                <div class="bg-amber-400 text-indigo-900 px-3 py-1.5 rounded-lg font-black text-xl">VCR</div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide">Ved Capital Rewa</h1>
+                    <p class="text-xs text-indigo-200">Official Portal</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <button v-if="!currentUser" @click="currentView = 'job_form'" 
+                        :class="currentView === 'job_form' ? 'bg-indigo-700' : 'hover:bg-indigo-800'" 
+                        class="px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                    <i class="fa-solid fa-briefcase mr-1"></i> Apply Job
+                </button>
+                <button v-if="!currentUser" @click="currentView = 'login'" 
+                        :class="currentView === 'login' ? 'bg-indigo-700' : 'hover:bg-indigo-800'" 
+                        class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-indigo-950 rounded-lg text-xs font-bold transition">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Login
+                </button>
+
+                <!-- Logged in User Bar -->
+                <div v-if="currentUser" class="flex items-center space-x-2">
+                    <span class="bg-indigo-800 px-3 py-1 rounded-full text-xs border border-indigo-600">
+                        <i class="fa-solid fa-user text-amber-400 mr-1"></i> {{ currentUser.name }} ({{ currentUser.role.toUpperCase() }})
+                    </span>
+                    <button @click="logout" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6">
+
+        <!-- 1. PUBLIC JOB FORM (NO IMMEDIATE CODE GENERATION) -->
+        <section v-if="currentView === 'job_form'" class="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow-xl border">
+            <div class="text-center mb-6">
+                <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Ved Capital Rewa</span>
+                <h2 class="text-2xl font-bold text-slate-800 mt-2">Job Application Form</h2>
+                <p class="text-slate-500 text-xs mt-1">Form fill kijiye. Approval ke baad aapko Client Code prapt hoga.</p>
+            </div>
+
+            <div v-if="submittedSuccess" class="p-4 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 text-center">
+                <i class="fa-solid fa-clock text-3xl text-amber-500 mb-2"></i>
+                <h3 class="font-bold text-base">Form Successfully Submitted!</h3>
+                <p class="text-xs mt-1">Aapka form <strong>Pending Review</strong> me hai. Admin ya Employee ke accept karte hi aapko Client Code diya jayega.</p>
+                <button @click="submittedSuccess = false" class="mt-4 px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold">New Form</button>
+            </div>
+
+            <form v-else @submit.prevent="submitJobForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                    <input v-model="jobForm.name" required type="text" placeholder="Enter full name" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+                        <input v-model="jobForm.phone" required type="tel" placeholder="10-digit mobile number" class="w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Job Type *</label>
+                        <select v-model="jobForm.workType" required class="w-full px-3 py-2 border rounded-lg text-sm bg-white outline-none">
+                            <option value="" disabled>Choose Work Type</option>
+                            <option value="Part-time Job">Part-time Job</option>
+                            <option value="Work At Home Job">Work At Home Job</option>
+                            <option value="Full-time Job">Full-time Job</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Job Role (10 Categories) *</label>
+                    <select v-model="jobForm.jobRole" required class="w-full px-3 py-2 border rounded-lg text-sm bg-white outline-none">
+                        <option value="" disabled>Select Job Role</option>
+                        <option value="Security Job">Security Job</option>
+                        <option value="Data Entry Job">Data Entry Job</option>
+                        <option value="Delivery Boy Job">Delivery Boy Job</option>
+                        <option value="Telecalling Job">Telecalling Job</option>
+                        <option value="Industry Job">Industry Job</option>
+                        <option value="Influencer Job">Influencer Job</option>
+                        <option value="Video Editing Job">Video Editing Job</option>
+                        <option value="Field Officer Job">Field Officer Job</option>
+                        <option value="Office Boy Job">Office Boy Job</option>
+                        <option value="Any Other Job">Any Other Job</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">City / Address *</label>
+                    <input v-model="jobForm.address" required type="text" placeholder="e.g. Rewa, MP" class="w-full px-3 py-2 border rounded-lg text-sm outline-none">
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg shadow text-sm transition">
+                    Submit Job Application
+                </button>
+            </form>
+        </section>
+
+        <!-- 2. LOGIN PORTAL -->
+        <section v-if="currentView === 'login'" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-xl border">
+            <h2 class="text-xl font-bold text-center text-slate-800 mb-4">Portal Login</h2>
+
+            <div class="flex border-b mb-4 text-xs font-bold">
+                <button @click="loginType = 'client'" :class="loginType === 'client' ? 'border-indigo-600 text-indigo-600' : 'text-slate-400'" class="flex-1 py-2 text-center border-b-2">Client</button>
+                <button @click="loginType = 'employee'" :class="loginType === 'employee' ? 'border-indigo-600 text-indigo-600' : 'text-slate-400'" class="flex-1 py-2 text-center border-b-2">Employee</button>
+                <button @click="loginType = 'admin'" :class="loginType === 'admin' ? 'border-indigo-600 text-indigo-600' : 'text-slate-400'" class="flex-1 py-2 text-center border-b-2">Admin</button>
+            </div>
+
+            <!-- Client Login -->
+            <form v-if="loginType === 'client'" @submit.prevent="handleClientLogin" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Approved Client Code</label>
+                    <input v-model="loginInput.code" placeholder="e.g. CLI-0101" required type="text" class="w-full px-3 py-2 border rounded-lg text-sm uppercase">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Full Name</label>
+                    <input v-model="loginInput.name" placeholder="Enter registered name" required type="text" class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold text-sm">Client Login</button>
+            </form>
+
+            <!-- Employee Login -->
+            <form v-if="loginType === 'employee'" @submit.prevent="handleEmployeeLogin" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Employee Code</label>
+                    <input v-model="loginInput.code" placeholder="e.g. EMP-0001" required type="text" class="w-full px-3 py-2 border rounded-lg text-sm uppercase">
+                </div>
+                <button type="submit" class="w-full bg-slate-800 text-white py-2 rounded-lg font-bold text-sm">Employee Login</button>
+            </form>
+
+            <!-- Admin Login -->
+            <form v-if="loginType === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Admin Password</label>
+                    <input v-model="loginInput.password" placeholder="Bhola@3307" required type="password" class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+                <button type="submit" class="w-full bg-amber-500 text-indigo-950 py-2 rounded-lg font-bold text-sm">Admin Login</button>
+            </form>
+
+            <p v-if="loginError" class="text-red-500 text-xs text-center mt-3 font-semibold">{{ loginError }}</p>
+        </section>
+
+        <!-- 3. CLIENT PORTAL (CENTRAL CAMPAIGN LIST ONLY) -->
+        <section v-if="currentView === 'client_dash' && currentUser" class="max-w-3xl mx-auto space-y-4">
+            <div class="bg-white p-4 rounded-xl shadow flex justify-between items-center border">
+                <div>
+                    <h2 class="font-bold text-base">{{ currentUser.name }}</h2>
+                    <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">Client Code: {{ currentUser.code }}</span>
+                </div>
+                <span class="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded font-bold">{{ currentUser.jobRole }} ({{ currentUser.workType }})</span>
+            </div>
+
+            <!-- Central Campaign Directory -->
+            <div class="bg-white p-5 rounded-xl shadow border">
+                <h3 class="font-bold text-sm text-slate-800 mb-1"><i class="fa-solid fa-bullhorn text-indigo-600 mr-1"></i> Active Campaign Links</h3>
+                <p class="text-xs text-slate-500 mb-4">Niche diye gaye campaign links par touch karke participate karein.</p>
+
+                <div class="space-y-3">
+                    <div v-for="c in campaigns" :key="c.id" class="p-3 border rounded-lg bg-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                        <div>
+                            <p class="font-bold text-sm text-indigo-900">{{ c.name }}</p>
+                            <p class="text-xs font-mono text-slate-500 truncate max-w-md">{{ c.link }}</p>
+                        </div>
+                        <a :href="c.link" target="_blank" @click="trackCampaignClick(c)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-bold transition flex items-center">
+                            Touch / Open Link <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. EMPLOYEE DASHBOARD (CALLING & APPROVAL) -->
+        <section v-if="currentView === 'emp_dash'" class="space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-lg">Employee Dashboard</h2>
+                    <p class="text-xs text-slate-500">Public Forms Review, Client Calling & Campaign Participation Tracking</p>
+                </div>
+                <input v-model="searchQuery" placeholder="Search name/phone..." class="px-3 py-1.5 border rounded-lg text-xs">
+            </div>
+
+            <!-- TAB NAV -->
+            <div class="flex border-b text-xs font-bold bg-white rounded-t-xl px-4 pt-2">
+                <button @click="empTab = 'pending'" :class="empTab === 'pending' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400'" class="pb-2 px-4">
+                    Pending Job Applications ({{ pendingApplicants.length }})
+                </button>
+                <button @click="empTab = 'approved'" :class="empTab === 'approved' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400'" class="pb-2 px-4">
+                    Approved Clients ({{ approvedClients.length }})
+                </button>
+                <button @click="empTab = 'clicks'" :class="empTab === 'clicks' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400'" class="pb-2 px-4">
+                    Campaign Click Participants ({{ campaignClicks.length }})
+                </button>
+            </div>
+
+            <!-- PENDING APPLICATIONS TABLE -->
+            <div v-if="empTab === 'pending'" class="bg-white rounded-b-xl shadow overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase text-slate-500">
+                        <tr>
+                            <th class="p-3">Applicant Name</th>
+                            <th class="p-3">Phone</th>
+                            <th class="p-3">Work Type</th>
+                            <th class="p-3">Job Role</th>
+                            <th class="p-3">Address</th>
+                            <th class="p-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr v-for="app in pendingApplicants" :key="app.id">
+                            <td class="p-3 font-bold">{{ app.name }}</td>
+                            <td class="p-3 font-mono">
+                                {{ app.phone }}
+                                <a :href="'tel:' + app.phone" class="ml-2 bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-phone"></i> Call</a>
+                            </td>
+                            <td class="p-3">{{ app.workType }}</td>
+                            <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">{{ app.jobRole }}</span></td>
+                            <td class="p-3">{{ app.address }}</td>
+                            <td class="p-3 text-right">
+                                <button @click="approveApplicant(app)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded text-xs font-bold">
+                                    Accept & Assign Code
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- APPROVED CLIENTS LIST -->
+            <div v-if="empTab === 'approved'" class="bg-white rounded-b-xl shadow overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase text-slate-500">
+                        <tr>
+                            <th class="p-3">Client Code</th>
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Phone & Call</th>
+                            <th class="p-3">Job Role</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr v-for="cl in approvedClients" :key="cl.code">
+                            <td class="p-3 font-bold font-mono text-indigo-600">{{ cl.code }}</td>
+                            <td class="p-3 font-semibold">{{ cl.name }}</td>
+                            <td class="p-3 font-mono">
+                                {{ cl.phone }}
+                                <a :href="'tel:' + cl.phone" class="ml-2 bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-phone"></i> Call Client</a>
+                            </td>
+                            <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">{{ cl.jobRole }}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- CAMPAIGN PARTICIPANTS TRACKING LIST -->
+            <div v-if="empTab === 'clicks'" class="bg-white rounded-b-xl shadow overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase text-slate-500">
+                        <tr>
+                            <th class="p-3">Campaign Name</th>
+                            <th class="p-3">Client Name</th>
+                            <th class="p-3">Client Code</th>
+                            <th class="p-3">Call Client</th>
+                            <th class="p-3">Clicked Time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr v-for="clk in campaignClicks" :key="clk.id">
+                            <td class="p-3 font-bold text-indigo-900">{{ clk.campaignName }}</td>
+                            <td class="p-3 font-semibold">{{ clk.clientName }}</td>
+                            <td class="p-3 font-mono font-bold">{{ clk.clientCode }}</td>
+                            <td class="p-3">
+                                <a :href="'tel:' + clk.clientPhone" class="bg-emerald-600 text-white px-2.5 py-1 rounded font-bold text-xs"><i class="fa-solid fa-phone"></i> Call Participant</a>
+                            </td>
+                            <td class="p-3 text-slate-400 font-mono">{{ clk.time }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. ADMIN DASHBOARD -->
+        <section v-if="currentView === 'admin_dash'" class="space-y-6">
+            <div class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
+                <div>
+                    <h2 class="font-bold text-lg">Admin Control Dashboard</h2>
+                    <p class="text-xs text-slate-500">Campaigns, Employees with Photo & Full Controls</p>
+                </div>
+                <button @click="exportCSV" class="bg-emerald-600 text-white px-3 py-1.5 rounded text-xs font-bold"><i class="fa-solid fa-file-excel mr-1"></i> Export Data</button>
+            </div>
+
+            <!-- ADMIN TABS -->
+            <div class="flex border-b text-xs font-bold bg-white rounded-t-xl px-4 pt-2">
+                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400'" class="pb-2 px-4">Campaign Links Directory</button>
+                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400'" class="pb-2 px-4">Manage Employees (With Photo)</button>
+                <button @click="adminTab = 'applicants'" :class="adminTab === 'applicants' ? 'border-b-2 border-indigo-600 text-indigo-600' : 'text-slate-400'" class="pb-2 px-4">Job Applicants Approval</button>
+            </div>
+
+            <!-- ADMIN CAMPAIGN DIRECTORY -->
+            <div v-if="adminTab === 'campaigns'" class="space-y-4 bg-white p-4 rounded-b-xl shadow">
+                <form @submit.prevent="addCampaign" class="grid grid-cols-1 md:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-lg border">
+                    <input v-model="newCampaign.name" placeholder="Campaign Name" required class="px-3 py-1.5 border rounded text-xs">
+                    <input v-model="newCampaign.link" placeholder="Campaign Link (URL)" required class="px-3 py-1.5 border rounded text-xs">
+                    <button type="submit" class="bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold">Add Central Campaign Link</button>
+                </form>
+
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase">
+                        <tr>
+                            <th class="p-2">Name</th>
+                            <th class="p-2">Link</th>
+                            <th class="p-2 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr v-for="(c, idx) in campaigns" :key="c.id">
+                            <td class="p-2 font-bold">{{ c.name }}</td>
+                            <td class="p-2 font-mono text-indigo-600 truncate max-w-xs">{{ c.link }}</td>
+                            <td class="p-2 text-right">
+                                <button @click="deleteCampaign(idx)" class="text-red-500 font-bold"><i class="fa-solid fa-trash"></i> Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ADMIN EMPLOYEE MANAGEMENT (WITH PHOTO) -->
+            <div v-if="adminTab === 'employees'" class="space-y-4 bg-white p-4 rounded-b-xl shadow">
+                <form @submit.prevent="addEmployee" class="grid grid-cols-1 md:grid-cols-3 gap-2 bg-slate-50 p-3 rounded-lg border">
+                    <input v-model="newEmployee.name" placeholder="Employee Name" required class="px-3 py-1.5 border rounded text-xs">
+                    <input v-model="newEmployee.photo" placeholder="Photo URL (e.g. https://...)" class="px-3 py-1.5 border rounded text-xs">
+                    <button type="submit" class="bg-slate-800 text-white px-3 py-1.5 rounded text-xs font-bold">Add Employee Code</button>
+                </form>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div v-for="emp in employees" :key="emp.code" class="p-3 border rounded-xl flex items-center space-x-3 bg-slate-50">
+                        <img :src="emp.photo || 'https://via.placeholder.com/50'" class="w-12 h-12 rounded-full object-cover border">
+                        <div class="flex-grow">
+                            <p class="font-bold text-xs">{{ emp.name }}</p>
+                            <p class="text-xs font-mono font-bold text-indigo-600">{{ emp.code }}</p>
+                        </div>
+                        <button @click="deleteEmployee(emp.code)" class="text-red-500 text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADMIN APPLICANTS APPROVAL -->
+            <div v-if="adminTab === 'applicants'" class="bg-white p-4 rounded-b-xl shadow overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-100 uppercase">
+                        <tr>
+                            <th class="p-2">Name</th>
+                            <th class="p-2">Phone</th>
+                            <th class="p-2">Job Role</th>
+                            <th class="p-2">Status</th>
+                            <th class="p-2 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr v-for="app in applicants" :key="app.id">
+                            <td class="p-2 font-bold">{{ app.name }}</td>
+                            <td class="p-2 font-mono">{{ app.phone }}</td>
+                            <td class="p-2">{{ app.jobRole }}</td>
+                            <td class="p-2">
+                                <span :class="app.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" class="px-2 py-0.5 rounded font-bold">
+                                    {{ app.status }} {{ app.clientCode ? '('+app.clientCode+')' : '' }}
+                                </span>
+                            </td>
+                            <td class="p-2 text-right">
+                                <button v-if="app.status === 'Pending'" @click="approveApplicant(app)" class="bg-emerald-600 text-white px-2 py-1 rounded font-bold mr-1">Approve</button>
+                                <button @click="deleteApplicant(app.id)" class="text-red-500 font-bold"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+    data() {
+        return {
+            currentView: 'job_form',
+            loginType: 'client',
+            empTab: 'pending',
+            adminTab: 'campaigns',
+            searchQuery: '',
+            currentUser: null,
+            loginError: '',
+            submittedSuccess: false,
+
+            loginInput: { code: '', name: '', password: '' },
+            jobForm: { name: '', phone: '', workType: '', jobRole: '', address: '' },
+            newCampaign: { name: '', link: '' },
+            newEmployee: { name: '', photo: '' },
+
+            // Centralized Campaigns List (Managed strictly by Admin)
+            campaigns: JSON.parse(localStorage.getItem('vcr_campaigns')) || [
+                { id: 1, name: 'Diwali Special Referral Offer', link: 'https://vedcapital.com/diwali-campaign' },
+                { name: 'Rewa Local Jobs Campaign', link: 'https://vedcapital.com/rewa-jobs' }
+            ],
+
+            // Applicants / Clients Data (Approval System)
+            applicants: JSON.parse(localStorage.getItem('vcr_applicants')) || [
+                { id: 101, name: 'Ramesh Kumar', phone: '9876543210', workType: 'Full-time Job', jobRole: 'Telecalling Job', address: 'Rewa', status: 'Approved', clientCode: 'CLI-0101' },
+                { id: 102, name: 'Pooja Verma', phone: '9123456789', workType: 'Work At Home Job', jobRole: 'Data Entry Job', address: 'Rewa', status: 'Pending', clientCode: '' }
+            ],
+
+            // Employee Directory (Managed by Admin with Photo)
+            employees: JSON.parse(localStorage.getItem('vcr_employees')) || [
+                { code: 'EMP-0001', name: 'Suresh Sharma', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100' }
+            ],
+
+            // Campaign Click Tracking
+            campaignClicks: JSON.parse(localStorage.getItem('vcr_clicks')) || []
+        }
+    },
+    watch: {
+        campaigns: { handler(val) { localStorage.setItem('vcr_campaigns', JSON.stringify(val)); }, deep: true },
+        applicants: { handler(val) { localStorage.setItem('vcr_applicants', JSON.stringify(val)); }, deep: true },
+        employees: { handler(val) { localStorage.setItem('vcr_employees', JSON.stringify(val)); }, deep: true },
+        campaignClicks: { handler(val) { localStorage.setItem('vcr_clicks', JSON.stringify(val)); }, deep: true }
+    },
+    computed: {
+        pendingApplicants() {
+            return this.applicants.filter(a => a.status === 'Pending');
+        },
+        approvedClients() {
+            return this.applicants.filter(a => a.status === 'Approved').map(a => ({
+                code: a.clientCode,
+                name: a.name,
+                phone: a.phone,
+                jobRole: a.jobRole,
+                workType: a.workType
+            }));
+        }
+    },
+    methods: {
+        submitJobForm() {
+            const newApp = {
+                id: Date.now(),
+                name: this.jobForm.name,
+                phone: this.jobForm.phone,
+                workType: this.jobForm.workType,
+                jobRole: this.jobForm.jobRole,
+                address: this.jobForm.address,
+                status: 'Pending',
+                clientCode: ''
+            };
+            this.applicants.push(newApp);
+            this.submittedSuccess = true;
+            this.jobForm = { name: '', phone: '', workType: '', jobRole: '', address: '' };
+        },
+
+        approveApplicant(app) {
+            const nextNum = String(this.applicants.filter(a => a.clientCode).length + 101).padStart(4, '0');
+            app.clientCode = `CLI-${nextNum}`;
+            app.status = 'Approved';
+            alert(`Approved! Client Code generated: ${app.clientCode}`);
+        },
+
+        handleClientLogin() {
+            this.loginError = '';
+            const found = this.applicants.find(a => 
+                a.status === 'Approved' &&
+                a.clientCode.trim().toUpperCase() === this.loginInput.code.trim().toUpperCase() &&
+                a.name.trim().toLowerCase() === this.loginInput.name.trim().toLowerCase()
+            );
+            if (found) {
+                this.currentUser = { ...found, code: found.clientCode, role: 'client' };
+                this.currentView = 'client_dash';
+            } else {
+                this.loginError = 'Invalid Client Code or Name. Form pending approval par bhi ho sakta hai.';
+            }
+        },
+
+        handleEmployeeLogin() {
+            this.loginError = '';
+            const emp = this.employees.find(e => e.code.trim().toUpperCase() === this.loginInput.code.trim().toUpperCase());
+            if (emp) {
+                this.currentUser = { ...emp, role: 'employee' };
+                this.currentView = 'emp_dash';
+            } else {
+                this.loginError = 'Invalid Employee Code!';
+            }
+        },
+
+        handleAdminLogin() {
+            this.loginError = '';
+            if (this.loginInput.password === 'Bhola@3307') {
+                this.currentUser = { name: 'Bhola (Admin)', role: 'admin' };
+                this.currentView = 'admin_dash';
+            } else {
+                this.loginError = 'Wrong Admin Password!';
+            }
+        },
+
+        trackCampaignClick(campaign) {
+            if (this.currentUser && this.currentUser.role === 'client') {
+                this.campaignClicks.unshift({
+                    id: Date.now(),
+                    campaignName: campaign.name,
+                    clientName: this.currentUser.name,
+                    clientCode: this.currentUser.code,
+                    clientPhone: this.currentUser.phone,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+            }
+        },
+
+        addCampaign() {
+            this.campaigns.push({ id: Date.now(), ...this.newCampaign });
+            this.newCampaign = { name: '', link: '' };
+        },
+        deleteCampaign(index) {
+            this.campaigns.splice(index, 1);
+        },
+        addEmployee() {
+            const code = `EMP-${String(this.employees.length + 1).padStart(4, '0')}`;
+            this.employees.push({ code: code, name: this.newEmployee.name, photo: this.newEmployee.photo });
+            this.newEmployee = { name: '', photo: '' };
+        },
+        deleteEmployee(code) {
+            this.employees = this.employees.filter(e => e.code !== code);
+        },
+        deleteApplicant(id) {
+            this.applicants = this.applicants.filter(a => a.id !== id);
+        },
+        logout() {
+            this.currentUser = null;
+            this.currentView = 'job_form';
+            this.loginInput = { code: '', name: '', password: '' };
+        },
+        exportCSV() {
+            let csv = "data:text/csv;charset=utf-8,Code,Name,Phone,JobRole,Status\n";
+            this.applicants.forEach(a => { csv += `${a.clientCode || 'PENDING'},${a.name},${a.phone},${a.jobRole},${a.status}\n`; });
+            const link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csv));
+            link.setAttribute("download", "VCR_Data.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
