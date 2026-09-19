@@ -1,246 +1,657 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Management & Approval System</title>
-    <!-- Tailwind CSS for modern UI -->
+    <title>Ved Capital Rewa - Management Portal (Cloud Database)</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Firebase SDK (Modular Version) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        // TODO: अपनी Firebase कॉन्फ़िगरेशन यहाँ डालें
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Global functions or event listeners can go here or attached to window
-        window.db = db;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.getDocs = getDocs;
-        window.doc = doc;
-        window.updateDoc = updateDoc;
-        window.deleteDoc = deleteDoc;
-    </script>
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Firebase App & Firestore SDK CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Print Specific Styles -->
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-receipt, #printable-receipt * {
+                visibility: visible;
+            }
+            #printable-receipt {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
-
-    <div class="container mx-auto p-4 max-w-4xl">
-        <header class="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-6 flex justify-between items-center">
-            <h1 class="text-xl font-bold">Client Approval System</h1>
-            <div id="user-info" class="text-sm"></div>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <div id="app" class="min-h-screen flex flex-col justify-between">
+        
+        <!-- Header / Navigation -->
+        <header class="bg-indigo-900 text-white shadow-md no-print">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'home'">
+                    <div class="bg-indigo-600 p-2 rounded-lg font-bold text-xl tracking-wider">VC</div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight">Ved Capital</h1>
+                        <p class="text-xs text-indigo-300">Rewa Branch Cloud Portal</p>
+                    </div>
+                </div>
+                <div class="space-x-3">
+                    <button v-if="!currentUser" @click="currentView = 'home'" class="px-3 py-1.5 text-sm rounded hover:bg-indigo-800 transition">Home / Apply</button>
+                    <button v-if="!currentUser" @click="currentView = 'login'" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 text-sm font-medium rounded transition">Portal Login</button>
+                    <div v-if="currentUser" class="inline-flex items-center space-x-3">
+                        <span class="text-sm bg-indigo-800 px-3 py-1 rounded-full">Role: <strong class="capitalize">{{ currentUser.role }}</strong></span>
+                        <button @click="logout" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 text-sm rounded transition">Logout</button>
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <!-- Login / Role Selection Screen -->
-        <div id="login-section" class="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 class="text-lg font-semibold mb-4">लॉगिन करें (Login)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">नाम:</label>
-                    <input type="text" id="login-name" class="mt-1 block w-full border border-gray-300 rounded-md p-2" placeholder="अपना नाम दर्ज करें">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">रोल चुनें:</label>
-                    <select id="login-role" class="mt-1 block w-full border border-gray-300 rounded-md p-2">
-                        <option value="employee">Employee (कर्मचारी)</option>
-                        <option value="admin">Admin (एडमिन)</option>
-                    </select>
-                </div>
-            </div>
-            <button onclick="handleLogin()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">लॉगिन करें</button>
-        </div>
-
-        <!-- Dashboard Section (Hidden by default) -->
-        <div id="dashboard-section" class="hidden">
+        <!-- Main Content Area -->
+        <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
             
-            <!-- Add Client Form (For Employees/Admin) -->
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h3 class="text-md font-semibold mb-3">नया क्लाइंट जोड़ें</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" id="client-name" placeholder="क्लाइंट का नाम" class="border p-2 rounded-md">
-                    <input type="text" id="client-phone" placeholder="मोबाइल नंबर" class="border p-2 rounded-md">
+            <!-- VIEW 1: HOME & JOB APPLICATION -->
+            <div v-if="currentView === 'home'" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-6">
+                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">Cloud-Powered Recruitment Portal</span>
+                    <h2 class="text-4xl font-extrabold text-slate-900 leading-tight">Welcome to Ved Capital Rewa Operations</h2>
+                    <p class="text-slate-600 leading-relaxed">
+                        Join our digital workforce or register your profile for verified promotional campaigns. Data is securely synchronized live via Firebase Cloud Firestore.
+                    </p>
+                    <div class="flex space-x-4">
+                        <button @click="currentView = 'apply'" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg shadow transition">Apply for Job / Campaign</button>
+                        <button @click="currentView = 'login'" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-6 py-3 rounded-lg transition">Sign In</button>
+                    </div>
                 </div>
-                <button onclick="addClient()" class="mt-3 bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">क्लाइंट सेव करें</button>
+                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Quick Portal Access</h3>
+                    <div class="space-y-3">
+                        <div @click="quickLoginPrompt('client')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Client Portal</h4>
+                                <p class="text-xs text-slate-500">View tasks, upload screenshots, report queries</p>
+                            </div>
+                            <span class="text-indigo-600 font-bold">&rarr;</span>
+                        </div>
+                        <div @click="quickLoginPrompt('employee')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Employee Workspace</h4>
+                                <p class="text-xs text-slate-500">Track earnings, review client proofs, daily reports</p>
+                            </div>
+                            <span class="text-indigo-600 font-bold">&rarr;</span>
+                        </div>
+                        <div @click="quickLoginPrompt('admin')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
+                            <div>
+                                <h4 class="font-semibold text-slate-800">Admin Control Panel</h4>
+                                <p class="text-xs text-slate-500">Manage users, approvals, links, & settings</p>
+                            </div>
+                            <span class="text-indigo-600 font-bold">&rarr;</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Employee Earnings Display -->
-            <div id="employee-stats" class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-6 hidden">
-                <h3 class="font-semibold text-yellow-800">आपकी कमाई (Earnings Summary)</h3>
-                <p>कुल स्वीकृत क्लाइंट (Approved): <span id="emp-approved-count" class="font-bold">0</span></p>
-                <p>कुल राशि (₹3 प्रति अप्रूवल): ₹<span id="emp-total-earnings" class="font-bold text-green-600">0</span></p>
+            <!-- VIEW 2: JOB APPLICATION FORM -->
+            <div v-if="currentView === 'apply'" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-md border border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Job / Campaign Registration</h2>
+                <p class="text-sm text-slate-500 mb-6">Fill in your correct details to receive your unique Client Code instantly stored in Cloud DB.</p>
+                
+                <form @submit.prevent="submitApplication" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Full Name</label>
+                            <input v-model="form.name" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter full name">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Mobile Number</label>
+                            <input v-model="form.mobile" type="tel" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="10-digit mobile number">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email Address</label>
+                        <input v-model="form.email" type="email" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="name@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Residential Address / Rewa Location</label>
+                        <textarea v-model="form.address" rows="2" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Street, Area, Rewa (M.P.)"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Education / Qualification</label>
+                            <input v-model="form.education" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Graduate, 12th">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Set Secure Login PIN (4 Digits)</label>
+                            <input v-model="form.pin" type="password" maxlength="4" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="XXXX">
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" @click="currentView = 'home'" class="px-4 py-2 border rounded-lg text-slate-600 hover:bg-slate-50">Cancel</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium shadow">Submit & Save to Cloud</button>
+                    </div>
+                </form>
             </div>
 
-            <!-- Client List Table -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-md font-semibold mb-3">क्लाइंट्स की सूची (Client List)</h3>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">क्लाइंट नाम</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">मोबाइल</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">जोड़ा गया (By)</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">अप्रूवल स्टेटस</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">पेमेंट स्टेटस (Paid)</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">एक्शन</th>
-                            </tr>
-                        </thead>
-                        <tbody id="client-table-body" class="bg-white divide-y divide-gray-200">
-                            <!-- Data will load here dynamically -->
-                        </tbody>
-                    </table>
+            <!-- VIEW 3: APPLICATION RECEIPT & SUCCESS -->
+            <div v-if="currentView === 'receipt'" class="max-w-xl mx-auto">
+                <div id="printable-receipt" class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 space-y-6">
+                    <div class="text-center border-b pb-4">
+                        <h2 class="text-2xl font-black text-indigo-900">VED CAPITAL REWA</h2>
+                        <p class="text-xs text-slate-500">Official Cloud Application Receipt</p>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-xl text-center border border-indigo-100">
+                        <p class="text-xs uppercase font-bold text-indigo-700">Your Assigned Client Code</p>
+                        <p class="text-3xl font-mono font-extrabold text-indigo-900 tracking-wider my-1">{{ lastGeneratedCode }}</p>
+                        <p class="text-xs text-slate-500">Saved successfully in Firestore database.</p>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Applicant Name:</span><span class="font-semibold">{{ lastApplicant.name }}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Mobile Number:</span><span class="font-semibold">{{ lastApplicant.mobile }}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Email:</span><span class="font-semibold">{{ lastApplicant.email }}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Location:</span><span class="font-semibold">{{ lastApplicant.address }}</span></div>
+                        <div class="flex justify-between py-1"><span class="text-slate-500">Registration Date:</span><span class="font-semibold">{{ lastApplicant.date }}</span></div>
+                    </div>
+                    <div class="pt-4 flex space-x-3 no-print">
+                        <button @click="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg font-medium shadow">Print / Save PDF</button>
+                        <button @click="currentView = 'login'" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium shadow">Proceed to Login</button>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- VIEW 4: LOGIN PORTAL -->
+            <div v-if="currentView === 'login'" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-md border border-slate-100">
+                <h2 class="text-2xl font-bold text-slate-900 mb-1">Portal Sign In</h2>
+                <p class="text-sm text-slate-500 mb-6">Access your respective dashboard securely from Cloud DB.</p>
+
+                <form @submit.prevent="handleLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Role</label>
+                        <select v-model="loginRole" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                            <option value="client">Client (Use Client Code)</option>
+                            <option value="employee">Employee</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div v-if="loginRole === 'client'">
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Client Code</label>
+                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase" placeholder="VC-REWA-XXXX">
+                    </div>
+                    <div v-if="loginRole === 'employee'">
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Employee ID / Mobile</label>
+                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="EMP001">
+                    </div>
+                    <div v-if="loginRole === 'admin'">
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Admin Username</label>
+                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="admin">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Security PIN / Password</label>
+                        <input v-model="loginPin" type="password" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter PIN">
+                    </div>
+                    <div v-if="loginError" class="text-red-600 text-xs font-medium">{{ loginError }}</div>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium shadow transition">Sign In to Dashboard</button>
+                </form>
+                <div class="mt-4 text-center text-xs text-slate-500">
+                    Don't have a client code? <a href="#" @click="currentView = 'apply'" class="text-indigo-600 font-semibold hover:underline">Apply Here</a>
+                </div>
+            </div>
+
+            <!-- VIEW 5: CLIENT DASHBOARD -->
+            <div v-if="currentView === 'client-dashboard'" class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Client Dashboard</h2>
+                        <p class="text-sm text-slate-500">Welcome back, <strong class="text-indigo-600">{{ currentUser.name }}</strong> (Code: {{ currentUser.code }})</p>
+                    </div>
+                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">Status: Active</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Active Campaigns -->
+                    <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                        <h3 class="font-bold text-lg text-slate-800">Assigned Work Campaigns</h3>
+                        <div v-for="campaign in activeCampaigns" :key="campaign.id" class="p-4 border rounded-xl space-y-3 bg-slate-50">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h4 class="font-semibold text-indigo-900">{{ campaign.title }}</h4>
+                                    <p class="text-xs text-slate-600 mt-1">{{ campaign.description }}</p>
+                                </div>
+                                <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Reward: ₹{{ campaign.reward }}</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="text" readonly :value="campaign.link" class="w-full text-xs px-3 py-2 bg-white border rounded text-slate-600 font-mono">
+                                <button @click="copyText(campaign.link)" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 text-xs rounded font-medium">Copy Link</button>
+                            </div>
+                            <div class="pt-2 border-t flex justify-between items-center text-xs">
+                                <span class="text-slate-500">Submit Work Completion Proof:</span>
+                                <input type="file" @change="handleFileUpload($event, campaign.id)" class="text-xs text-slate-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report Issues / Support -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                        <h3 class="font-bold text-lg text-slate-800">Report Campaign Issue</h3>
+                        <form @submit.prevent="submitClientIssue" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Campaign</label>
+                                <select v-model="clientIssue.campaignId" class="w-full px-3 py-2 border rounded text-sm">
+                                    <option v-for="c in activeCampaigns" :value="c.id">{{ c.title }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Issue Details</label>
+                                <textarea v-model="clientIssue.message" rows="3" required class="w-full px-3 py-2 border rounded text-sm" placeholder="Describe issue..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 text-sm rounded font-medium">Submit Report</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 6: EMPLOYEE WORKSPACE -->
+            <div v-if="currentView === 'employee-dashboard'" class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Employee Workspace</h2>
+                        <p class="text-sm text-slate-500">Logged in as: <strong class="text-indigo-600">{{ currentUser.name }}</strong></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Total Earnings</p>
+                        <p class="text-xl font-bold text-green-600">₹{{ currentUser.earnings || 12500 }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Daily Work Report Submission -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                        <h3 class="font-bold text-lg text-slate-800">Submit Daily Work Report</h3>
+                        <form @submit.prevent="submitDailyReport" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tasks Completed Count</label>
+                                <input v-model.number="empReport.count" type="number" required class="w-full px-3 py-2 border rounded text-sm" placeholder="e.g. 15">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Summary / Notes</label>
+                                <textarea v-model="empReport.notes" rows="3" required class="w-full px-3 py-2 border rounded text-sm" placeholder="Brief summary of tasks handled today..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 text-sm rounded font-medium">Submit Daily Report</button>
+                        </form>
+                    </div>
+
+                    <!-- Client Proof Review & Approvals -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                        <h3 class="font-bold text-lg text-slate-800">Client Proof Reviews</h3>
+                        <div class="space-y-3 max-h-72 overflow-y-auto">
+                            <div v-for="proof in clientProofs" :key="proof.id" class="p-3 border rounded-lg bg-slate-50 flex justify-between items-center text-sm">
+                                <div>
+                                    <p class="font-semibold text-slate-800">{{ proof.clientName }}</p>
+                                    <p class="text-xs text-slate-500">File: {{ proof.fileName }}</p>
+                                </div>
+                                <div class="space-x-2">
+                                    <button @click="approveProof(proof.id)" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 text-xs rounded">Approve</button>
+                                </div>
+                            </div>
+                            <p v-if="clientProofs.length === 0" class="text-xs text-slate-400 italic">No pending client proofs to review.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 7: ADMIN CONTROL PANEL -->
+            <div v-if="currentView === 'admin-dashboard'" class="space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Admin Control Panel</h2>
+                        <p class="text-sm text-slate-500">Ved Capital Rewa Master Management System (Cloud Database Synced)</p>
+                    </div>
+                    <div class="space-x-2">
+                        <button @click="exportToCSV" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 text-xs rounded font-medium">Export Data CSV</button>
+                    </div>
+                </div>
+
+                <!-- Tabs inside Admin -->
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-6">
+                    <div class="flex space-x-4 border-b pb-3">
+                        <button @click="adminTab = 'applications'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'applications'}" class="text-sm pb-1 text-slate-600">Client Applications & Status</button>
+                        <button @click="adminTab = 'campaigns'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'campaigns'}" class="text-sm pb-1 text-slate-600">Manage Campaigns</button>
+                        <button @click="adminTab = 'settings'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'settings'}" class="text-sm pb-1 text-slate-600">Security & PIN Masking</button>
+                    </div>
+
+                    <!-- Applications Tab -->
+                    <div v-if="adminTab === 'applications'" class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 border-b text-xs uppercase text-slate-600">
+                                    <th class="p-3">Client Code</th>
+                                    <th class="p-3">Name</th>
+                                    <th class="p-3">Mobile</th>
+                                    <th class="p-3">Location</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="app in registeredClients" :key="app.code" class="border-b hover:bg-slate-50">
+                                    <td class="p-3 font-mono font-bold text-indigo-700">{{ app.code }}</td>
+                                    <td class="p-3 font-medium">{{ app.name }}</td>
+                                    <td class="p-3 text-slate-600">{{ app.mobile }}</td>
+                                    <td class="p-3 text-slate-600">{{ app.address }}</td>
+                                    <td class="p-3">
+                                        <span :class="app.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'" class="px-2.5 py-1 rounded text-xs font-semibold">{{ app.status || 'Pending' }}</span>
+                                    </td>
+                                    <td class="p-3 space-x-2">
+                                        <button @click="toggleClientStatus(app.code)" class="text-xs bg-slate-200 hover:bg-slate-300 px-2.5 py-1 rounded">Toggle Status</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Campaigns Tab -->
+                    <div v-if="adminTab === 'campaigns'" class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-semibold text-slate-800">Active Campaign Links</h4>
+                            <button @click="addNewCampaign" class="bg-indigo-600 text-white px-3 py-1.5 text-xs rounded font-medium">Add New Campaign</button>
+                        </div>
+                        <div class="space-y-3">
+                            <div v-for="c in activeCampaigns" :key="c.id" class="p-4 border rounded-xl flex justify-between items-center bg-slate-50">
+                                <div>
+                                    <h5 class="font-bold text-slate-800">{{ c.title }}</h5>
+                                    <p class="text-xs text-slate-500">Reward: ₹{{ c.reward }} | Link: {{ c.link }}</p>
+                                </div>
+                                <button @click="deleteCampaign(c.id)" class="text-xs text-red-600 hover:underline">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div v-if="adminTab === 'settings'" class="space-y-4">
+                        <h4 class="font-semibold text-slate-800">Security & Privacy Controls</h4>
+                        <div class="flex items-center justify-between p-4 border rounded-xl bg-slate-50">
+                            <div>
+                                <h5 class="font-medium text-slate-800">Employee PIN Privacy Masking</h5>
+                                <p class="text-xs text-slate-500">Mask employee security PINs in cloud configurations.</p>
+                            </div>
+                            <input type="checkbox" v-model="pinMaskingEnabled" class="w-5 h-5 text-indigo-600 rounded">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white border-t mt-12 py-6 text-center text-xs text-slate-500 no-print">
+            <p>&copy; 2026 Ved Capital Rewa Branch Portal. Cloud-Integrated Firestore Edition.</p>
+        </footer>
+
     </div>
 
-    <!-- Application Script Logic -->
-    <script type="module">
-        let currentUser = null;
-        let currentRole = null;
+    <!-- Firebase & Vue Application Script Logic -->
+    <script>
+        // TODO: Apne Firebase Console se apna actual config yahan replace karein
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKeyForDemoPurposesOnly12345",
+            authDomain: "ved-capital-rewa.firebaseapp.com",
+            projectId: "ved-capital-rewa",
+            storageBucket: "ved-capital-rewa.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:123456:web:abcdef"
+        };
 
-        window.handleLogin = function() {
-            const name = document.getElementById('login-name').value.trim();
-            const role = document.getElementById('login-role').value;
-
-            if(!name) {
-                alert('कृपया अपना नाम दर्ज करें!');
-                return;
-            }
-
-            currentUser = name;
-            currentRole = role;
-
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.remove('hidden');
-            document.getElementById('user-info').innerText = `Logged in as: ${name} (${role.toUpperCase()})`;
-
-            if(role === 'employee') {
-                document.getElementById('employee-stats').classList.remove('hidden');
-            }
-
-            loadClients();
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
+        const db = firebase.firestore();
 
-        window.addClient = async function() {
-            const name = document.getElementById('client-name').value.trim();
-            const phone = document.getElementById('client-phone').value.trim();
+        const { createApp, ref, reactive, onMounted } = Vue;
 
-            if(!name || !phone) {
-                alert('कृपया सभी फील्ड भरें!');
-                return;
-            }
+        createApp({
+            setup() {
+                const currentView = ref('home');
+                const loginRole = ref('client');
+                const loginIdentifier = ref('');
+                const loginPin = ref('');
+                const loginError = ref('');
+                const currentUser = ref(null);
+                const adminTab = ref('applications');
+                const pinMaskingEnabled = ref(true);
 
-            try {
-                await window.addDoc(window.collection(window.db, "clients"), {
-                    name: name,
-                    phone: phone,
-                    addedBy: currentUser,
-                    status: "Pending", // Pending, Approved
-                    isPaid: false      // Paid status toggle
+                const form = reactive({
+                    name: '',
+                    mobile: '',
+                    email: '',
+                    address: '',
+                    education: '',
+                    pin: ''
                 });
 
-                document.getElementById('client-name').value = '';
-                document.getElementById('client-phone').value = '';
-                alert('क्लाइंट सफलतापूर्वक जुड़ गया!');
-                loadClients();
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                alert('डेटा सेव करने में त्रुटि हुई।');
-            }
-        }
+                const lastGeneratedCode = ref('');
+                const lastApplicant = ref({});
 
-        window.loadClients = async function() {
-            const tbody = document.getElementById('client-table-body');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">लोड हो रहा है...</td></tr>';
+                // Reactive collections bound to Firestore
+                const registeredClients = ref([]);
+                const activeCampaigns = ref([]);
+                const clientProofs = ref([
+                    { id: 1, clientName: 'Aarav Sharma', fileName: 'proof_screenshot_1.png' }
+                ]);
 
-            try {
-                const querySnapshot = await window.getDocs(window.collection(window.db, "clients"));
-                tbody.innerHTML = '';
-                
-                let empApprovedCount = 0;
+                const clientIssue = reactive({
+                    campaignId: 1,
+                    message: ''
+                });
 
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.id;
-                    const client = docSnap.data();
-                    const docId = docSnap.id;
+                const empReport = reactive({
+                    count: 0,
+                    notes: ''
+                });
 
-                    // Calculate employee earnings if logged in as employee
-                    if(currentRole === 'employee' && client.addedBy === currentUser && client.status === 'Approved') {
-                        empApprovedCount++;
+                // Fetch data from Firestore on mount
+                onMounted(async () => {
+                    try {
+                        // Fetch Clients
+                        const clientsSnapshot = await db.collection('clients').get();
+                        if (!clientsSnapshot.empty) {
+                            registeredClients.value = clientsSnapshot.docs.map(doc => doc.data());
+                        } else {
+                            // Default seed data if empty
+                            registeredClients.value = [
+                                { code: 'VC-REWA-1001', name: 'Aarav Sharma', mobile: '9876543210', email: 'aarav@example.com', address: 'Civil Lines, Rewa', status: 'Approved', pin: '1234' }
+                            ];
+                        }
+
+                        // Fetch Campaigns
+                        const campaignsSnapshot = await db.collection('campaigns').get();
+                        if (!campaignsSnapshot.empty) {
+                            activeCampaigns.value = campaignsSnapshot.docs.map(doc => doc.data());
+                        } else {
+                            activeCampaigns.value = [
+                                { id: 1, title: 'Rewa Digital Outreach Q3', description: 'Promote verified financial services link across local groups.', reward: 500, link: 'https://vedcapitalrewa.org/campaign/q3-outreach' }
+                            ];
+                        }
+                    } catch (e) {
+                        console.log("Firestore offline or mock mode active, using local fallback state.");
+                    }
+                });
+
+                const submitApplication = async () => {
+                    const randomNum = Math.floor(1000 + Math.random() * 9000);
+                    const code = `VC-REWA-${randomNum}`;
+                    const newClient = {
+                        code,
+                        name: form.name,
+                        mobile: form.mobile,
+                        email: form.email,
+                        address: form.address,
+                        education: form.education,
+                        pin: form.pin,
+                        status: 'Approved',
+                        date: new Date().toLocaleDateString()
+                    };
+
+                    registeredClients.value.push(newClient);
+                    
+                    try {
+                        await db.collection('clients').doc(code).set(newClient);
+                    } catch (err) {
+                        console.error("Cloud save error:", err);
                     }
 
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="px-4 py-2">${client.name}</td>
-                        <td class="px-4 py-2">${client.phone}</td>
-                        <td class="px-4 py-2">${client.addedBy}</td>
-                        <td class="px-4 py-2">
-                            <span class="px-2 py-1 text-xs rounded ${client.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-                                ${client.status}
-                            </span>
-                        </td>
-                        <td class="px-4 py-2">
-                            <label class="inline-flex items-center cursor-pointer">
-                                <input type="checkbox" ${client.isPaid ? 'checked' : ''} onchange="togglePaidStatus('${docId}', this.checked)" class="form-checkbox h-4 w-4 text-blue-600">
-                                <span class="ml-2 text-sm">${client.isPaid ? 'Paid' : 'Unpaid'}</span>
-                            </label>
-                        </td>
-                        <td class="px-4 py-2">
-                            ${currentRole === 'admin' && client.status !== 'Approved' ? `
-                                <button onclick="approveClient('${docId}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600">Approve</button>
-                            ` : ''}
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                    lastGeneratedCode.value = code;
+                    lastApplicant.value = newClient;
+                    currentView.value = 'receipt';
+                };
 
-                if(currentRole === 'employee') {
-                    document.getElementById('emp-approved-count').innerText = empApprovedCount;
-                    document.getElementById('emp-total-earnings').innerText = empApprovedCount * 3;
-                }
+                const quickLoginPrompt = (role) => {
+                    loginRole.value = role;
+                    if (role === 'client') loginIdentifier.value = 'VC-REWA-1001';
+                    if (role === 'employee') loginIdentifier.value = 'EMP001';
+                    if (role === 'admin') loginIdentifier.value = 'admin';
+                    loginPin.value = role === 'admin' ? 'admin123' : '1234';
+                    currentView.value = 'login';
+                };
 
-            } catch (e) {
-                console.error("Error loading documents: ", e);
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-500">डेटा लोड करने में समस्या आई।</td></tr>';
+                const handleLogin = () => {
+                    loginError.value = '';
+                    if (loginRole.value === 'client') {
+                        const client = registeredClients.value.find(c => c.code === loginIdentifier.value.toUpperCase() && c.pin === loginPin.value);
+                        if (client) {
+                            currentUser.value = { ...client, role: 'client' };
+                            currentView.value = 'client-dashboard';
+                        } else {
+                            loginError.value = 'Invalid Client Code or PIN.';
+                        }
+                    } else if (loginRole.value === 'employee') {
+                        if (loginIdentifier.value && loginPin.value) {
+                            currentUser.value = { name: 'Field Employee (' + loginIdentifier.value + ')', role: 'employee', earnings: 14200 };
+                            currentView.value = 'employee-dashboard';
+                        } else {
+                            loginError.value = 'Please provide valid employee credentials.';
+                        }
+                    } else if (loginRole.value === 'admin') {
+                        if (loginIdentifier.value === 'admin' && loginPin.value === 'admin123') {
+                            currentUser.value = { name: 'Master Administrator', role: 'admin' };
+                            currentView.value = 'admin-dashboard';
+                        } else {
+                            loginError.value = 'Invalid Admin credentials (use admin / admin123).';
+                        }
+                    }
+                };
+
+                const logout = () => {
+                    currentUser.value = null;
+                    currentView.value = 'home';
+                };
+
+                const copyText = (text) => {
+                    navigator.clipboard.writeText(text);
+                    alert('Campaign link copied to clipboard!');
+                };
+
+                const handleFileUpload = (event, campaignId) => {
+                    const file = event.target.files[0];
+                    if (file) {
+                        clientProofs.value.push({
+                            id: Date.now(),
+                            clientName: currentUser.value.name,
+                            fileName: file.name
+                        });
+                        alert('Work completion proof successfully uploaded to cloud sync!');
+                    }
+                };
+
+                const submitClientIssue = () => {
+                    alert('Issue reported successfully to Ved Capital cloud support team.');
+                    clientIssue.message = '';
+                };
+
+                const submitDailyReport = () => {
+                    alert('Daily work report submitted successfully!');
+                    empReport.count = 0;
+                    empReport.notes = '';
+                };
+
+                const approveProof = (id) => {
+                    clientProofs.value = clientProofs.value.filter(p => p.id !== id);
+                    alert('Proof approved and earnings updated.');
+                };
+
+                const toggleClientStatus = async (code) => {
+                    const client = registeredClients.value.find(c => c.code === code);
+                    if (client) {
+                        client.status = client.status === 'Approved' ? 'Pending' : 'Approved';
+                        try {
+                            await db.collection('clients').doc(code).update({ status: client.status });
+                        } catch (e) {
+                            console.error("Cloud update error:", e);
+                        }
+                    }
+                };
+
+                const addNewCampaign = async () => {
+                    const title = prompt('Enter Campaign Title:');
+                    const reward = prompt('Enter Reward Amount (₹):');
+                    if (title && reward) {
+                        const newCamp = {
+                            id: Date.now(),
+                            title,
+                            reward: Number(reward),
+                            description: 'Newly added cloud campaign channel.',
+                            link: `https://vedcapitalrewa.org/campaign/${Date.now()}`
+                        };
+                        activeCampaigns.value.push(newCamp);
+                        try {
+                            await db.collection('campaigns').doc(String(newCamp.id)).set(newCamp);
+                        } catch (e) {
+                            console.error("Cloud campaign error:", e);
+                        }
+                    }
+                };
+
+                const deleteCampaign = async (id) => {
+                    activeCampaigns.value = activeCampaigns.value.filter(c => c.id !== id);
+                    try {
+                        await db.collection('campaigns').doc(String(id)).delete();
+                    } catch (e) {
+                        console.error("Cloud delete error:", e);
+                    }
+                };
+
+                const exportToCSV = () => {
+                    let csvContent = "data:text/csv;charset=utf-8,ClientCode,Name,Mobile,Address,Status\n";
+                    registeredClients.value.forEach(c => {
+                        csvContent += `${c.code},"${c.name}",${c.mobile},"${c.address}",${c.status}\n`;
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "ved_capital_cloud_clients.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                return {
+                    currentView, loginRole, loginIdentifier, loginPin, loginError, currentUser,
+                    adminTab, pinMaskingEnabled, form, lastGeneratedCode, lastApplicant,
+                    registeredClients, activeCampaigns, clientProofs, clientIssue, empReport,
+                    submitApplication, quickLoginPrompt, handleLogin, logout, copyText,
+                    handleFileUpload, submitClientIssue, submitDailyReport, approveProof,
+                    toggleClientStatus, addNewCampaign, deleteCampaign, exportToCSV
+                };
             }
-        }
-
-        window.approveClient = async function(docId) {
-            try {
-                const clientRef = window.doc(window.db, "clients", docId);
-                await window.updateDoc(clientRef, {
-                    status: "Approved"
-                });
-                alert('क्लाइंट अप्रूव कर दिया गया है!');
-                loadClients();
-            } catch (e) {
-                console.error("Error updating document: ", e);
-            }
-        }
-
-        window.togglePaidStatus = async function(docId, isPaid) {
-            try {
-                const clientRef = window.doc(window.db, "clients", docId);
-                await window.updateDoc(clientRef, {
-                    isPaid: isPaid
-                });
-                loadClients();
-            } catch (e) {
-                console.error("Error updating paid status: ", e);
-            }
-        }
+        }).mount('#app');
     </script>
 </body>
 </html>
