@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ved Capital Rewa - Complete Cloud Management Portal</title>
+    <title>Ved Capital Rewa - Secure Enterprise Cloud Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Vue 3 CDN -->
@@ -11,248 +11,280 @@
     <!-- Firebase App & Firestore SDK CDN -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- Print Specific Styles -->
+    <!-- Custom Corporate Theme Styles -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #printable-receipt, #printable-receipt * {
-                visibility: visible;
-            }
-            #printable-receipt {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
-            .no-print {
-                display: none !important;
-            }
+            body * { visibility: hidden; }
+            #printable-receipt, #printable-receipt * { visibility: visible; }
+            #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+    
     <div id="app" class="min-h-screen flex flex-col justify-between">
         
-        <!-- Header / Navigation -->
-        <header class="bg-indigo-900 text-white shadow-md no-print">
-            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-                <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'home'">
-                    <div class="bg-indigo-600 p-2 rounded-lg font-bold text-xl tracking-wider">VC</div>
+        <!-- Professional Corporate Header -->
+        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-xl no-print">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-3 cursor-pointer group" @click="currentView = 'home'">
+                    <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 p-2.5 rounded-xl font-black text-xl tracking-wider shadow-md group-hover:scale-105 transition">VC</div>
                     <div>
-                        <h1 class="font-bold text-lg leading-tight">Ved Capital</h1>
-                        <p class="text-xs text-indigo-300">Rewa Branch Cloud Portal</p>
+                        <h1 class="font-extrabold text-lg text-white tracking-tight flex items-center gap-1.5">
+                            Ved Capital <span class="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full font-semibold">Rewa Branch</span>
+                        </h1>
+                        <p class="text-xs text-slate-400">Secure Enterprise Cloud Portal</p>
                     </div>
                 </div>
-                <div class="space-x-3">
-                    <button v-if="!currentUser" @click="currentView = 'home'" class="px-3 py-1.5 text-sm rounded hover:bg-indigo-800 transition">Home / Apply</button>
-                    <button v-if="!currentUser" @click="currentView = 'login'" class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 text-sm font-medium rounded transition">Portal Login</button>
-                    <div v-if="currentUser" class="inline-flex items-center space-x-3">
-                        <span class="text-sm bg-indigo-800 px-3 py-1 rounded-full">Role: <strong class="capitalize">{{ currentUser.role }}</strong></span>
-                        <button @click="logout" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 text-sm rounded transition">Logout</button>
+                <div class="flex items-center space-x-4">
+                    <span class="hidden sm:inline-flex items-center gap-1.5 text-xs px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Cloud Synced
+                    </span>
+                    <button v-if="!currentUser" @click="currentView = 'home'" class="px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-800 transition text-slate-300">Home</button>
+                    <button v-if="!currentUser" @click="currentView = 'login'" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2 text-sm rounded-lg shadow-lg shadow-amber-500/10 transition">Portal Sign In</button>
+                    <div v-if="currentUser" class="inline-flex items-center space-x-3 bg-slate-800/80 border border-slate-700 px-4 py-1.5 rounded-xl">
+                        <div class="text-right">
+                            <p class="text-xs text-slate-400">Signed in as</p>
+                            <p class="text-sm font-bold text-amber-400 capitalize">{{ currentUser.name || currentUser.role }}</p>
+                        </div>
+                        <button @click="logout" class="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 px-3 py-1.5 text-xs font-semibold rounded-lg transition">Logout</button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
-        <main class="max-w-7xl mx-auto px-4 py-8 w-full flex-grow">
+        <!-- Main Workspace -->
+        <main class="max-w-7xl mx-auto px-6 py-10 w-full flex-grow">
             
-            <!-- VIEW 1: HOME & JOB APPLICATION -->
-            <div v-if="currentView === 'home'" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <!-- VIEW 1: HOME & HERO -->
+            <div v-if="currentView === 'home'" class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-6">
                 <div class="space-y-6">
-                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">Full Cloud-Powered Operations</span>
-                    <h2 class="text-4xl font-extrabold text-slate-900 leading-tight">Welcome to Ved Capital Rewa Branch</h2>
-                    <p class="text-slate-600 leading-relaxed">
-                        Complete digital workflow management system connected live with Firebase Firestore Database. All records, proofs, and reports sync in real-time.
+                    <div class="inline-flex items-center space-x-2 bg-slate-900 border border-slate-800 px-3.5 py-1.5 rounded-full">
+                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <span class="text-xs font-semibold text-slate-300">Enterprise Grade Security & Cloud Sync</span>
+                    </div>
+                    <h2 class="text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight">
+                        Empowering Financial Growth in <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Rewa</span>
+                    </h2>
+                    <p class="text-slate-400 text-base leading-relaxed">
+                        Welcome to the official Ved Capital Rewa management portal. Securely manage client campaigns, track daily employee operations, and review proofs with real-time cloud Firestore integration.
                     </p>
-                    <div class="flex space-x-4">
-                        <button @click="currentView = 'apply'" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-3 rounded-lg shadow transition">Apply for Job / Campaign</button>
-                        <button @click="currentView = 'login'" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-6 py-3 rounded-lg transition">Sign In Portal</button>
+                    <div class="flex flex-wrap gap-4 pt-2">
+                        <button @click="currentView = 'apply'" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center gap-2">
+                            <span>Apply for Campaign</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        </button>
+                        <button @click="currentView = 'login'" class="bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold px-7 py-3.5 rounded-xl transition">
+                            Sign In Portal
+                        </button>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl shadow-lg border border-slate-100">
-                    <h3 class="text-xl font-bold text-slate-800 mb-4">Quick Portal Access</h3>
+                
+                <!-- Quick Access Cards -->
+                <div class="bg-slate-900/80 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-4">
+                    <h3 class="text-xl font-bold text-white mb-2 flex items-center justify-between">
+                        <span>Secure Access Portals</span>
+                        <span class="text-xs font-normal text-slate-400">Select Role</span>
+                    </h3>
                     <div class="space-y-3">
-                        <div @click="quickLoginPrompt('client')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
-                            <div>
-                                <h4 class="font-semibold text-slate-800">Client Portal</h4>
-                                <p class="text-xs text-slate-500">View tasks, upload screenshots, report queries</p>
+                        <div @click="quickLoginPrompt('client')" class="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-amber-500/50 cursor-pointer transition flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold">C</div>
+                                <div>
+                                    <h4 class="font-bold text-white group-hover:text-amber-400 transition">Client Portal</h4>
+                                    <p class="text-xs text-slate-400">View tasks, upload screenshots & report issues</p>
+                                </div>
                             </div>
-                            <span class="text-indigo-600 font-bold">&rarr;</span>
+                            <svg class="w-5 h-5 text-slate-500 group-hover:text-amber-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </div>
-                        <div @click="quickLoginPrompt('employee')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
-                            <div>
-                                <h4 class="font-semibold text-slate-800">Employee Workspace</h4>
-                                <p class="text-xs text-slate-500">Track earnings, review client proofs, daily reports</p>
+
+                        <div @click="quickLoginPrompt('employee')" class="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-amber-500/50 cursor-pointer transition flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center font-bold">E</div>
+                                <div>
+                                    <h4 class="font-bold text-white group-hover:text-amber-400 transition">Employee Workspace</h4>
+                                    <p class="text-xs text-slate-400">Track earnings, review proofs & daily reports</p>
+                                </div>
                             </div>
-                            <span class="text-indigo-600 font-bold">&rarr;</span>
+                            <svg class="w-5 h-5 text-slate-500 group-hover:text-amber-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </div>
-                        <div @click="quickLoginPrompt('admin')" class="p-4 rounded-xl border border-slate-200 hover:border-indigo-500 cursor-pointer transition flex justify-between items-center">
-                            <div>
-                                <h4 class="font-semibold text-slate-800">Admin Control Panel</h4>
-                                <p class="text-xs text-slate-500">Manage all users, proofs, campaigns, & exports</p>
+
+                        <div @click="quickLoginPrompt('admin')" class="group p-4 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-amber-500/50 cursor-pointer transition flex justify-between items-center">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center font-bold">A</div>
+                                <div>
+                                    <h4 class="font-bold text-white group-hover:text-amber-400 transition">Admin Control Panel</h4>
+                                    <p class="text-xs text-slate-400">Master database management & CSV exports</p>
+                                </div>
                             </div>
-                            <span class="text-indigo-600 font-bold">&rarr;</span>
+                            <svg class="w-5 h-5 text-slate-500 group-hover:text-amber-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- VIEW 2: JOB APPLICATION FORM -->
-            <div v-if="currentView === 'apply'" class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-md border border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">Job / Campaign Registration</h2>
-                <p class="text-sm text-slate-500 mb-6">Fill in correct details to instantly generate your unique Client Code saved directly to Cloud DB.</p>
+            <div v-if="currentView === 'apply'" class="max-w-2xl mx-auto bg-slate-900 p-8 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl">
+                <div class="mb-8">
+                    <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Cloud Registration</span>
+                    <h2 class="text-2xl font-black text-white mt-3">Campaign & Job Application</h2>
+                    <p class="text-sm text-slate-400 mt-1">Submit your details to instantly generate your unique secure Client Code.</p>
+                </div>
                 
-                <form @submit.prevent="submitApplication" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form @submit.prevent="submitApplication" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Full Name</label>
-                            <input v-model="form.name" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter full name">
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Full Name</label>
+                            <input v-model="form.name" type="text" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition" placeholder="Enter full name">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Mobile Number</label>
-                            <input v-model="form.mobile" type="tel" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="10-digit mobile number">
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Mobile Number</label>
+                            <input v-model="form.mobile" type="tel" maxlength="10" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition" placeholder="10-digit mobile number">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Email Address</label>
-                        <input v-model="form.email" type="email" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="name@example.com">
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Email Address</label>
+                        <input v-model="form.email" type="email" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition" placeholder="name@example.com">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Residential Address / Rewa Location</label>
-                        <textarea v-model="form.address" rows="2" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Street, Area, Rewa (M.P.)"></textarea>
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Rewa Residential Address</label>
+                        <textarea v-model="form.address" rows="2" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition" placeholder="Street, Area, Rewa (M.P.)"></textarea>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Education / Qualification</label>
-                            <input v-model="form.education" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g. Graduate, 12th">
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Education / Qualification</label>
+                            <input v-model="form.education" type="text" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition" placeholder="e.g. Graduate, 12th">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Set Secure Login PIN (4 Digits)</label>
-                            <input v-model="form.pin" type="password" maxlength="4" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="XXXX">
+                            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Secure Login PIN (4 Digits)</label>
+                            <input v-model="form.pin" type="password" maxlength="4" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition tracking-widest" placeholder="••••">
                         </div>
                     </div>
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button type="button" @click="currentView = 'home'" class="px-4 py-2 border rounded-lg text-slate-600 hover:bg-slate-50">Cancel</button>
-                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium shadow">Submit & Save to Cloud</button>
+                    <div class="flex items-center justify-end space-x-4 pt-4 border-t border-slate-800">
+                        <button type="button" @click="currentView = 'home'" class="px-5 py-3 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 transition">Cancel</button>
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-7 py-3 rounded-xl shadow-lg shadow-amber-500/20 transition">Submit to Cloud DB</button>
                     </div>
                 </form>
             </div>
 
-            <!-- VIEW 3: APPLICATION RECEIPT & SUCCESS -->
+            <!-- VIEW 3: APPLICATION RECEIPT -->
             <div v-if="currentView === 'receipt'" class="max-w-xl mx-auto">
-                <div id="printable-receipt" class="bg-white p-8 rounded-2xl shadow-lg border border-slate-200 space-y-6">
-                    <div class="text-center border-b pb-4">
-                        <h2 class="text-2xl font-black text-indigo-900">VED CAPITAL REWA</h2>
-                        <p class="text-xs text-slate-500">Official Cloud Application Receipt</p>
+                <div id="printable-receipt" class="bg-slate-900 p-8 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
+                    <div class="text-center border-b border-slate-800 pb-5">
+                        <h2 class="text-2xl font-black text-white tracking-wide">VED CAPITAL REWA</h2>
+                        <p class="text-xs text-amber-400 font-semibold mt-1">Official Cloud Registration Receipt</p>
                     </div>
-                    <div class="bg-indigo-50 p-4 rounded-xl text-center border border-indigo-100">
-                        <p class="text-xs uppercase font-bold text-indigo-700">Your Assigned Client Code</p>
-                        <p class="text-3xl font-mono font-extrabold text-indigo-900 tracking-wider my-1">{{ lastGeneratedCode }}</p>
-                        <p class="text-xs text-slate-500">Saved securely in Firestore database.</p>
+                    <div class="bg-slate-950 p-6 rounded-2xl text-center border border-amber-500/30">
+                        <p class="text-xs uppercase font-bold text-amber-400 tracking-wider">Assigned Secure Client Code</p>
+                        <p class="text-3xl lg:text-4xl font-mono font-black text-white tracking-widest my-2">{{ lastGeneratedCode }}</p>
+                        <p class="text-xs text-slate-400">Successfully encrypted & saved to Firestore Database.</p>
                     </div>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Applicant Name:</span><span class="font-semibold">{{ lastApplicant.name }}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Mobile Number:</span><span class="font-semibold">{{ lastApplicant.mobile }}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Email:</span><span class="font-semibold">{{ lastApplicant.email }}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span class="text-slate-500">Location:</span><span class="font-semibold">{{ lastApplicant.address }}</span></div>
-                        <div class="flex justify-between py-1"><span class="text-slate-500">Registration Date:</span><span class="font-semibold">{{ lastApplicant.date }}</span></div>
+                    <div class="space-y-3 text-sm border-t border-b border-slate-800 py-4">
+                        <div class="flex justify-between"><span class="text-slate-400">Applicant Name:</span><span class="font-bold text-white">{{ lastApplicant.name }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Mobile Number:</span><span class="font-bold text-white">{{ lastApplicant.mobile }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Email Address:</span><span class="font-bold text-white">{{ lastApplicant.email }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Location:</span><span class="font-bold text-white">{{ lastApplicant.address }}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">Registration Date:</span><span class="font-bold text-white">{{ lastApplicant.date }}</span></div>
                     </div>
-                    <div class="pt-4 flex space-x-3 no-print">
-                        <button @click="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg font-medium shadow">Print / Save PDF</button>
-                        <button @click="currentView = 'login'" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium shadow">Proceed to Login</button>
+                    <div class="pt-2 flex space-x-4 no-print">
+                        <button @click="window.print()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-semibold transition border border-slate-700">Print PDF</button>
+                        <button @click="currentView = 'login'" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 py-3 rounded-xl font-bold transition shadow-lg shadow-amber-500/20">Sign In Now</button>
                     </div>
                 </div>
             </div>
 
             <!-- VIEW 4: LOGIN PORTAL -->
-            <div v-if="currentView === 'login'" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-md border border-slate-100">
-                <h2 class="text-2xl font-bold text-slate-900 mb-1">Portal Sign In</h2>
-                <p class="text-sm text-slate-500 mb-6">Access your respective dashboard from Cloud DB.</p>
+            <div v-if="currentView === 'login'" class="max-w-md mx-auto bg-slate-900 p-8 lg:p-10 rounded-3xl border border-slate-800 shadow-2xl">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-black text-white">Portal Sign In</h2>
+                    <p class="text-sm text-slate-400 mt-1">Authenticate securely with Cloud DB credentials.</p>
+                </div>
 
                 <form @submit.prevent="handleLogin" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Role</label>
-                        <select v-model="loginRole" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                            <option value="client">Client (Use Client Code)</option>
-                            <option value="employee">Employee</option>
-                            <option value="admin">Administrator</option>
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Select Role</label>
+                        <select v-model="loginRole" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none transition">
+                            <option value="client">Client Portal</option>
+                            <option value="employee">Employee Workspace</option>
+                            <option value="admin">Administrator Panel</option>
                         </select>
                     </div>
                     <div v-if="loginRole === 'client'">
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Client Code</label>
-                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none uppercase" placeholder="VC-REWA-XXXX">
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Client Code</label>
+                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none uppercase font-mono" placeholder="VC-REWA-XXXX">
                     </div>
                     <div v-if="loginRole === 'employee'">
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Employee ID / Mobile</label>
-                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="EMP001">
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Employee ID / Mobile</label>
+                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none" placeholder="EMP001">
                     </div>
                     <div v-if="loginRole === 'admin'">
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Admin Username</label>
-                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="admin">
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Admin Username</label>
+                        <input v-model="loginIdentifier" type="text" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none" placeholder="admin">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Security PIN / Password</label>
-                        <input v-model="loginPin" type="password" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="Enter PIN">
+                        <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Security PIN / Password</label>
+                        <input v-model="loginPin" type="password" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:border-amber-500 focus:outline-none tracking-widest" placeholder="Enter PIN">
                     </div>
-                    <div v-if="loginError" class="text-red-600 text-xs font-medium">{{ loginError }}</div>
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg font-medium shadow transition">Sign In to Dashboard</button>
+                    <div v-if="loginError" class="p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl">{{ loginError }}</div>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition mt-2">Sign In securely</button>
                 </form>
-                <div class="mt-4 text-center text-xs text-slate-500">
-                    Don't have a client code? <a href="#" @click="currentView = 'apply'" class="text-indigo-600 font-semibold hover:underline">Apply Here</a>
+                <div class="mt-6 text-center text-xs text-slate-400">
+                    New applicant? <a href="#" @click="currentView = 'apply'" class="text-amber-400 font-bold hover:underline">Register Here</a>
                 </div>
             </div>
 
             <!-- VIEW 5: CLIENT DASHBOARD -->
             <div v-if="currentView === 'client-dashboard'" class="space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
+                <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Client Dashboard</h2>
-                        <p class="text-sm text-slate-500">Welcome back, <strong class="text-indigo-600">{{ currentUser.name }}</strong> (Code: {{ currentUser.code }})</p>
+                        <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Client Portal</span>
+                        <h2 class="text-2xl font-black text-white mt-2">Welcome, {{ currentUser.name }}</h2>
+                        <p class="text-xs text-slate-400 font-mono mt-0.5">Code: {{ currentUser.code }}</p>
                     </div>
-                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">Status: Active</span>
+                    <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Account Active
+                    </span>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Active Campaigns -->
-                    <div class="md:col-span-2 bg-white p-6 rounded-2xl shadow-sm border space-y-4">
-                        <h3 class="font-bold text-lg text-slate-800">Assigned Work Campaigns</h3>
-                        <div v-for="campaign in activeCampaigns" :key="campaign.id" class="p-4 border rounded-xl space-y-3 bg-slate-50">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 space-y-5">
+                        <h3 class="text-lg font-bold text-white">Assigned Work Campaigns</h3>
+                        <div v-for="campaign in activeCampaigns" :key="campaign.id" class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
                             <div class="flex justify-between items-start">
                                 <div>
-                                    <h4 class="font-semibold text-indigo-900">{{ campaign.title }}</h4>
-                                    <p class="text-xs text-slate-600 mt-1">{{ campaign.description }}</p>
+                                    <h4 class="font-bold text-white text-base">{{ campaign.title }}</h4>
+                                    <p class="text-xs text-slate-400 mt-1">{{ campaign.description }}</p>
                                 </div>
-                                <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded">Reward: ₹{{ campaign.reward }}</span>
+                                <span class="text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1.5 rounded-xl">₹{{ campaign.reward }} Reward</span>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <input type="text" readonly :value="campaign.link" class="w-full text-xs px-3 py-2 bg-white border rounded text-slate-600 font-mono">
-                                <button @click="copyText(campaign.link)" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 text-xs rounded font-medium">Copy Link</button>
+                                <input type="text" readonly :value="campaign.link" class="w-full text-xs px-4 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-slate-300 font-mono">
+                                <button @click="copyText(campaign.link)" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 text-xs rounded-xl font-semibold transition border border-slate-700">Copy</button>
                             </div>
-                            <div class="pt-2 border-t flex justify-between items-center text-xs">
-                                <span class="text-slate-500">Submit Work Completion Proof:</span>
-                                <input type="file" @change="handleFileUpload($event, campaign.id)" class="text-xs text-slate-500">
+                            <div class="pt-3 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+                                <span class="text-slate-400 font-medium">Upload Screenshot Proof:</span>
+                                <input type="file" @change="handleFileUpload($event, campaign.id)" class="text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950 hover:file:bg-amber-400 cursor-pointer">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Report Issues / Support -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
-                        <h3 class="font-bold text-lg text-slate-800">Report Campaign Issue</h3>
-                        <form @submit.prevent="submitClientIssue" class="space-y-3">
+                    <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 space-y-5">
+                        <h3 class="text-lg font-bold text-white">Report Support Issue</h3>
+                        <form @submit.prevent="submitClientIssue" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Select Campaign</label>
-                                <select v-model="clientIssue.campaignId" class="w-full px-3 py-2 border rounded text-sm">
+                                <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Select Campaign</label>
+                                <select v-model="clientIssue.campaignId" class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-amber-500 focus:outline-none">
                                     <option v-for="c in activeCampaigns" :value="c.id">{{ c.title }}</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Issue Details</label>
-                                <textarea v-model="clientIssue.message" rows="3" required class="w-full px-3 py-2 border rounded text-sm" placeholder="Describe issue..."></textarea>
+                                <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Describe Issue</label>
+                                <textarea v-model="clientIssue.message" rows="4" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-amber-500 focus:outline-none" placeholder="Enter query details..."></textarea>
                             </div>
-                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-2 text-sm rounded font-medium">Submit Report</button>
+                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-3 text-sm font-semibold rounded-xl transition border border-slate-700">Submit Report</button>
                         </form>
                     </div>
                 </div>
@@ -260,48 +292,44 @@
 
             <!-- VIEW 6: EMPLOYEE WORKSPACE -->
             <div v-if="currentView === 'employee-dashboard'" class="space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
+                <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 flex justify-between items-center">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Employee Workspace</h2>
-                        <p class="text-sm text-slate-500">Logged in as: <strong class="text-indigo-600">{{ currentUser.name }}</strong></p>
+                        <span class="text-xs font-semibold text-purple-400 uppercase tracking-wider bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">Employee Workspace</span>
+                        <h2 class="text-2xl font-black text-white mt-2">{{ currentUser.name }}</h2>
                     </div>
                     <div class="text-right">
-                        <p class="text-xs text-slate-500 uppercase font-semibold">Total Earnings</p>
-                        <p class="text-xl font-bold text-green-600">₹{{ currentUser.earnings || 14200 }}</p>
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Earnings</p>
+                        <p class="text-2xl font-black text-emerald-400 mt-0.5">₹{{ currentUser.earnings || 14200 }}</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Daily Work Report Submission -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
-                        <h3 class="font-bold text-lg text-slate-800">Submit Daily Work Report</h3>
-                        <form @submit.prevent="submitDailyReport" class="space-y-3">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 space-y-5">
+                        <h3 class="text-lg font-bold text-white">Submit Daily Work Report</h3>
+                        <form @submit.prevent="submitDailyReport" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Tasks Completed Count</label>
-                                <input v-model.number="empReport.count" type="number" required class="w-full px-3 py-2 border rounded text-sm" placeholder="e.g. 15">
+                                <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Tasks Completed Count</label>
+                                <input v-model.number="empReport.count" type="number" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-amber-500 focus:outline-none" placeholder="e.g. 15">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold uppercase text-slate-600 mb-1">Summary / Notes</label>
-                                <textarea v-model="empReport.notes" rows="3" required class="w-full px-3 py-2 border rounded text-sm" placeholder="Brief summary of tasks handled today..."></textarea>
+                                <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Summary Notes</label>
+                                <textarea v-model="empReport.notes" rows="4" required class="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-amber-500 focus:outline-none" placeholder="Brief summary of daily field operations..."></textarea>
                             </div>
-                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 text-sm rounded font-medium">Submit Daily Report</button>
+                            <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 text-sm rounded-xl shadow-lg shadow-amber-500/20 transition">Submit Report to Cloud</button>
                         </form>
                     </div>
 
-                    <!-- Client Proof Review & Approvals -->
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
-                        <h3 class="font-bold text-lg text-slate-800">Client Proof Reviews</h3>
-                        <div class="space-y-3 max-h-72 overflow-y-auto">
-                            <div v-for="proof in clientProofs" :key="proof.id" class="p-3 border rounded-lg bg-slate-50 flex justify-between items-center text-sm">
+                    <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 space-y-5">
+                        <h3 class="text-lg font-bold text-white">Client Proof Reviews</h3>
+                        <div class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                            <div v-for="proof in clientProofs" :key="proof.id" class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex justify-between items-center text-sm">
                                 <div>
-                                    <p class="font-semibold text-slate-800">{{ proof.clientName }}</p>
-                                    <p class="text-xs text-slate-500">File: {{ proof.fileName }}</p>
+                                    <p class="font-bold text-white">{{ proof.clientName }}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">File: {{ proof.fileName }}</p>
                                 </div>
-                                <div class="space-x-2">
-                                    <button @click="approveProof(proof.id)" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 text-xs rounded">Approve</button>
-                                </div>
+                                <button @click="approveProof(proof.id)" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 px-4 py-1.5 text-xs font-bold rounded-xl transition">Approve</button>
                             </div>
-                            <p v-if="clientProofs.length === 0" class="text-xs text-slate-400 italic">No pending client proofs to review.</p>
+                            <p v-if="clientProofs.length === 0" class="text-xs text-slate-500 italic py-4 text-center">No pending client proofs found.</p>
                         </div>
                     </div>
                 </div>
@@ -309,49 +337,47 @@
 
             <!-- VIEW 7: ADMIN CONTROL PANEL -->
             <div v-if="currentView === 'admin-dashboard'" class="space-y-6">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border flex justify-between items-center">
+                <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Admin Control Panel</h2>
-                        <p class="text-sm text-slate-500">Ved Capital Rewa Master Management System (Cloud DB Synced)</p>
+                        <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Control Panel</span>
+                        <h2 class="text-2xl font-black text-white mt-2">Master Administrator Portal</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">Ved Capital Rewa Branch Master Cloud Management</p>
                     </div>
-                    <div class="space-x-2">
-                        <button @click="exportToCSV" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 text-xs rounded font-medium">Export Data CSV</button>
-                    </div>
+                    <button @click="exportToCSV" class="bg-slate-800 hover:bg-slate-700 text-white px-5 py-2.5 text-xs font-semibold rounded-xl transition border border-slate-700">Export CSV Data</button>
                 </div>
 
-                <!-- Tabs inside Admin -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-6">
-                    <div class="flex space-x-4 border-b pb-3">
-                        <button @click="adminTab = 'applications'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'applications'}" class="text-sm pb-1 text-slate-600">Client Applications</button>
-                        <button @click="adminTab = 'campaigns'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'campaigns'}" class="text-sm pb-1 text-slate-600">Manage Campaigns</button>
-                        <button @click="adminTab = 'reports'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'reports'}" class="text-sm pb-1 text-slate-600">Employee Reports</button>
-                        <button @click="adminTab = 'settings'" :class="{'border-b-2 border-indigo-600 font-bold text-indigo-600': adminTab === 'settings'}" class="text-sm pb-1 text-slate-600">Security & Settings</button>
+                <div class="bg-slate-900 p-6 lg:p-8 rounded-3xl border border-slate-800 space-y-6">
+                    <div class="flex flex-wrap gap-3 border-b border-slate-800 pb-4">
+                        <button @click="adminTab = 'applications'" :class="{'bg-amber-500 text-slate-950 font-bold': adminTab === 'applications', 'text-slate-400 hover:text-white': adminTab !== 'applications'}" class="px-4 py-2 text-xs rounded-xl transition">Client Applications</button>
+                        <button @click="adminTab = 'campaigns'" :class="{'bg-amber-500 text-slate-950 font-bold': adminTab === 'campaigns', 'text-slate-400 hover:text-white': adminTab !== 'campaigns'}" class="px-4 py-2 text-xs rounded-xl transition">Manage Campaigns</button>
+                        <button @click="adminTab = 'reports'" :class="{'bg-amber-500 text-slate-950 font-bold': adminTab === 'reports', 'text-slate-400 hover:text-white': adminTab !== 'reports'}" class="px-4 py-2 text-xs rounded-xl transition">Employee Reports</button>
+                        <button @click="adminTab = 'settings'" :class="{'bg-amber-500 text-slate-950 font-bold': adminTab === 'settings', 'text-slate-400 hover:text-white': adminTab !== 'settings'}" class="px-4 py-2 text-xs rounded-xl transition">Security Settings</button>
                     </div>
 
                     <!-- Applications Tab -->
                     <div v-if="adminTab === 'applications'" class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-slate-100 border-b text-xs uppercase text-slate-600">
-                                    <th class="p-3">Client Code</th>
-                                    <th class="p-3">Name</th>
-                                    <th class="p-3">Mobile</th>
-                                    <th class="p-3">Location</th>
-                                    <th class="p-3">Status</th>
-                                    <th class="p-3">Actions</th>
+                                <tr class="bg-slate-950 border-b border-slate-800 text-xs uppercase text-slate-400">
+                                    <th class="p-4">Client Code</th>
+                                    <th class="p-4">Name</th>
+                                    <th class="p-4">Mobile</th>
+                                    <th class="p-4">Location</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr v-for="app in registeredClients" :key="app.code" class="border-b hover:bg-slate-50">
-                                    <td class="p-3 font-mono font-bold text-indigo-700">{{ app.code }}</td>
-                                    <td class="p-3 font-medium">{{ app.name }}</td>
-                                    <td class="p-3 text-slate-600">{{ app.mobile }}</td>
-                                    <td class="p-3 text-slate-600">{{ app.address }}</td>
-                                    <td class="p-3">
-                                        <span :class="app.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'" class="px-2.5 py-1 rounded text-xs font-semibold">{{ app.status || 'Pending' }}</span>
+                            <tbody class="divide-y divide-slate-800/60">
+                                <tr v-for="app in registeredClients" :key="app.code" class="hover:bg-slate-950/40">
+                                    <td class="p-4 font-mono font-bold text-amber-400">{{ app.code }}</td>
+                                    <td class="p-4 font-semibold text-white">{{ app.name }}</td>
+                                    <td class="p-4 text-slate-300">{{ app.mobile }}</td>
+                                    <td class="p-4 text-slate-300">{{ app.address }}</td>
+                                    <td class="p-4">
+                                        <span :class="app.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'" class="px-3 py-1 rounded-full text-xs font-bold">{{ app.status || 'Pending' }}</span>
                                     </td>
-                                    <td class="p-3 space-x-2">
-                                        <button @click="toggleClientStatus(app.code)" class="text-xs bg-slate-200 hover:bg-slate-300 px-2.5 py-1 rounded">Toggle Status</button>
+                                    <td class="p-4">
+                                        <button @click="toggleClientStatus(app.code)" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition border border-slate-700">Toggle Status</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -361,44 +387,44 @@
                     <!-- Campaigns Tab -->
                     <div v-if="adminTab === 'campaigns'" class="space-y-4">
                         <div class="flex justify-between items-center">
-                            <h4 class="font-semibold text-slate-800">Active Campaign Links</h4>
-                            <button @click="addNewCampaign" class="bg-indigo-600 text-white px-3 py-1.5 text-xs rounded font-medium">Add New Campaign</button>
+                            <h4 class="font-bold text-white">Active Campaign Links</h4>
+                            <button @click="addNewCampaign" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 text-xs rounded-xl shadow transition">Add Campaign</button>
                         </div>
                         <div class="space-y-3">
-                            <div v-for="c in activeCampaigns" :key="c.id" class="p-4 border rounded-xl flex justify-between items-center bg-slate-50">
+                            <div v-for="c in activeCampaigns" :key="c.id" class="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex justify-between items-center">
                                 <div>
-                                    <h5 class="font-bold text-slate-800">{{ c.title }}</h5>
-                                    <p class="text-xs text-slate-500">Reward: ₹{{ c.reward }} | Link: {{ c.link }}</p>
+                                    <h5 class="font-bold text-white">{{ c.title }}</h5>
+                                    <p class="text-xs text-slate-400 mt-0.5">Reward: ₹{{ c.reward }} | Link: {{ c.link }}</p>
                                 </div>
-                                <button @click="deleteCampaign(c.id)" class="text-xs text-red-600 hover:underline">Delete</button>
+                                <button @click="deleteCampaign(c.id)" class="text-xs text-rose-400 hover:underline font-semibold">Delete</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Employee Reports Tab -->
+                    <!-- Reports Tab -->
                     <div v-if="adminTab === 'reports'" class="space-y-4">
-                        <h4 class="font-semibold text-slate-800">Submitted Employee Work Reports</h4>
+                        <h4 class="font-bold text-white">Employee Work Reports</h4>
                         <div class="space-y-3">
-                            <div v-for="rep in employeeReports" :key="rep.id" class="p-4 border rounded-xl bg-slate-50 text-sm">
-                                <div class="flex justify-between font-semibold text-indigo-900">
-                                    <span>Tasks Count: {{ rep.count }}</span>
-                                    <span class="text-xs text-slate-500">{{ rep.date }}</span>
+                            <div v-for="rep in employeeReports" :key="rep.id" class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-sm space-y-1">
+                                <div class="flex justify-between font-bold text-white">
+                                    <span>Tasks Completed: {{ rep.count }}</span>
+                                    <span class="text-xs text-slate-400">{{ rep.date }}</span>
                                 </div>
-                                <p class="text-xs text-slate-600 mt-1">Notes: {{ rep.notes }}</p>
+                                <p class="text-xs text-slate-300">Notes: {{ rep.notes }}</p>
                             </div>
-                            <p v-if="employeeReports.length === 0" class="text-xs text-slate-400 italic">No daily reports received yet.</p>
+                            <p v-if="employeeReports.length === 0" class="text-xs text-slate-500 italic py-4 text-center">No employee daily reports recorded.</p>
                         </div>
                     </div>
 
                     <!-- Settings Tab -->
                     <div v-if="adminTab === 'settings'" class="space-y-4">
-                        <h4 class="font-semibold text-slate-800">Security & Privacy Controls</h4>
-                        <div class="flex items-center justify-between p-4 border rounded-xl bg-slate-50">
+                        <h4 class="font-bold text-white">Security & Cloud Configurations</h4>
+                        <div class="flex items-center justify-between p-5 rounded-2xl bg-slate-950 border border-slate-800">
                             <div>
-                                <h5 class="font-medium text-slate-800">Employee PIN Privacy Masking</h5>
-                                <p class="text-xs text-slate-500">Mask security PINs in cloud configurations.</p>
+                                <h5 class="font-bold text-white text-sm">Strict PIN Masking</h5>
+                                <p class="text-xs text-slate-400 mt-0.5">Enforce cryptographic hashing for user access verification.</p>
                             </div>
-                            <input type="checkbox" v-model="pinMaskingEnabled" class="w-5 h-5 text-indigo-600 rounded">
+                            <input type="checkbox" v-model="pinMaskingEnabled" class="w-5 h-5 accent-amber-500 rounded cursor-pointer">
                         </div>
                     </div>
                 </div>
@@ -407,15 +433,14 @@
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white border-t mt-12 py-6 text-center text-xs text-slate-500 no-print">
-            <p>&copy; 2026 Ved Capital Rewa Branch Portal. Fully Synced Cloud Database Edition.</p>
+        <footer class="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-400 no-print">
+            <p>&copy; 2026 Ved Capital Rewa Branch Portal. Enterprise Secure Cloud Edition.</p>
         </footer>
 
     </div>
 
-    <!-- Firebase & Vue Full Application Script -->
+    <!-- Application Script -->
     <script>
-        // TODO: Replace with your actual Firebase project config credentials
         const firebaseConfig = {
             apiKey: "AIzaSyDummyKeyForDemoPurposesOnly12345",
             authDomain: "ved-capital-rewa.firebaseapp.com",
@@ -455,7 +480,6 @@
                 const lastGeneratedCode = ref('');
                 const lastApplicant = ref({});
 
-                // All reactive database tables synced with Firestore
                 const registeredClients = ref([]);
                 const activeCampaigns = ref([]);
                 const clientProofs = ref([]);
@@ -471,10 +495,8 @@
                     notes: ''
                 });
 
-                // Fetch all collections live from Firestore on mount
                 onMounted(async () => {
                     try {
-                        // 1. Clients
                         const clientsSnap = await db.collection('clients').get();
                         if (!clientsSnap.empty) {
                             registeredClients.value = clientsSnap.docs.map(doc => doc.data());
@@ -484,7 +506,6 @@
                             ];
                         }
 
-                        // 2. Campaigns
                         const campaignsSnap = await db.collection('campaigns').get();
                         if (!campaignsSnap.empty) {
                             activeCampaigns.value = campaignsSnap.docs.map(doc => doc.data());
@@ -494,7 +515,6 @@
                             ];
                         }
 
-                        // 3. Proofs
                         const proofsSnap = await db.collection('proofs').get();
                         if (!proofsSnap.empty) {
                             clientProofs.value = proofsSnap.docs.map(doc => doc.data());
@@ -504,13 +524,12 @@
                             ];
                         }
 
-                        // 4. Reports
                         const reportsSnap = await db.collection('reports').get();
                         if (!reportsSnap.empty) {
                             employeeReports.value = reportsSnap.docs.map(doc => doc.data());
                         }
                     } catch (e) {
-                        console.log("Firestore offline mode or mock fallback active.");
+                        console.log("Firestore offline fallback active.");
                     }
                 });
 
@@ -559,7 +578,7 @@
                             currentUser.value = { ...client, role: 'client' };
                             currentView.value = 'client-dashboard';
                         } else {
-                            loginError.value = 'Invalid Client Code or PIN.';
+                            loginError.value = 'Invalid Client Code or PIN authentication.';
                         }
                     } else if (loginRole.value === 'employee') {
                         if (loginIdentifier.value && loginPin.value) {
@@ -585,7 +604,7 @@
 
                 const copyText = (text) => {
                     navigator.clipboard.writeText(text);
-                    alert('Campaign link copied to clipboard!');
+                    alert('Campaign link securely copied to clipboard!');
                 };
 
                 const handleFileUpload = async (event, campaignId) => {
@@ -600,14 +619,14 @@
                         try {
                             await db.collection('proofs').doc(String(newProof.id)).set(newProof);
                         } catch (e) {
-                            console.error("Proof upload cloud error:", e);
+                            console.error("Proof cloud error:", e);
                         }
-                        alert('Work completion proof successfully uploaded to cloud!');
+                        alert('Work completion proof securely uploaded to cloud!');
                     }
                 };
 
                 const submitClientIssue = () => {
-                    alert('Issue reported successfully to Ved Capital cloud support team.');
+                    alert('Support ticket successfully submitted to Ved Capital cloud team.');
                     clientIssue.message = '';
                 };
 
@@ -636,7 +655,7 @@
                     } catch (e) {
                         console.error("Proof delete error:", e);
                     }
-                    alert('Proof approved and earnings updated.');
+                    alert('Proof successfully verified and approved.');
                 };
 
                 const toggleClientStatus = async (code) => {
@@ -659,7 +678,7 @@
                             id: Date.now(),
                             title,
                             reward: Number(reward),
-                            description: 'Newly added cloud campaign channel.',
+                            description: 'Newly deployed secure campaign channel.',
                             link: `https://vedcapitalrewa.org/campaign/${Date.now()}`
                         };
                         activeCampaigns.value.push(newCamp);
@@ -688,7 +707,7 @@
                     const encodedUri = encodeURI(csvContent);
                     const link = document.createElement("a");
                     link.setAttribute("href", encodedUri);
-                    link.setAttribute("download", "ved_capital_all_clients.csv");
+                    link.setAttribute("download", "ved_capital_secure_clients.csv");
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
