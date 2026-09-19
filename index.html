@@ -96,21 +96,24 @@
             </div>
         </div>
 
-        <!-- 1. PUBLIC JOB APPLICATION FORM -->
+        <!-- 1. PUBLIC JOB APPLICATION FORM WITH ID PHOTO -->
         <section v-if="currentView === 'job_form'" class="max-w-3xl mx-auto">
             <div class="text-center mb-8">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
                     <i class="fa-solid fa-star mr-1.5"></i> Direct Recruitment Drive 2026
                 </span>
                 <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Ved Capital Rewa Career Portal</h2>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और तुरंत अपना ऑफिशियल Client Code प्राप्त करें।</p>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें, फोटो अपलोड करें और तुरंत अपना ऑफिशियल Client Code प्राप्त करें।</p>
             </div>
 
             <div v-if="applicationSuccess" id="printable-slip" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-100">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-amber-500"></div>
 
                 <div class="text-center mb-6 border-b border-slate-700/80 pb-6">
-                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 no-print">
+                    <div v-if="lastSubmitted.photo" class="w-20 h-20 rounded-full border-2 border-amber-400 mx-auto mb-3 overflow-hidden shadow-md">
+                        <img :src="lastSubmitted.photo" class="w-full h-full object-cover">
+                    </div>
+                    <div v-else class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 no-print">
                         <i class="fa-solid fa-circle-check text-3xl"></i>
                     </div>
                     <h3 class="text-2xl font-bold text-white">Ved Capital Rewa</h3>
@@ -182,9 +185,15 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">शहर / पता (Address) *</label>
-                        <input v-model="jobForm.address" required type="text" placeholder="e.g. Rewa, Madhya Pradesh" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">शहर / पता (Address) *</label>
+                            <input v-model="jobForm.address" required type="text" placeholder="e.g. Rewa, Madhya Pradesh" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">ID Card Photo (Passport Size) *</label>
+                            <input type="file" accept="image/*" @change="handleJobPhotoUpload" required class="w-full text-xs text-slate-300 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
+                        </div>
                     </div>
 
                     <p v-if="formError" class="text-rose-400 text-xs font-semibold bg-rose-950/50 p-3 rounded-lg border border-rose-800">
@@ -285,20 +294,28 @@
         <section v-if="currentView === 'client_dash' && currentUser" class="max-w-4xl mx-auto space-y-6">
             <div class="bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-2xl shadow-xl">
                 <div class="flex flex-wrap justify-between items-start border-b border-slate-700 pb-4 mb-6 gap-3">
-                    <div>
-                        <h2 class="text-2xl font-extrabold text-white">{{ currentUser.name }}</h2>
-                        <div class="flex items-center space-x-2 mt-1">
-                            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
-                                Client Code: {{ currentUser.code }}
-                            </span>
-                            <span class="text-xs font-bold text-slate-300 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-700">
-                                Applied Job: <strong class="text-amber-400">{{ currentUser.jobType }}</strong>
-                            </span>
+                    <div class="flex items-center space-x-4">
+                        <div v-if="currentUser.photo" class="w-14 h-14 rounded-full border-2 border-amber-400 overflow-hidden shadow-md">
+                            <img :src="currentUser.photo" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-white">{{ currentUser.name }}</h2>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                                    Client Code: {{ currentUser.code }}
+                                </span>
+                                <span class="text-xs font-bold text-slate-300 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-700">
+                                    Applied Job: <strong class="text-amber-400">{{ currentUser.jobType }}</strong>
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button @click="openIdCardModal(currentUser)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center shadow-lg shadow-amber-500/10">
                             <span class="not-italic flex items-center"><i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card</span>
+                        </button>
+                        <button @click="openSupportChat" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center">
+                            <i class="fa-solid fa-headset mr-1.5"></i> Support Chat
                         </button>
                         <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1.5 rounded-full border">
                             {{ currentUser.status || 'Pending Review' }}
@@ -390,24 +407,32 @@
                 <div v-else class="bg-slate-900/80 border border-slate-700/80 p-6 rounded-2xl text-center space-y-2">
                     <i class="fa-solid fa-clock-rotate-left text-amber-400 text-3xl mb-2"></i>
                     <p class="font-bold text-slate-200">आपका अकाउंट रिव्यू में है।</p>
-                    <p class="text-xs text-slate-400">एडमिन द्वारा प्रोफाइल अप्रूव (Approved) होते ही आपको सभी एक्टिव कैंपेन यहाँ दिखेंगे।</p>
+                    <p class="text-xs text-slate-400">एडमिन या एम्प्लॉयी द्वारा प्रोफाइल अप्रूव (Approved) होते ही आपको सभी एक्टिव कैंपेन यहाँ दिखेंगे।</p>
                 </div>
             </div>
         </section>
 
-        <!-- 5. EMPLOYEE DASHBOARD -->
+        <!-- 5. EMPLOYEE DASHBOARD WITH CLIENT APPROVAL & ₹3 PAYOUT -->
         <section v-if="currentView === 'emp_dash' && currentUser" class="space-y-6">
             
             <!-- Employee Header & Earning Stats -->
             <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-700 pb-4">
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">Employee Workspace</h2>
-                        <p class="text-xs text-amber-400 font-semibold">{{ currentUser.name }} (Code: {{ currentUser.code }})</p>
+                    <div class="flex items-center space-x-4">
+                        <div v-if="currentUser.photo" class="w-14 h-14 rounded-full border-2 border-amber-400 overflow-hidden shadow-md">
+                            <img :src="currentUser.photo" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Employee Workspace</h2>
+                            <p class="text-xs text-amber-400 font-semibold">{{ currentUser.name }} (Code: {{ currentUser.code }})</p>
+                        </div>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button @click="openIdCardModal(currentUser)" class="bg-indigo-500/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
                             <i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card
+                        </button>
+                        <button @click="openSupportChat" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center">
+                            <i class="fa-solid fa-headset mr-1.5"></i> Support Chat
                         </button>
                         <button @click="showEmpSelfPinModal = true" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
                             <i class="fa-solid fa-key mr-1.5"></i> Change PIN
@@ -420,7 +445,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                     <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
                         <div>
-                            <p class="text-[10px] uppercase font-bold text-slate-400">Total Approved Earnings</p>
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Total Approved Earnings (incl. ₹3 Approvals)</p>
                             <p class="text-2xl font-black text-emerald-400 mt-0.5">₹ {{ getEmpEarnings(currentUser.code).totalApproved }}</p>
                         </div>
                         <i class="fa-solid fa-indian-rupee-sign text-emerald-400 text-2xl"></i>
@@ -444,12 +469,12 @@
 
             <!-- Employee Sub Tabs -->
             <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 space-x-1 overflow-x-auto">
-                <button @click="empSubTab = 'clients'" :class="empSubTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Clients & Campaign Issues</button>
+                <button @click="empSubTab = 'clients'" :class="empSubTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Clients & Approval Authority (₹3)</button>
                 <button @click="empSubTab = 'extra_work'" :class="empSubTab === 'extra_work' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Extra Work Submission</button>
                 <button @click="empSubTab = 'payouts'" :class="empSubTab === 'payouts' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Request Payout (Withdrawal)</button>
             </div>
 
-            <!-- TAB 1: CLIENTS & CAMPAIGN VERIFICATION -->
+            <!-- TAB 1: CLIENTS & APPROVAL AUTHORITY -->
             <div v-if="empSubTab === 'clients'" class="space-y-6">
                 <!-- Submit Daily Report -->
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
@@ -460,10 +485,10 @@
                     </form>
                 </div>
 
-                <!-- Client Table for Employee -->
+                <!-- Client Table for Employee with Approval Authority -->
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
                     <div class="px-6 py-4 bg-slate-900/80 border-b border-slate-700 flex justify-between items-center">
-                        <span class="font-bold text-slate-200 text-sm">Registered Applicants & Campaign Issues</span>
+                        <span class="font-bold text-slate-200 text-sm">Registered Applicants & Approval Authority (Earn ₹3 per Approval)</span>
                         <span class="text-xs font-bold bg-slate-800 px-3 py-1 rounded-full text-amber-400 border border-slate-700">Total: {{ filteredClients.length }}</span>
                     </div>
                     <div class="overflow-x-auto">
@@ -473,15 +498,22 @@
                                     <th class="p-4">Client Code & Name</th>
                                     <th class="p-4">Contact</th>
                                     <th class="p-4">Applied Job</th>
-                                    <th class="p-4">Campaign Issues Reported</th>
+                                    <th class="p-4">Client Status & Approval (Earn ₹3)</th>
                                     <th class="p-4 text-center">Campaign Proof Check</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-700/60 text-slate-300">
                                 <tr v-for="c in filteredClients" :key="c.code" class="hover:bg-slate-700/30">
                                     <td class="p-4">
-                                        <p class="font-mono font-bold text-amber-400 text-xs">{{ c.code }}</p>
-                                        <p class="font-bold text-white text-sm">{{ c.name }}</p>
+                                        <div class="flex items-center space-x-3">
+                                            <div v-if="c.photo" class="w-10 h-10 rounded-full border border-amber-400 overflow-hidden flex-shrink-0">
+                                                <img :src="c.photo" class="w-full h-full object-cover">
+                                            </div>
+                                            <div>
+                                                <p class="font-mono font-bold text-amber-400 text-xs">{{ c.code }}</p>
+                                                <p class="font-bold text-white text-sm">{{ c.name }}</p>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td class="p-4 space-x-1">
                                         <a :href="'tel:' + c.phone" class="inline-flex items-center justify-center w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500 hover:text-white transition" title="Direct Call">
@@ -501,13 +533,14 @@
                                         </select>
                                     </td>
                                     <td class="p-4">
-                                        <div v-if="c.campaignIssues && Object.keys(c.campaignIssues).length > 0" class="space-y-1">
-                                            <div v-for="(iss, cmpId) in c.campaignIssues" :key="cmpId" class="bg-rose-500/10 border border-rose-500/20 p-1.5 rounded text-xs">
-                                                <span class="font-bold text-rose-300">{{ getCampaignTitle(Number(cmpId)) }}:</span>
-                                                <span class="text-slate-200 block text-[11px]">{{ iss.issueType }} - {{ iss.note }}</span>
-                                            </div>
+                                        <div class="space-y-1">
+                                            <select :value="c.status" @change="employeeApproveClient(c, $event.target.value)" class="bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-1.5 font-bold">
+                                                <option value="Pending">Pending</option>
+                                                <option value="Approved">Approved (Earn ₹3)</option>
+                                                <option value="Rejected">Rejected</option>
+                                            </select>
+                                            <p v-if="c.approvedByEmp" class="text-[10px] text-emerald-400 font-semibold">Approved by: {{ c.approvedByEmp }}</p>
                                         </div>
-                                        <span v-else class="text-xs text-slate-500">No issues reported</span>
                                     </td>
                                     <td class="p-4 text-center">
                                         <button @click="openCampaignReviewModal(c)" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center mx-auto">
@@ -594,9 +627,14 @@
                     <h2 class="text-2xl font-black text-white">Admin Control Panel</h2>
                     <p class="text-xs text-amber-400 font-semibold">Ved Capital Rewa Management System</p>
                 </div>
-                <button @click="exportCSV" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition flex items-center">
-                    <i class="fa-solid fa-file-excel mr-2"></i> Export Data (CSV)
-                </button>
+                <div class="flex items-center space-x-3">
+                    <button @click="openSupportChat" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center shadow-lg">
+                        <i class="fa-solid fa-headset mr-2"></i> Support Chats
+                    </button>
+                    <button @click="exportCSV" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition flex items-center">
+                        <i class="fa-solid fa-file-excel mr-2"></i> Export Data (CSV)
+                    </button>
+                </div>
             </div>
 
             <!-- Stats -->
@@ -651,8 +689,15 @@
                         <tbody class="divide-y divide-slate-700/60 text-slate-300">
                             <tr v-for="c in clients" :key="c.code">
                                 <td class="p-3">
-                                    <p class="font-mono font-bold text-amber-400">{{ c.code }}</p>
-                                    <button @click="openIdCardModal(c)" class="text-[11px] text-indigo-400 underline mt-0.5"><i class="fa-solid fa-id-card mr-1"></i> ID Card</button>
+                                    <div class="flex items-center space-x-2">
+                                        <div v-if="c.photo" class="w-8 h-8 rounded-full border border-amber-400 overflow-hidden flex-shrink-0">
+                                            <img :src="c.photo" class="w-full h-full object-cover">
+                                        </div>
+                                        <div>
+                                            <p class="font-mono font-bold text-amber-400">{{ c.code }}</p>
+                                            <button @click="openIdCardModal(c)" class="text-[11px] text-indigo-400 underline mt-0.5"><i class="fa-solid fa-id-card mr-1"></i> ID Card</button>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="p-3 font-semibold text-white">{{ c.name }}</td>
                                 <td class="p-3">{{ c.phone }}</td>
@@ -695,7 +740,7 @@
                 </div>
             </div>
 
-            <!-- TAB 2: EMPLOYEE MANAGEMENT WITH PRIVACY MASKING -->
+            <!-- TAB 2: EMPLOYEE MANAGEMENT -->
             <div v-if="adminTab === 'employees'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
                 <div class="flex justify-between items-center">
                     <h3 class="text-lg font-bold text-white">Employees Overview & Privacy Security</h3>
@@ -716,17 +761,22 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div v-for="emp in employees" :key="emp.id" class="bg-slate-900 border border-slate-700 p-5 rounded-2xl flex flex-col justify-between gap-3">
                         <div class="flex justify-between items-start">
-                            <div>
-                                <p class="font-bold text-white text-base">{{ emp.name }}</p>
-                                <p class="text-xs text-amber-400 font-mono mt-0.5">Code: {{ emp.code }} | PIN: 
-                                    <span class="text-emerald-400 font-bold bg-slate-800 px-2 py-0.5 rounded ml-1">
-                                        {{ emp.showPin ? (emp.pin || '1234') : '••••' }}
-                                    </span>
-                                    <button @click="emp.showPin = !emp.showPin" class="text-[11px] text-slate-400 hover:text-amber-300 ml-1.5 underline">
-                                        {{ emp.showPin ? 'Hide' : 'Reveal' }}
-                                    </button>
-                                </p>
-                                <p class="text-xs text-slate-400 mt-0.5">{{ emp.position }} ({{ emp.phone }})</p>
+                            <div class="flex items-center space-x-3">
+                                <div v-if="emp.photo" class="w-12 h-12 rounded-full border border-amber-400 overflow-hidden flex-shrink-0">
+                                    <img :src="emp.photo" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <p class="font-bold text-white text-base">{{ emp.name }}</p>
+                                    <p class="text-xs text-amber-400 font-mono mt-0.5">Code: {{ emp.code }} | PIN: 
+                                        <span class="text-emerald-400 font-bold bg-slate-800 px-2 py-0.5 rounded ml-1">
+                                            {{ emp.showPin ? (emp.pin || '1234') : '••••' }}
+                                        </span>
+                                        <button @click="emp.showPin = !emp.showPin" class="text-[11px] text-slate-400 hover:text-amber-300 ml-1.5 underline">
+                                            {{ emp.showPin ? 'Hide' : 'Reveal' }}
+                                        </button>
+                                    </p>
+                                    <p class="text-xs text-slate-400 mt-0.5">{{ emp.position }} ({{ emp.phone }})</p>
+                                </div>
                             </div>
                             <button @click="deleteEmployee(emp.id)" class="text-rose-400 hover:text-rose-300 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
                         </div>
@@ -950,7 +1000,7 @@
 
     </main>
 
-    <!-- DIGITAL ID CARD MODAL -->
+    <!-- DIGITAL ID CARD MODAL WITH PHOTO -->
     <div v-if="showIdCardModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
             <button @click="showIdCardModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white no-print text-lg"><i class="fa-solid fa-xmark"></i></button>
@@ -964,7 +1014,10 @@
                     <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Official Identification Card</p>
                 </div>
 
-                <div class="w-20 h-20 bg-slate-800 border-2 border-amber-400/80 rounded-full flex items-center justify-center mx-auto text-2xl font-black text-amber-300">
+                <div v-if="idCardData.photo" class="w-24 h-24 rounded-full border-2 border-amber-400/90 mx-auto overflow-hidden shadow-lg">
+                    <img :src="idCardData.photo" class="w-full h-full object-cover">
+                </div>
+                <div v-else class="w-20 h-20 bg-slate-800 border-2 border-amber-400/80 rounded-full flex items-center justify-center mx-auto text-2xl font-black text-amber-300">
                     {{ idCardData.name ? idCardData.name.charAt(0) : 'U' }}
                 </div>
 
@@ -987,6 +1040,46 @@
                 </button>
                 <button @click="showIdCardModal = false" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- SUPPORT CHAT MODAL -->
+    <div v-if="showSupportChatModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="bg-slate-900 p-4 border-b border-slate-700 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-headset text-amber-400 text-xl"></i>
+                    <div>
+                        <h3 class="font-bold text-white text-sm">Support & Assistance Chat</h3>
+                        <p class="text-[10px] text-slate-400">Direct Connect with VCR Administration</p>
+                    </div>
+                </div>
+                <button @click="showSupportChatModal = false" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Message List -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/50">
+                <div v-if="supportChats.length === 0" class="text-center text-xs text-slate-500 py-10">
+                    कोई संदेश नहीं है। अपनी समस्या यहाँ लिखकर भेजें।
+                </div>
+                <div v-for="chat in filteredSupportChats" :key="chat.id" class="flex flex-col" :class="chat.senderCode === currentUser.code ? 'items-end' : 'items-start'">
+                    <div class="max-w-[80%] rounded-2xl p-3 text-xs shadow" :class="chat.senderCode === currentUser.code ? 'bg-amber-500 text-slate-950 font-medium rounded-br-none' : 'bg-slate-800 text-slate-100 border border-slate-700 rounded-bl-none'">
+                        <div class="flex justify-between items-center mb-1 space-x-2">
+                            <span class="font-bold text-[10px]" :class="chat.senderCode === currentUser.code ? 'text-slate-900' : 'text-amber-400'">{{ chat.senderName }} ({{ chat.senderCode }})</span>
+                            <span class="text-[9px] opacity-70">{{ chat.date }}</span>
+                        </div>
+                        <p class="whitespace-pre-line">{{ chat.message }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Message Input Form -->
+            <form @submit.prevent="sendSupportMessage" class="p-3 bg-slate-900 border-t border-slate-700 flex gap-2">
+                <input v-model="supportMessageInput" type="text" placeholder="अपनी बात या समस्या यहाँ टाइप करें..." required class="flex-grow bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs transition">
+                    <i class="fa-solid fa-paper-plane"></i> Send
+                </button>
+            </form>
         </div>
     </div>
 
@@ -1127,7 +1220,7 @@ createApp({
 
             toast: { show: false, message: '', type: 'success' },
 
-            jobForm: { name: '', phone: '', jobType: '', address: '' },
+            jobForm: { name: '', phone: '', jobType: '', address: '', photo: null },
             formError: '',
             applicationSuccess: false,
             lastSubmitted: {},
@@ -1148,8 +1241,14 @@ createApp({
             showIdCardModal: false,
             idCardData: {},
 
+            showSupportChatModal: false,
+            supportMessageInput: '',
+            supportChats: [
+                { id: 1, senderCode: 'ADMIN', senderName: 'Ved Capital Support', message: 'नमस्ते! Ved Capital Rewa सपोर्ट पोर्टल में आपका स्वागत है। आप यहाँ अपनी कोई भी समस्या पूछ सकते हैं।', date: '19/09/2026' }
+            ],
+
             adminTab: 'clients',
-            newEmp: { name: '', phone: '', position: '', pin: '1234' },
+            newEmp: { name: '', phone: '', position: '', pin: '1234', photo: null },
             newCmp: { title: '', url: '' },
             newNoticeText: '',
             adminSettingsForm: { username: 'admin', password: 'Admin@3307' },
@@ -1179,12 +1278,14 @@ createApp({
                     address: 'Rewa, MP', 
                     status: 'Approved', 
                     isPromoted: false,
+                    photo: null,
+                    approvedByEmp: 'Admin',
                     campaignIssues: {},
                     campaignProofs: []
                 }
             ],
             employees: [
-                { id: 1, code: 'EMP-0001', name: 'Suresh Patel', phone: '9123456789', position: 'Field Officer', pin: '1234', showPin: false }
+                { id: 1, code: 'EMP-0001', name: 'Suresh Patel', phone: '9123456789', position: 'Field Officer', pin: '1234', showPin: false, photo: null }
             ],
             feedbacks: [],
             earningsRequests: [],
@@ -1200,6 +1301,9 @@ createApp({
                 (c.code && c.code.toLowerCase().includes(q)) ||
                 (c.phone && c.phone.includes(q))
             );
+        },
+        filteredSupportChats() {
+            return this.supportChats;
         }
     },
     mounted() {
@@ -1250,6 +1354,7 @@ createApp({
             localStorage.setItem('vcr_feedbacks', JSON.stringify(this.feedbacks));
             localStorage.setItem('vcr_earnings_requests', JSON.stringify(this.earningsRequests));
             localStorage.setItem('vcr_payout_requests', JSON.stringify(this.payoutRequests));
+            localStorage.setItem('vcr_support_chats', JSON.stringify(this.supportChats));
             if (this.currentUser) {
                 localStorage.setItem('vcr_current_user', JSON.stringify(this.currentUser));
             }
@@ -1275,9 +1380,20 @@ createApp({
             if (er) this.earningsRequests = JSON.parse(er);
             const pr = localStorage.getItem('vcr_payout_requests');
             if (pr) this.payoutRequests = JSON.parse(pr);
+            const sc = localStorage.getItem('vcr_support_chats');
+            if (sc) this.supportChats = JSON.parse(sc);
 
             this.adminSettingsForm.username = this.adminSettings.username;
             this.adminSettingsForm.password = this.adminSettings.password;
+        },
+        handleJobPhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.jobForm.photo = e.target.result;
+            };
+            reader.readAsDataURL(file);
         },
         submitJobForm() {
             if (!this.jobForm.phone || this.jobForm.phone.length !== 10) {
@@ -1293,8 +1409,10 @@ createApp({
                 phone: this.jobForm.phone.trim(),
                 jobType: this.jobForm.jobType,
                 address: this.jobForm.address.trim(),
+                photo: this.jobForm.photo || null,
                 status: 'Pending',
                 isPromoted: false,
+                approvedByEmp: '',
                 campaignIssues: {},
                 campaignProofs: []
             };
@@ -1304,7 +1422,7 @@ createApp({
 
             this.lastSubmitted = { ...newClient };
             this.applicationSuccess = true;
-            this.jobForm = { name: '', phone: '', jobType: '', address: '' };
+            this.jobForm = { name: '', phone: '', jobType: '', address: '', photo: null };
             this.showNotification('Application Submit Ho Gayi Hai!');
         },
         printSlip() { window.print(); },
@@ -1314,6 +1432,22 @@ createApp({
         },
         printIdCard() {
             window.print();
+        },
+        openSupportChat() {
+            this.showSupportChatModal = true;
+        },
+        sendSupportMessage() {
+            if (!this.supportMessageInput.trim()) return;
+            this.supportChats.push({
+                id: Date.now(),
+                senderCode: this.currentUser ? this.currentUser.code : 'GUEST',
+                senderName: this.currentUser ? this.currentUser.name : 'Guest User',
+                message: this.supportMessageInput.trim(),
+                date: new Date().toLocaleDateString('hi-IN') + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            this.saveData();
+            this.supportMessageInput = '';
+            this.showNotification('Support Message Sent!');
         },
         getWhatsAppLink(client) {
             const num = this.companyInfo.whatsapp || '919000000000';
@@ -1358,7 +1492,7 @@ createApp({
         },
         handleAdminLogin() {
             if (this.loginInput.username === this.adminSettings.username && this.loginInput.password === this.adminSettings.password) {
-                this.currentUser = { name: this.adminSettings.username, role: 'admin' };
+                this.currentUser = { name: this.adminSettings.username, code: 'ADMIN', role: 'admin' };
                 this.currentView = 'admin_dash';
                 this.loginError = '';
                 this.saveSession();
@@ -1475,6 +1609,31 @@ createApp({
             const cmp = this.campaigns.find(c => c.id === cmpId);
             return cmp ? cmp.title : 'Campaign #' + cmpId;
         },
+        employeeApproveClient(client, newStatus) {
+            const oldStatus = client.status;
+            client.status = newStatus;
+            client.approvedByEmp = this.currentUser.name + ' (' + this.currentUser.code + ')';
+            this.saveData();
+
+            // If newly approved by employee, credit ₹3 to employee earnings automatically
+            if (newStatus === 'Approved' && oldStatus !== 'Approved') {
+                this.earningsRequests.unshift({
+                    id: Date.now(),
+                    empCode: this.currentUser.code,
+                    empName: this.currentUser.name,
+                    type: 'ClientApproval',
+                    clientCode: client.code,
+                    screenshot: null,
+                    amount: 3,
+                    status: 'Approved', // Auto-approved for employee authority
+                    date: new Date().toLocaleDateString('hi-IN')
+                });
+                this.saveData();
+                this.showNotification(`Client Approved! ₹3 credited to your earnings.`);
+            } else {
+                this.showNotification(`Client status updated to ${newStatus}`);
+            }
+        },
         verifyClientCampaign(client, proof, isApproved) {
             proof.status = isApproved ? 'Approved' : 'Rejected';
             this.saveData();
@@ -1531,10 +1690,9 @@ createApp({
             const empReqs = this.earningsRequests.filter(r => r.empCode === empCode);
             const approvedReqs = empReqs.filter(r => r.status === 'Approved');
             const totalApproved = approvedReqs.reduce((sum, r) => sum + (r.amount || 0), 0);
-            const approvedLeadsCount = approvedReqs.filter(r => r.type === 'Lead').length;
-            const pendingAmount = empReqs.filter(r => r.status === 'Pending').reduce((sum, r) => sum + (r.amount || 0), 0);
+            const approvedLeadsCount = approvedReqs.filter(r => r.type === 'Lead' || r.type === 'ClientApproval').length;
 
-            return { totalApproved, approvedLeadsCount, pendingAmount };
+            return { totalApproved, approvedLeadsCount };
         },
         getEmpAvailableBalance(empCode) {
             const earnings = this.getEmpEarnings(empCode).totalApproved;
@@ -1658,16 +1816,9 @@ createApp({
             const empReports = this.feedbacks.filter(f => f.empCode === emp.code);
             this.selectedEmpWork = { emp: emp, reports: empReports };
         },
-        deleteEmployee(id) {
-            if (confirm('Are you sure you want to delete this employee?')) {
-                this.employees = this.employees.filter(e => e.id !== id);
-                this.saveData();
-                this.showNotification('Employee deleted successfully');
-            }
-        },
         addEmployee() {
             if (!this.newEmp.name || !this.newEmp.phone) {
-                alert('Please enter name and phone');
+                alert('नाम और फोन नंबर आवश्यक हैं!');
                 return;
             }
             const nextCode = 'EMP-' + String(this.employees.length + 1).padStart(4, '0');
@@ -1676,19 +1827,43 @@ createApp({
                 code: nextCode,
                 name: this.newEmp.name.trim(),
                 phone: this.newEmp.phone.trim(),
-                position: this.newEmp.position.trim() || 'Field Officer',
-                pin: this.newEmp.pin || '1234',
-                showPin: false
+                position: this.newEmp.position.trim() || 'Staff Officer',
+                pin: '1234',
+                showPin: false,
+                photo: null
             });
-            this.newEmp = { name: '', phone: '', position: '', pin: '1234' };
             this.saveData();
-            this.showNotification('Employee added successfully');
+            this.newEmp = { name: '', phone: '', position: '', pin: '1234', photo: null };
+            this.showNotification('Employee Added Successfully!');
+        },
+        deleteEmployee(id) {
+            if (confirm('क्या आप वाकई इस एम्प्लॉई को हटाना चाहते हैं?')) {
+                this.employees = this.employees.filter(e => e.id !== id);
+                this.saveData();
+                this.showNotification('Employee Deleted');
+            }
+        },
+        promoteClientToEmployee(client) {
+            const nextCode = 'EMP-' + String(this.employees.length + 1).padStart(4, '0');
+            this.employees.push({
+                id: Date.now(),
+                code: nextCode,
+                name: client.name,
+                phone: client.phone,
+                position: client.jobType || 'Corporate Staff',
+                pin: '1234',
+                showPin: false,
+                photo: client.photo || null
+            });
+            client.isPromoted = true;
+            this.saveData();
+            this.showNotification(`${client.name} successfully promoted to Employee (${nextCode})!`);
         },
         deleteClient(code) {
-            if (confirm('Are you sure you want to delete this client?')) {
+            if (confirm('क्या आप वाकई इस क्लाइंट को हटाना चाहते हैं?')) {
                 this.clients = this.clients.filter(c => c.code !== code);
                 this.saveData();
-                this.showNotification('Client deleted successfully');
+                this.showNotification('Client Deleted');
             }
         },
         updateClientStatus(client, newStatus) {
@@ -1696,24 +1871,9 @@ createApp({
             this.saveData();
             this.showNotification(`Client status updated to ${newStatus}`);
         },
-        promoteClientToEmployee(client) {
-            client.isPromoted = true;
-            const nextCode = 'EMP-' + String(this.employees.length + 1).padStart(4, '0');
-            this.employees.push({
-                id: Date.now(),
-                code: nextCode,
-                name: client.name,
-                phone: client.phone,
-                position: client.jobType,
-                pin: '1234',
-                showPin: false
-            });
-            this.saveData();
-            this.showNotification(`${client.name} promoted to Employee successfully!`);
-        },
         addCampaign() {
             if (!this.newCmp.title || !this.newCmp.url) {
-                alert('Please fill campaign title and URL');
+                alert('शीर्षक और लिंक आवश्यक हैं!');
                 return;
             }
             this.campaigns.push({
@@ -1721,15 +1881,17 @@ createApp({
                 title: this.newCmp.title.trim(),
                 url: this.newCmp.url.trim()
             });
+            this.saveData();
             this.newCmp = { title: '', url: '' };
             this.initCampaignIssueInputs();
-            this.saveData();
-            this.showNotification('Campaign added successfully');
+            this.showNotification('Campaign Added Successfully!');
         },
         deleteCampaign(id) {
-            this.campaigns = this.campaigns.filter(c => c.id !== id);
-            this.saveData();
-            this.showNotification('Campaign deleted');
+            if (confirm('क्या आप वाकई इस कैंपेन को हटाना चाहते हैं?')) {
+                this.campaigns = this.campaigns.filter(c => c.id !== id);
+                this.saveData();
+                this.showNotification('Campaign Deleted');
+            }
         },
         sendAnnouncement() {
             if (!this.newNoticeText.trim()) return;
@@ -1738,45 +1900,47 @@ createApp({
                 text: this.newNoticeText.trim(),
                 date: new Date().toLocaleDateString('hi-IN')
             });
-            this.newNoticeText = '';
             this.saveData();
-            this.showNotification('Notice published successfully');
+            this.newNoticeText = '';
+            this.showNotification('Notice Published Successfully!');
         },
         deleteAnnouncement(id) {
-            this.announcements = this.announcements.filter(a => a.id !== id);
+            this.announcements = this.announcements.filter(n => n.id !== id);
             this.saveData();
-            this.showNotification('Notice deleted');
+            this.showNotification('Notice Deleted');
         },
         updateCompanySettings() {
             this.saveData();
-            this.showNotification('Company info updated successfully');
+            this.showNotification('Company Profile Updated Successfully!');
         },
         updateAdminCredentials() {
             if (!this.adminSettingsForm.username || !this.adminSettingsForm.password) {
-                alert('Please enter username and password');
+                alert('Username और Password आवश्यक हैं!');
                 return;
             }
             this.adminSettings.username = this.adminSettingsForm.username.trim();
             this.adminSettings.password = this.adminSettingsForm.password.trim();
             this.saveData();
-            this.showNotification('Admin credentials updated successfully');
+            this.showNotification('Admin Credentials Updated!');
         },
         exportCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,Code,Name,Phone,JobType,Status\n";
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Code,Name,Phone,JobType,Status,Address\n";
             this.clients.forEach(c => {
-                csvContent += `${c.code},"${c.name}",${c.phone},"${c.jobType}",${c.status}\n`;
+                csvContent += `${c.code},"${c.name}",${c.phone},"${c.jobType}","${c.status}","${c.address}"\n`;
             });
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "ved_capital_clients.csv");
+            link.setAttribute("download", "ved_capital_rewa_clients.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            this.showNotification('Data exported as CSV');
+            this.showNotification('CSV Export Successful!');
         }
     }
 }).mount('#app');
 </script>
+
 </body>
 </html>
