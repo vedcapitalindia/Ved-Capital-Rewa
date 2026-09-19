@@ -1676,25 +1676,25 @@ createApp({
                 code: nextCode,
                 name: this.newEmp.name.trim(),
                 phone: this.newEmp.phone.trim(),
-                position: this.newEmp.position.trim() || 'Staff Officer',
-                pin: '1234',
+                position: this.newEmp.position.trim() || 'Field Officer',
+                pin: this.newEmp.pin || '1234',
                 showPin: false
             });
-            this.saveData();
             this.newEmp = { name: '', phone: '', position: '', pin: '1234' };
+            this.saveData();
             this.showNotification('Employee added successfully');
         },
         deleteClient(code) {
             if (confirm('Are you sure you want to delete this client?')) {
                 this.clients = this.clients.filter(c => c.code !== code);
                 this.saveData();
-                this.showNotification('Client deleted');
+                this.showNotification('Client deleted successfully');
             }
         },
         updateClientStatus(client, newStatus) {
             client.status = newStatus;
             this.saveData();
-            this.showNotification('Client status updated to ' + newStatus);
+            this.showNotification(`Client status updated to ${newStatus}`);
         },
         promoteClientToEmployee(client) {
             client.isPromoted = true;
@@ -1709,18 +1709,21 @@ createApp({
                 showPin: false
             });
             this.saveData();
-            this.showNotification('Client promoted to employee successfully!');
+            this.showNotification(`${client.name} promoted to Employee successfully!`);
         },
         addCampaign() {
-            if (!this.newCmp.title || !this.newCmp.url) return;
+            if (!this.newCmp.title || !this.newCmp.url) {
+                alert('Please fill campaign title and URL');
+                return;
+            }
             this.campaigns.push({
                 id: Date.now(),
                 title: this.newCmp.title.trim(),
                 url: this.newCmp.url.trim()
             });
-            this.saveData();
             this.newCmp = { title: '', url: '' };
             this.initCampaignIssueInputs();
+            this.saveData();
             this.showNotification('Campaign added successfully');
         },
         deleteCampaign(id) {
@@ -1735,8 +1738,8 @@ createApp({
                 text: this.newNoticeText.trim(),
                 date: new Date().toLocaleDateString('hi-IN')
             });
-            this.saveData();
             this.newNoticeText = '';
+            this.saveData();
             this.showNotification('Notice published successfully');
         },
         deleteAnnouncement(id) {
@@ -1750,7 +1753,7 @@ createApp({
         },
         updateAdminCredentials() {
             if (!this.adminSettingsForm.username || !this.adminSettingsForm.password) {
-                alert('Please fill admin credentials');
+                alert('Please enter username and password');
                 return;
             }
             this.adminSettings.username = this.adminSettingsForm.username.trim();
@@ -1759,20 +1762,18 @@ createApp({
             this.showNotification('Admin credentials updated successfully');
         },
         exportCSV() {
-            let csv = 'Code,Name,Phone,JobType,Status,Role\n';
+            let csvContent = "data:text/csv;charset=utf-8,Code,Name,Phone,JobType,Status\n";
             this.clients.forEach(c => {
-                csv += `${c.code},"${c.name}",${c.phone},"${c.jobType}",${c.status},Client\n`;
+                csvContent += `${c.code},"${c.name}",${c.phone},"${c.jobType}",${c.status}\n`;
             });
-            this.employees.forEach(e => {
-                csv += `${e.code},"${e.name}",${e.phone},"${e.position}",Active,Employee\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'ved_capital_rewa_data.csv');
-            a.click();
-            this.showNotification('CSV Data Exported Successfully');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "ved_capital_clients.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            this.showNotification('Data exported as CSV');
         }
     }
 }).mount('#app');
