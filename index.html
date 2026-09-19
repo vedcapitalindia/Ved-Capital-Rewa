@@ -3,935 +3,1542 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ved Capital Rewa - Master Management Portal</title>
+    <title>Ved Capital Rewa - Official Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Vue 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <!-- FontAwesome Icons CDN -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #printable-slip, #printable-slip * { visibility: visible; }
+            #printable-slip { position: absolute; left: 0; top: 0; width: 100%; border: none !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen text-slate-800 font-sans antialiased">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-900">
 
-<div id="app" class="relative min-h-screen pb-12">
+<div id="app" class="flex flex-col min-h-screen">
 
-    <!-- TOAST NOTIFICATION -->
-    <div v-if="showToast" class="fixed top-5 right-5 z-50 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 transition-all animate-bounce">
-        <span class="w-3 h-3 bg-emerald-400 rounded-full animate-ping"></span>
-        <p class="text-sm font-medium">{{ notificationMessage }}</p>
+    <!-- Toast Notification System -->
+    <div v-if="toast.show" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 rounded-xl shadow-2xl transition-all duration-300 border"
+         :class="toast.type === 'success' ? 'bg-emerald-950 text-emerald-200 border-emerald-600' : 'bg-rose-950 text-rose-200 border-rose-600'">
+        <i :class="toast.type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-triangle-exclamation text-rose-400'" class="text-xl mr-3"></i>
+        <div class="text-sm font-medium">{{ toast.message }}</div>
     </div>
 
-    <!-- HEADER / NAVIGATION (Jab Login Ho) -->
-    <header v-if="isLoggedIn" class="max-w-7xl mx-auto px-4 pt-6">
-        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 rounded-2xl shadow-xl flex flex-wrap justify-between items-center border border-slate-800 gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-indigo-600/30 border border-indigo-400/30 rounded-xl flex items-center justify-center text-indigo-400 text-xl font-bold">
-                    <i class="fa-solid fa-building-columns"></i>
+    <!-- MAIN NAVBAR -->
+    <header class="bg-slate-950/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
+            
+            <div class="flex items-center space-x-3 cursor-pointer" @click="navigateHome">
+                <div class="bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 font-black text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    VCR
                 </div>
                 <div>
-                    <h1 class="text-xl font-black tracking-wide text-white">Ved Capital Rewa</h1>
-                    <p class="text-xs text-indigo-200/80 flex items-center gap-2">
-                        <span>Logged in as: <strong class="text-indigo-400">{{ currentUser.name }}</strong></span>
-                        <span class="bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded text-[10px] uppercase font-bold border border-indigo-500/30">{{ currentUser.role }}</span>
-                    </p>
+                    <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center">Ved Capital Rewa</h1>
+                    <p class="text-xs text-amber-400 font-semibold tracking-wide uppercase">Official Portal</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button v-if="currentUser.role === 'employee' || currentUser.role === 'client'" @click="showSelfPinModal = true" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl font-semibold border border-slate-700 transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-key text-amber-400"></i> Change PIN
+
+            <nav class="hidden md:flex items-center space-x-1">
+                <button v-if="!currentUser" @click="setView('job_form')" 
+                        :class="currentView === 'job_form' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'"
+                        class="px-4 py-2 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-briefcase mr-1.5"></i> Apply Job
                 </button>
-                <button @click="logout" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-3.5 py-2 rounded-xl font-semibold border border-rose-500/30 transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+                <button v-if="!currentUser" @click="setView('about')" 
+                        :class="currentView === 'about' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'"
+                        class="px-4 py-2 rounded-lg text-sm transition">
+                    <i class="fa-solid fa-building mr-1.5"></i> About Us
                 </button>
+            </nav>
+
+            <div class="flex items-center space-x-3">
+                <button v-if="!currentUser" @click="setView('login')" 
+                        class="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 rounded-xl text-sm font-bold transition shadow-lg shadow-amber-500/10 flex items-center">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Portal Login
+                </button>
+
+                <div v-if="currentUser" class="flex items-center space-x-3">
+                    <div class="bg-slate-800 border border-slate-700 px-3.5 py-1.5 rounded-xl flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-xs font-bold text-slate-200">{{ currentUser.name }}</span>
+                        <span class="text-[10px] uppercase font-black px-2 py-0.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-md">
+                            {{ currentUser.role }}
+                        </span>
+                    </div>
+                    <button @click="logout" class="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white border border-rose-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-power-off mr-1"></i> Logout
+                    </button>
+                </div>
             </div>
+
         </div>
     </header>
 
-    <!-- UNAUTHENTICATED VIEW (PUBLIC FORM & LOGIN MODAL) -->
-    <div v-if="!isLoggedIn" class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 flex flex-col justify-center items-center p-4">
-        
-        <!-- TOP NAVIGATION TOGGLE -->
-        <div class="mb-6 flex gap-3 bg-white/10 p-1.5 rounded-2xl backdrop-blur-md border border-white/10">
-            <button @click="unauthView = 'public'" :class="unauthView === 'public' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-300 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                <i class="fa-solid fa-pen-nib"></i> Public Inquiry Form
-            </button>
-            <button @click="unauthView = 'login'" :class="unauthView === 'login' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-300 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                <i class="fa-solid fa-right-to-bracket"></i> Portal Login
-            </button>
-        </div>
+    <!-- CONTENT AREA -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
 
-        <!-- 1. PUBLIC INQUIRY FORM -->
-        <div v-if="unauthView === 'public'" class="bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-200/50">
-            <div class="text-center mb-6">
-                <div class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg shadow-indigo-500/30 text-xl">
-                    <i class="fa-solid fa-handshake"></i>
-                </div>
-                <h2 class="text-2xl font-black text-slate-900">Ved Capital Rewa</h2>
-                <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider mt-1">Client Registration & Public Inquiry Form</p>
+        <!-- 1. PUBLIC JOB APPLICATION FORM -->
+        <section v-if="currentView === 'job_form'" class="max-w-3xl mx-auto">
+            <div class="text-center mb-8">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
+                    <i class="fa-solid fa-star mr-1.5"></i> Direct Recruitment Drive 2026
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Ved Capital Rewa Career Portal</h2>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और तुरंत अपना ऑफिशियल Client Code प्राप्त करें।</p>
             </div>
 
-            <form @submit.prevent="submitPublicLead" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Aapka Naam (Full Name)</label>
-                    <input v-model="publicForm.name" type="text" placeholder="e.g. Ramesh Kumar" required class="w-full px-4 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
+            <div v-if="applicationSuccess" id="printable-slip" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-100">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-amber-500"></div>
+
+                <div class="text-center mb-6 border-b border-slate-700/80 pb-6">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 no-print">
+                        <i class="fa-solid fa-circle-check text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Ved Capital Rewa</h3>
+                    <p class="text-xs text-amber-400 font-bold uppercase tracking-wider mt-1">Official Application Receipt</p>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Phone Number</label>
-                    <input v-model="publicForm.phone" type="tel" placeholder="e.g. 9876543210" required class="w-full px-4 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Kamm Ka Prakar (Requirement Category)</label>
-                    <select v-model="publicForm.jobType" class="w-full px-4 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white font-semibold">
-                        <option value="Lead Gen">Lead Generation</option>
-                        <option value="Data Entry">Data Entry Work</option>
-                        <option value="Telecalling">Telecalling Services</option>
-                        <option value="Other Query">Other Business Query</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Sankshep Vivran (Message / Detail)</label>
-                    <textarea v-model="publicForm.message" placeholder="Aapko kya kaam karwana hai..." rows="3" class="w-full px-4 py-2.5 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white"></textarea>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 text-sm">
-                    <i class="fa-solid fa-paper-plane"></i> Submit Request
-                </button>
-            </form>
-        </div>
 
-        <!-- 2. LOGIN FORM WITH ROLE SELECTOR -->
-        <div v-if="unauthView === 'login'" class="bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-200/50">
-            <div class="text-center mb-6">
-                <div class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg shadow-indigo-500/30 text-xl">
-                    <i class="fa-solid fa-user-shield"></i>
-                </div>
-                <h2 class="text-2xl font-black text-slate-900">Portal Login</h2>
-                <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider mt-1">Select Role & Access Account</p>
-            </div>
-
-            <!-- Role Selector Tabs -->
-            <div class="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-xl mb-5">
-                <button @click="loginForm.role = 'admin'" :class="loginForm.role === 'admin' ? 'bg-white text-indigo-600 shadow' : 'text-slate-500'" class="py-1.5 text-xs font-bold rounded-lg transition-all">Admin</button>
-                <button @click="loginForm.role = 'employee'" :class="loginForm.role === 'employee' ? 'bg-white text-indigo-600 shadow' : 'text-slate-500'" class="py-1.5 text-xs font-bold rounded-lg transition-all">Employee</button>
-                <button @click="loginForm.role = 'client'" :class="loginForm.role === 'client' ? 'bg-white text-indigo-600 shadow' : 'text-slate-500'" class="py-1.5 text-xs font-bold rounded-lg transition-all">Client</button>
-            </div>
-
-            <form @submit.prevent="login" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-id-card text-indigo-500"></i> Username / Code
-                    </label>
-                    <input v-model="loginForm.username" type="text" :placeholder="loginForm.role === 'admin' ? 'admin' : (loginForm.role === 'employee' ? 'EMP-1001' : 'CL-101')" required class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all bg-slate-50 focus:bg-white">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase text-slate-600 mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-lock text-indigo-500"></i> Password / PIN
-                    </label>
-                    <input v-model="loginForm.password" type="password" placeholder="••••" required class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition-all bg-slate-50 focus:bg-white">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 text-sm">
-                    <i class="fa-solid fa-right-to-bracket"></i> Login Now
-                </button>
-            </form>
-
-            <div class="mt-6 pt-4 border-t text-center text-xs text-slate-500">
-                <p class="font-semibold">Default Passwords:</p>
-                <p class="mt-0.5 font-mono">Admin: <b>admin / 123</b> | Employee: <b>EMP-1001 / 1234</b> | Client: <b>CL-101 / 1234</b></p>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- LOGGED IN DASHBOARD AREA -->
-    <div v-else class="max-w-7xl mx-auto px-4 py-6">
-
-        <!-- ==================== 1. ADMIN DASHBOARD ==================== -->
-        <div v-if="currentUser.role === 'admin'" class="space-y-6">
-            
-            <!-- ADMIN NAVIGATION TABS -->
-            <div class="flex flex-wrap items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
-                <button @click="adminTab = 'clients'" :class="adminTab === 'clients' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-users"></i> Client Roster
-                </button>
-                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-user-gear"></i> Employee Vivran
-                </button>
-                <button @click="adminTab = 'public_leads'" :class="adminTab === 'public_leads' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 relative">
-                    <i class="fa-solid fa-envelope-open-text"></i> Public Leads
-                    <span v-if="publicLeads.length > 0" class="bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">{{ publicLeads.length }}</span>
-                </button>
-                <button @click="adminTab = 'earnings'" :class="adminTab === 'earnings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2 relative">
-                    <i class="fa-solid fa-sack-dollar"></i> Claims & Approvals
-                    <span v-if="getPendingClaimsCount() > 0" class="bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">{{ getPendingClaimsCount() }}</span>
-                </button>
-                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-bullhorn"></i> Campaigns
-                </button>
-                <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'" class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> Security & Privacy
-                </button>
-                <button @click="exportCSV" class="ml-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all shadow flex items-center gap-2">
-                    <i class="fa-solid fa-file-csv"></i> Export Data (CSV)
-                </button>
-            </div>
-
-            <!-- ADMIN TAB 1: CLIENTS MANAGEMENT -->
-            <div v-if="adminTab === 'clients'" class="space-y-6">
-                <!-- Add Client Form -->
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-indigo-500"></i> Register New Client
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input v-model="newClient.name" placeholder="Client Full Name" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <input v-model="newClient.phone" placeholder="Phone Number" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <select v-model="newClient.jobType" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white font-semibold">
-                            <option value="Lead Gen">Lead Gen</option>
-                            <option value="Data Entry">Data Entry</option>
-                            <option value="Telecalling">Telecalling</option>
-                        </select>
-                        <button @click="addClient" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-xl transition-all shadow flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-plus"></i> Add Client
-                        </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/60 p-5 rounded-xl border border-slate-700/60 mb-6 text-sm">
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Client Code</p>
+                        <p class="text-lg font-mono font-black text-amber-400">{{ lastSubmitted.code }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Status</p>
+                        <p class="inline-block px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 mt-1">Pending Review</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Applicant Name</p>
+                        <p class="font-bold text-slate-200">{{ lastSubmitted.name }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Mobile Number</p>
+                        <p class="font-bold text-slate-200">{{ lastSubmitted.phone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Applied Category</p>
+                        <p class="font-bold text-slate-200">{{ lastSubmitted.jobType }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 font-semibold">Location / Address</p>
+                        <p class="font-bold text-slate-200">{{ lastSubmitted.address }}</p>
                     </div>
                 </div>
 
-                <!-- Client Roster Table -->
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <h2 class="text-base font-extrabold text-slate-900 mb-4">Client Roster & Privacy Access</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold border-b">
-                                <tr>
-                                    <th class="p-3">Client Code</th>
-                                    <th class="p-3">Name</th>
-                                    <th class="p-3">Phone</th>
-                                    <th class="p-3">Job Category</th>
-                                    <th class="p-3">Login PIN</th>
-                                    <th class="p-3 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <tr v-for="c in clients" :key="c.code" class="hover:bg-slate-50/50">
-                                    <td class="p-3 font-mono text-xs font-bold text-indigo-600">{{ c.code }}</td>
-                                    <td class="p-3 font-bold text-slate-800">{{ c.name }}</td>
-                                    <td class="p-3 text-slate-600">{{ c.phone }}</td>
-                                    <td class="p-3">
-                                        <select :value="c.jobType" @change="shiftClientJob(c, $event.target.value)" class="border rounded p-1 text-xs font-semibold bg-white">
-                                            <option value="Lead Gen">Lead Gen</option>
-                                            <option value="Data Entry">Data Entry</option>
-                                            <option value="Telecalling">Telecalling</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-3 font-mono text-xs text-slate-500">{{ c.pin || '1234' }}</td>
-                                    <td class="p-3 text-right space-x-1">
-                                        <button @click="openClientReviewModal(c)" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg font-bold">
-                                            <i class="fa-solid fa-eye"></i> Campaigns
-                                        </button>
-                                        <button v-if="!c.isPromoted" @click="promoteClientToEmployee(c)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-lg font-bold border border-indigo-200">
-                                            Promote to EMP
-                                        </button>
-                                        <button @click="deleteClient(c.code)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1 rounded-lg">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="flex flex-wrap gap-3 no-print justify-center">
+                    <button @click="printSlip" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition flex items-center">
+                        <i class="fa-solid fa-print mr-2"></i> Print / Save PDF
+                    </button>
+                    <a v-if="companyInfo.whatsapp" :href="getWhatsAppLink(lastSubmitted)" target="_blank" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition flex items-center shadow-lg shadow-emerald-600/20">
+                        <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Send Code on WhatsApp
+                    </a>
+                    <button @click="applicationSuccess = false" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-sm font-bold transition">
+                        Submit Another Form
+                    </button>
                 </div>
             </div>
 
-            <!-- ADMIN TAB 2: EMPLOYEE VIVRAN -->
-            <div v-if="adminTab === 'employees'" class="space-y-6">
-                <!-- Add Employee Form -->
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-indigo-500"></i> Add New Employee
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <input v-model="newEmp.name" placeholder="Full Name" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <input v-model="newEmp.phone" placeholder="Phone Number" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <input v-model="newEmp.position" placeholder="Designation" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <button @click="addEmployee" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-xl transition-all shadow flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-plus"></i> Add Employee
-                        </button>
+            <div v-else class="bg-slate-800/90 border border-slate-700/80 p-6 sm:p-8 rounded-2xl shadow-2xl backdrop-blur-sm">
+                <form @submit.prevent="submitJobForm" class="space-y-5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">पूरा नाम (Full Name) *</label>
+                        <input v-model="jobForm.name" required type="text" placeholder="अपना नाम दर्ज करें" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
                     </div>
-                </div>
 
-                <!-- Employees List -->
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <h2 class="text-base font-extrabold text-slate-900 mb-4">Employee Vivran & Reports Roster</h2>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold border-b">
-                                <tr>
-                                    <th class="p-3">EMP Code</th>
-                                    <th class="p-3">Name</th>
-                                    <th class="p-3">Phone</th>
-                                    <th class="p-3">Designation</th>
-                                    <th class="p-3">Approved Earnings</th>
-                                    <th class="p-3 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                <tr v-for="e in employees" :key="e.id" class="hover:bg-slate-50/50">
-                                    <td class="p-3 font-mono text-xs font-bold text-indigo-600">{{ e.code }}</td>
-                                    <td class="p-3 font-bold text-slate-800">{{ e.name }}</td>
-                                    <td class="p-3 text-slate-600">{{ e.phone }}</td>
-                                    <td class="p-3 text-slate-600">{{ e.position }}</td>
-                                    <td class="p-3 font-black text-emerald-600">₹{{ getEmpEarnings(e.code).totalApproved }}</td>
-                                    <td class="p-3 text-right space-x-1.5">
-                                        <button @click="viewEmployeeWork(e)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2.5 py-1.5 rounded-lg font-bold border border-indigo-200">
-                                            <i class="fa-solid fa-file-lines"></i> Reports & Proofs
-                                        </button>
-                                        <button @click="openAdminPinModal(e)" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-2 py-1.5 rounded-lg font-bold border border-amber-200">
-                                            <i class="fa-solid fa-key"></i> Reset PIN
-                                        </button>
-                                        <button @click="deleteEmployee(e.id)" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-1.5 rounded-lg">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ADMIN TAB 3: PUBLIC LEADS (FROM PUBLIC FORM) -->
-            <div v-if="adminTab === 'public_leads'" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-base font-extrabold text-slate-900 mb-4">Inquiries Received from Public Form</h2>
-                <div v-if="publicLeads.length === 0" class="text-center py-10 text-slate-400 text-sm">
-                    <i class="fa-solid fa-inbox text-3xl mb-2 block"></i> No public leads submitted yet.
-                </div>
-                <div v-else class="space-y-3">
-                    <div v-for="(lead, idx) in publicLeads" :key="idx" class="border rounded-2xl p-4 bg-slate-50 flex justify-between items-start">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm font-bold text-slate-900">{{ lead.name }}</span>
-                                <span class="bg-indigo-100 text-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase">{{ lead.jobType }}</span>
-                            </div>
-                            <p class="text-xs text-slate-600 font-mono mt-0.5"><i class="fa-solid fa-phone"></i> {{ lead.phone }}</p>
-                            <p v-if="lead.message" class="text-xs text-slate-700 bg-white p-2.5 rounded-xl border mt-2">{{ lead.message }}</p>
-                            <span class="text-[10px] text-slate-400 mt-1 block"><i class="fa-regular fa-clock"></i> {{ lead.date }}</span>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">मोबाइल नंबर (10 Digit) *</label>
+                            <input v-model="jobForm.phone" required type="tel" maxlength="10" placeholder="10 अंकों का नंबर" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
                         </div>
-                        <button @click="convertPublicLeadToClient(lead, idx)" class="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-bold shadow hover:bg-emerald-700">
-                            + Convert to Client
-                        </button>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">जॉब केटेगरी *</label>
+                            <select v-model="jobForm.jobType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                <option value="" disabled>केटेगरी का चयन करें</option>
+                                <option value="Telecalling Job">Telecalling Job</option>
+                                <option value="Corporate Job">Corporate Job</option>
+                                <option value="Field & Delivery">Field & Delivery Job</option>
+                                <option value="Security Officer">Security Officer</option>
+                                <option value="Office Administration">Office Administration</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">शहर / पता (Address) *</label>
+                        <input v-model="jobForm.address" required type="text" placeholder="e.g. Rewa, Madhya Pradesh" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <p v-if="formError" class="text-rose-400 text-xs font-semibold bg-rose-950/50 p-3 rounded-lg border border-rose-800">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ formError }}
+                    </p>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center text-base">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Application Submit Karein
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 2. ABOUT US VIEW -->
+        <section v-if="currentView === 'about'" class="max-w-4xl mx-auto space-y-6">
+            <div class="bg-slate-800 border border-slate-700 p-8 rounded-2xl shadow-xl">
+                <div class="flex items-center space-x-3 border-b border-slate-700 pb-4 mb-6">
+                    <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+                        <i class="fa-solid fa-building text-2xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">कंपनी के बारे में (About Ved Capital Rewa)</h2>
+                        <p class="text-xs text-slate-400">Official Profile & Contact Info</p>
+                    </div>
+                </div>
+
+                <div class="text-slate-300 leading-relaxed whitespace-pre-line text-sm sm:text-base">
+                    {{ companyInfo.aboutText }}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 pt-6 border-t border-slate-700">
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                        <p class="text-xs text-slate-400 font-bold uppercase mb-1"><i class="fa-solid fa-location-dot text-amber-400 mr-1.5"></i> Head Office</p>
+                        <p class="text-sm font-semibold text-slate-200">{{ companyInfo.address }}</p>
+                    </div>
+                    <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/60">
+                        <p class="text-xs text-slate-400 font-bold uppercase mb-1"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1.5"></i> WhatsApp Helpline</p>
+                        <p class="text-sm font-semibold text-slate-200">+{{ companyInfo.whatsapp }}</p>
                     </div>
                 </div>
             </div>
+        </section>
 
-            <!-- ADMIN TAB 4: CLAIMS & APPROVALS -->
-            <div v-if="adminTab === 'earnings'" class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                <h2 class="text-base font-extrabold text-slate-900 mb-4">Pending Earning Claims & Screenshots</h2>
-                <div v-if="earningsRequests.filter(r => r.status === 'Pending').length === 0" class="text-center py-10 text-slate-400 text-sm">
-                    <i class="fa-solid fa-circle-check text-3xl text-emerald-400 mb-2 block"></i> All earning claims reviewed!
+        <!-- 3. LOGIN PORTAL -->
+        <section v-if="currentView === 'login'" class="max-w-md mx-auto">
+            <div class="bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-2xl shadow-2xl">
+                <h2 class="text-2xl font-bold text-center text-white mb-6">Portal Access Login</h2>
+
+                <div class="flex bg-slate-900 p-1 rounded-xl mb-6 border border-slate-700/60">
+                    <button @click="loginType = 'client'; loginError=''" :class="loginType === 'client' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Client Login</button>
+                    <button @click="loginType = 'employee'; loginError=''" :class="loginType === 'employee' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Employee</button>
+                    <button @click="loginType = 'admin'; loginError=''" :class="loginType === 'admin' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Admin</button>
                 </div>
-                <div v-else class="space-y-3">
-                    <div v-for="req in earningsRequests.filter(r => r.status === 'Pending')" :key="req.id" class="border rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700 uppercase">{{ req.type }}</span>
-                                <span class="text-xs text-slate-400 font-mono">{{ req.date }}</span>
+
+                <form v-if="loginType === 'client'" @submit.prevent="handleClientLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Client Code</label>
+                        <input v-model="loginInput.code" placeholder="e.g. CLI-1001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
+                        <input v-model="loginInput.phone" placeholder="10 Digit Mobile Number" required type="tel" maxlength="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Dashboard Login</button>
+                </form>
+
+                <form v-if="loginType === 'employee'" @submit.prevent="handleEmployeeLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Employee Code</label>
+                        <input v-model="loginInput.code" placeholder="e.g. EMP-0001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Secret PIN (4 Digit)</label>
+                        <input v-model="loginInput.pin" placeholder="Enter PIN" required type="password" maxlength="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Employee Login</button>
+                </form>
+
+                <form v-if="loginType === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Username</label>
+                        <input v-model="loginInput.username" placeholder="admin" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label>
+                        <input v-model="loginInput.password" placeholder="Admin@3307" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Admin Control Panel</button>
+                </form>
+
+                <p v-if="loginError" class="mt-4 text-rose-400 text-xs text-center font-bold bg-rose-950/40 p-2.5 rounded-lg border border-rose-800/80">
+                    {{ loginError }}
+                </p>
+            </div>
+        </section>
+
+        <!-- 4. CLIENT DASHBOARD -->
+        <section v-if="currentView === 'client_dash' && currentUser" class="max-w-4xl mx-auto space-y-6">
+            <div class="bg-slate-800 border border-slate-700 p-6 sm:p-8 rounded-2xl shadow-xl">
+                <div class="flex flex-wrap justify-between items-start border-b border-slate-700 pb-4 mb-6 gap-3">
+                    <div>
+                        <h2 class="text-2xl font-extrabold text-white">{{ currentUser.name }}</h2>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/20">
+                                Client Code: {{ currentUser.code }}
+                            </span>
+                            <span class="text-xs font-bold text-slate-300 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-700">
+                                Applied Job: <strong class="text-amber-400">{{ currentUser.jobType }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                    <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1 rounded-full border">
+                        {{ currentUser.status || 'Pending Review' }}
+                    </span>
+                </div>
+
+                <!-- CAMPAIGN LIST FOR CLIENT WITH PER-CAMPAIGN ISSUE OPTION -->
+                <div v-if="currentUser.status === 'Approved'" class="space-y-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-bold text-amber-400 flex items-center">
+                            <i class="fa-solid fa-bullhorn mr-2"></i> Available Campaigns to Process
+                        </h3>
+                        <span class="text-xs font-semibold text-slate-400">Total: {{ campaigns.length }} Campaigns</span>
+                    </div>
+
+                    <div v-if="campaigns.length === 0" class="text-sm text-slate-400 bg-slate-900/60 p-4 rounded-xl border border-slate-700">
+                        अभी कोई कैंपेन उपलब्ध नहीं है।
+                    </div>
+
+                    <div v-for="cmp in campaigns" :key="cmp.id" class="bg-slate-900/90 border border-slate-700/80 p-5 rounded-xl space-y-4 hover:border-amber-500/50 transition">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                            <div>
+                                <p class="font-bold text-slate-100 text-base">{{ cmp.title }}</p>
+                                <a :href="cmp.url" target="_blank" class="text-xs text-amber-400 underline font-mono break-all inline-flex items-center">
+                                    <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Open Campaign Link: {{ cmp.url }}
+                                </a>
                             </div>
-                            <p class="font-bold text-slate-800 text-sm mt-1">{{ req.empName }} <span class="text-xs text-slate-500">({{ req.empCode }})</span></p>
-                            <p v-if="req.description" class="text-xs text-slate-600 mt-0.5">{{ req.description }}</p>
-                            <button v-if="req.screenshot" @click="previewScreenshot = req.screenshot" class="text-xs text-indigo-600 font-bold hover:underline mt-1 block">
-                                <i class="fa-solid fa-image"></i> View Proof Screenshot
+                            <button @click="copyToClipboard(cmp.url)" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-600 transition">
+                                <i class="fa-solid fa-copy mr-1"></i> Copy Link
                             </button>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="font-black text-emerald-600 text-lg">₹{{ req.amount || 10 }}</span>
-                            <button @click="approveLeadClaim(req)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl">Approve</button>
-                            <button @click="rejectEarningClaim(req)" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl">Reject</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- ADMIN TAB 5: CAMPAIGNS -->
-            <div v-if="adminTab === 'campaigns'" class="space-y-6">
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-plus text-indigo-500"></i> Create Campaign Link
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <input v-model="newCmp.title" placeholder="Campaign Title" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <input v-model="newCmp.url" placeholder="Target Link URL" class="border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                        <button @click="addCampaign" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-xl transition-all shadow">Publish Campaign</button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-                    <h2 class="text-base font-extrabold text-slate-900 mb-4">Active Campaigns</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div v-for="cmp in campaigns" :key="cmp.id" class="border rounded-xl p-3.5 bg-slate-50 flex justify-between items-center">
-                            <div>
-                                <p class="font-bold text-slate-800 text-sm">{{ cmp.title }}</p>
-                                <a :href="cmp.url" target="_blank" class="text-xs text-indigo-600 hover:underline break-all font-mono">{{ cmp.url }}</a>
+                        <!-- Screenshot Proof Upload Section for Campaign Completion -->
+                        <div class="border-t border-slate-800 pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="w-full sm:w-auto flex-grow">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Upload Work Screenshot Proof *</label>
+                                <input type="file" accept="image/*" @change="handleClientScreenshotUpload($event, cmp.id)" class="text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30">
                             </div>
-                            <button @click="deleteCampaign(cmp.id)" class="text-xs bg-rose-50 text-rose-600 p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+
+                            <div class="flex items-center space-x-2">
+                                <span v-if="getClientCampaignStatus(cmp.id)" :class="getProofStatusClass(getClientCampaignStatus(cmp.id))" class="text-xs font-bold px-3 py-1.5 rounded-lg border">
+                                    Status: {{ getClientCampaignStatus(cmp.id) }}
+                                </span>
+                                <button v-else @click="submitClientCampaignProof(cmp.id)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition">
+                                    Submit Proof
+                                </button>
+                            </div>
                         </div>
+
+                        <!-- Preview uploaded screenshot if exists -->
+                        <div v-if="getClientCampaignScreenshot(cmp.id)" class="mt-2">
+                            <p class="text-[10px] text-slate-400 font-bold mb-1">Uploaded Proof Preview:</p>
+                            <img :src="getClientCampaignScreenshot(cmp.id)" class="h-24 rounded-lg border border-slate-700 object-cover">
+                        </div>
+
+                        <!-- PER-CAMPAIGN ISSUE / STUCK OPTION -->
+                        <div class="bg-slate-950/70 border border-rose-500/30 p-3 rounded-xl mt-2">
+                            <details class="group">
+                                <summary class="text-xs font-bold text-rose-400 cursor-pointer flex items-center justify-between">
+                                    <span class="flex items-center"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> इस कैंपेन में कोई समस्या आ रही है? (Report Issue)</span>
+                                    <i class="fa-solid fa-chevron-down text-[10px] group-open:rotate-180 transition"></i>
+                                </summary>
+                                <div class="mt-3 space-y-2 pt-2 border-t border-rose-500/20">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <select v-model="campaignIssueInputs[cmp.id].issueType" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
+                                            <option value="" disabled>समस्या का प्रकार चुनें</option>
+                                            <option value="KYC Pending">KYC Verification Issue</option>
+                                            <option value="Bank Account Issue">Bank Account Issue</option>
+                                            <option value="PAN Card Verification">PAN Card Issue</option>
+                                            <option value="DigiLocker Verification">DigiLocker Issue</option>
+                                            <option value="Technical Error / OTP">Technical Error / OTP Issue</option>
+                                        </select>
+                                        <input v-model="campaignIssueInputs[cmp.id].note" placeholder="विवरण लिखें (e.g. OTP नहीं आ रहा)" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
+                                    </div>
+                                    <button @click="submitCampaignSpecificIssue(cmp.id)" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-1.5 rounded-lg text-xs transition">
+                                        Send Issue Report for this Campaign
+                                    </button>
+                                    <p v-if="getCampaignSpecificIssueText(cmp.id)" class="text-[11px] text-amber-300 bg-amber-500/10 p-2 rounded border border-amber-500/20">
+                                        <i class="fa-solid fa-clock mr-1"></i> दर्ज समस्या: <strong>{{ getCampaignSpecificIssueText(cmp.id) }}</strong>
+                                    </p>
+                                </div>
+                            </details>
+                        </div>
+
                     </div>
                 </div>
-            </div>
 
-            <!-- ADMIN TAB 6: SECURITY & PRIVACY SETTINGS -->
-            <div v-if="adminTab === 'settings'" class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 max-w-lg">
-                <h2 class="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved text-indigo-600"></i> Admin Privacy & Security Credentials
-                </h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Admin Username</label>
-                        <input v-model="adminSettingsForm.username" type="text" class="w-full border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1">Admin Password</label>
-                        <input v-model="adminSettingsForm.password" type="password" class="w-full border rounded-xl px-3.5 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <button @click="updateAdminCredentials" class="bg-slate-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow">Update Security Credentials</button>
+                <div v-else class="bg-slate-900/80 border border-slate-700/80 p-6 rounded-2xl text-center space-y-2">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-400 text-3xl mb-2"></i>
+                    <p class="font-bold text-slate-200">आपका अकाउंट रिव्यू में है।</p>
+                    <p class="text-xs text-slate-400">एडमिन द्वारा प्रोफाइल अप्रूव (Approved) होते ही आपको सभी एक्टिव कैंपेन यहाँ दिखेंगे।</p>
                 </div>
             </div>
+        </section>
 
-        </div>
-
-        <!-- ==================== 2. EMPLOYEE DASHBOARD ==================== -->
-        <div v-if="currentUser.role === 'employee'" class="space-y-6">
+        <!-- 5. EMPLOYEE DASHBOARD -->
+        <section v-if="currentView === 'emp_dash' && currentUser" class="space-y-6">
             
-            <!-- Earnings Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
+            <!-- Employee Header & Earning Stats -->
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-700 pb-4">
                     <div>
-                        <span class="text-[11px] font-extrabold text-slate-400 uppercase">Approved Earnings</span>
-                        <h3 class="text-2xl font-black text-emerald-600 mt-1">₹{{ getEmpEarnings(currentUser.code).totalApproved }}</h3>
+                        <h2 class="text-2xl font-bold text-white">Employee Workspace</h2>
+                        <p class="text-xs text-amber-400 font-semibold">{{ currentUser.name }} (Code: {{ currentUser.code }})</p>
                     </div>
-                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-wallet"></i></div>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <span class="text-[11px] font-extrabold text-slate-400 uppercase">Pending Approvals</span>
-                        <h3 class="text-2xl font-black text-amber-500 mt-1">₹{{ getEmpEarnings(currentUser.code).pendingAmount }}</h3>
+                    <div class="flex items-center space-x-3">
+                        <button @click="showEmpSelfPinModal = true" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
+                            <i class="fa-solid fa-key mr-1.5"></i> Change PIN
+                        </button>
+                        <input v-model="searchQuery" placeholder="Search applicant..." class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-sm w-56 text-white focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-hourglass-half"></i></div>
                 </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <span class="text-[11px] font-extrabold text-slate-400 uppercase">Approved Leads</span>
-                        <h3 class="text-2xl font-black text-indigo-600 mt-1">{{ getEmpEarnings(currentUser.code).approvedLeadsCount }}</h3>
-                    </div>
-                    <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-xl"><i class="fa-solid fa-award"></i></div>
-                </div>
-            </div>
 
-            <!-- Campaign Tasks -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="text-base font-extrabold text-slate-900 mb-3"><i class="fa-solid fa-bullhorn text-indigo-600"></i> Active Campaigns to Work On</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div v-for="cmp in campaigns" :key="cmp.id" class="border rounded-xl p-3 bg-slate-50 flex justify-between items-center">
+                <!-- Earnings Stats Widget -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
                         <div>
-                            <p class="font-bold text-sm text-slate-800">{{ cmp.title }}</p>
-                            <a :href="cmp.url" target="_blank" class="text-xs text-indigo-600 font-mono hover:underline">Open Link</a>
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Total Approved Earnings</p>
+                            <p class="text-2xl font-black text-emerald-400 mt-0.5">₹ {{ getEmpEarnings(currentUser.code).totalApproved }}</p>
                         </div>
-                        <button @click="submitLeadClaim(cmp)" class="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow">+ Claim Lead ₹10</button>
+                        <i class="fa-solid fa-indian-rupee-sign text-emerald-400 text-2xl"></i>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Total Leads Approved</p>
+                            <p class="text-2xl font-black text-amber-400 mt-0.5">{{ getEmpEarnings(currentUser.code).approvedLeadsCount }}</p>
+                        </div>
+                        <i class="fa-solid fa-users-check text-amber-400 text-2xl"></i>
+                    </div>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Pending Approval Earnings</p>
+                            <p class="text-2xl font-black text-indigo-400 mt-0.5">₹ {{ getEmpEarnings(currentUser.code).pendingAmount }}</p>
+                        </div>
+                        <i class="fa-solid fa-hourglass-half text-indigo-400 text-2xl"></i>
                     </div>
                 </div>
             </div>
 
-            <!-- Submit Extra Work Proof -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="text-base font-extrabold text-slate-900 mb-3"><i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i> Submit Extra Work Proof (Earning ₹10)</h3>
+            <!-- Employee Sub Tabs -->
+            <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 space-x-1">
+                <button @click="empSubTab = 'clients'" :class="empSubTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Clients & Campaign Issues</button>
+                <button @click="empSubTab = 'extra_work'" :class="empSubTab === 'extra_work' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Extra Work Submission (Earn ₹10 - ₹500)</button>
+            </div>
+
+            <!-- TAB 1: CLIENTS & CAMPAIGN VERIFICATION -->
+            <div v-if="empSubTab === 'clients'" class="space-y-6">
+                <!-- Submit Daily Report -->
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+                    <h3 class="text-sm font-bold text-amber-400 mb-2"><i class="fa-solid fa-comment-dots mr-1.5"></i> Daily Work Report & Call Details Submit Karein</h3>
+                    <form @submit.prevent="submitFeedback" class="flex gap-3">
+                        <input v-model="employeeFeedbackInput" placeholder="आज का काम, कॉल अपडेट या रिपोर्ट यहाँ लिखें..." required class="flex-grow bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm">Submit Report</button>
+                    </form>
+                </div>
+
+                <!-- Client Table for Employee -->
+                <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+                    <div class="px-6 py-4 bg-slate-900/80 border-b border-slate-700 flex justify-between items-center">
+                        <span class="font-bold text-slate-200 text-sm">Registered Applicants & Campaign Issues</span>
+                        <span class="text-xs font-bold bg-slate-800 px-3 py-1 rounded-full text-amber-400 border border-slate-700">Total: {{ filteredClients.length }}</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-900 text-slate-400 text-xs uppercase font-bold border-b border-slate-700">
+                                <tr>
+                                    <th class="p-4">Client Code & Name</th>
+                                    <th class="p-4">Contact</th>
+                                    <th class="p-4">Applied Job</th>
+                                    <th class="p-4">Campaign Issues Reported</th>
+                                    <th class="p-4 text-center">Campaign Proof Check</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/60 text-slate-300">
+                                <tr v-for="c in filteredClients" :key="c.code" class="hover:bg-slate-700/30">
+                                    <td class="p-4">
+                                        <p class="font-mono font-bold text-amber-400 text-xs">{{ c.code }}</p>
+                                        <p class="font-bold text-white text-sm">{{ c.name }}</p>
+                                    </td>
+                                    <td class="p-4 space-x-1">
+                                        <a :href="'tel:' + c.phone" class="inline-flex items-center justify-center w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500 hover:text-white transition" title="Direct Call">
+                                            <i class="fa-solid fa-phone text-xs"></i>
+                                        </a>
+                                        <a :href="getDirectWhatsAppLink(c.phone, c.name)" target="_blank" class="inline-flex items-center justify-center w-8 h-8 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white transition" title="WhatsApp Chat">
+                                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                                        </a>
+                                    </td>
+                                    <td class="p-4">
+                                        <select :value="c.jobType" @change="shiftClientJob(c, $event.target.value)" class="bg-slate-900 border border-slate-700 text-xs text-amber-300 rounded-lg p-1.5 font-semibold focus:outline-none focus:border-amber-500">
+                                            <option value="Telecalling Job">Telecalling Job</option>
+                                            <option value="Corporate Job">Corporate Job</option>
+                                            <option value="Field & Delivery">Field & Delivery Job</option>
+                                            <option value="Security Officer">Security Officer</option>
+                                            <option value="Office Administration">Office Administration</option>
+                                        </select>
+                                    </td>
+                                    <td class="p-4">
+                                        <div v-if="c.campaignIssues && Object.keys(c.campaignIssues).length > 0" class="space-y-1">
+                                            <div v-for="(iss, cmpId) in c.campaignIssues" :key="cmpId" class="bg-rose-500/10 border border-rose-500/20 p-1.5 rounded text-xs">
+                                                <span class="font-bold text-rose-300">{{ getCampaignTitle(Number(cmpId)) }}:</span>
+                                                <span class="text-slate-200 block text-[11px]">{{ iss.issueType }} - {{ iss.note }}</span>
+                                            </div>
+                                        </div>
+                                        <span v-else class="text-xs text-slate-500">No issues reported</span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <button @click="openCampaignReviewModal(c)" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center mx-auto">
+                                            <i class="fa-solid fa-image mr-1.5"></i> Review Proofs ({{ getClientPendingProofCount(c) }})
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: EXTRA WORK SUBMISSION -->
+            <div v-if="empSubTab === 'extra_work'" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-cloud-arrow-up text-amber-400 mr-2"></i> Submit Extra Work Proof</h3>
+                    <p class="text-xs text-slate-400">अलग से किए गए काम का स्क्रीनशॉट और विवरण भेजें। एडमिन इसे रिव्यू करके ₹10 से ₹500 तक का पेमेंट स्वीकृत करेगा।</p>
+                </div>
+
+                <form @submit.prevent="submitEmpExtraWork" class="space-y-4 max-w-xl bg-slate-900 p-5 rounded-xl border border-slate-700">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Work Screenshot *</label>
+                        <input type="file" accept="image/*" @change="handleExtraWorkFile" required class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Work Description / Detail *</label>
+                        <textarea v-model="extraWorkForm.description" rows="3" required placeholder="क्या काम किया है उसका विवरण लिखें..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs transition">Submit Extra Work to Admin</button>
+                </form>
+            </div>
+
+            <!-- MODAL: Employee Change Own PIN -->
+            <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+                    <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-2"></i> Update Your Security PIN</h3>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-1">New 4-Digit PIN</label>
+                        <input v-model="selfPinInput" type="password" maxlength="4" placeholder="Enter new 4 digit PIN" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-2">
+                        <button @click="showEmpSelfPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
+                        <button @click="updateSelfPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL: Employee Campaign Screenshot Review -->
+            <div v-if="selectedReviewClient" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Review Campaign Proofs - {{ selectedReviewClient.name }}</h3>
+                            <p class="text-xs text-amber-400 font-mono">Code: {{ selectedReviewClient.code }}</p>
+                        </div>
+                        <button @click="selectedReviewClient = null" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+                        <div v-if="!selectedReviewClient.campaignProofs || selectedReviewClient.campaignProofs.length === 0" class="text-xs text-slate-400 p-4 bg-slate-900 rounded-xl">
+                            इस क्लाइंट ने अभी तक कोई भी कैंपेन का स्क्रीनशॉट अपलोड नहीं किया है।
+                        </div>
+
+                        <div v-for="proof in selectedReviewClient.campaignProofs" :key="proof.cmpId" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-sm text-slate-200">{{ getCampaignTitle(proof.cmpId) }}</span>
+                                <span :class="getProofStatusClass(proof.status)" class="text-xs font-bold px-2.5 py-0.5 rounded border">
+                                    {{ proof.status }}
+                                </span>
+                            </div>
+
+                            <img v-if="proof.screenshot" :src="proof.screenshot" class="max-h-56 rounded-lg border border-slate-700 object-contain mx-auto bg-slate-950 p-1">
+
+                            <div v-if="proof.status === 'Submitted - Verification Pending'" class="flex space-x-3 pt-2 border-t border-slate-800">
+                                <button @click="verifyClientCampaign(selectedReviewClient, proof, true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-xl">
+                                    <i class="fa-solid fa-check mr-1"></i> Approve Campaign (+₹10 Earning)
+                                </button>
+                                <button @click="verifyClientCampaign(selectedReviewClient, proof, false)" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 rounded-xl">
+                                    <i class="fa-solid fa-xmark mr-1"></i> Reject Proof
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700 text-right">
+                        <button @click="selectedReviewClient = null" class="px-5 py-2 bg-slate-700 text-white font-bold text-xs rounded-xl">Close</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 6. ADMIN DASHBOARD -->
+        <section v-if="currentView === 'admin_dash'" class="space-y-6">
+            
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-white">Admin Control Panel</h2>
+                    <p class="text-xs text-amber-400 font-semibold">Ved Capital Rewa Management System</p>
+                </div>
+                <button @click="exportCSV" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition flex items-center">
+                    <i class="fa-solid fa-file-excel mr-2"></i> Export Data (CSV)
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Total Clients</p>
+                    <p class="text-3xl font-black text-amber-400 mt-1">{{ clients.length }}</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Total Employees</p>
+                    <p class="text-3xl font-black text-emerald-400 mt-1">{{ employees.length }}</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Pending Lead Claims</p>
+                    <p class="text-3xl font-black text-indigo-400 mt-1">{{ getPendingLeadClaimsCount() }}</p>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+                    <p class="text-xs font-bold text-slate-400 uppercase">Pending Extra Work</p>
+                    <p class="text-3xl font-black text-rose-400 mt-1">{{ getPendingExtraWorkCount() }}</p>
+                </div>
+            </div>
+
+            <!-- Admin Tabs -->
+            <div class="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-700/80 space-x-1 overflow-x-auto">
+                <button @click="adminTab = 'clients'" :class="adminTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Clients & Issues</button>
+                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Employees & Privacy</button>
+                <button @click="adminTab = 'earnings_approval'" :class="adminTab === 'earnings_approval' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Approve Earnings & Extra Work</button>
+                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Campaign Links</button>
+                <button @click="adminTab = 'feedbacks'" :class="adminTab === 'feedbacks' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Daily Work Reports</button>
+                <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Security & Settings</button>
+            </div>
+
+            <!-- TAB 1: CLIENT MANAGEMENT -->
+            <div v-if="adminTab === 'clients'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold text-white">Client Management & Campaign Issues</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900 text-slate-400 text-xs uppercase border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">Code</th>
+                                <th class="p-3">Name</th>
+                                <th class="p-3">Phone</th>
+                                <th class="p-3">Applied Job</th>
+                                <th class="p-3">Status</th>
+                                <th class="p-3">Reported Campaign Issues</th>
+                                <th class="p-3">Promotion</th>
+                                <th class="p-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/60 text-slate-300">
+                            <tr v-for="c in clients" :key="c.code">
+                                <td class="p-3 font-mono font-bold text-amber-400">{{ c.code }}</td>
+                                <td class="p-3 font-semibold text-white">{{ c.name }}</td>
+                                <td class="p-3">{{ c.phone }}</td>
+                                <td class="p-3">
+                                    <select :value="c.jobType" @change="shiftClientJob(c, $event.target.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1 text-xs text-amber-300">
+                                        <option value="Telecalling Job">Telecalling Job</option>
+                                        <option value="Corporate Job">Corporate Job</option>
+                                        <option value="Field & Delivery">Field & Delivery Job</option>
+                                        <option value="Security Officer">Security Officer</option>
+                                        <option value="Office Administration">Office Administration</option>
+                                    </select>
+                                </td>
+                                <td class="p-3">
+                                    <select :value="c.status" @change="updateClientStatus(c, $event.target.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1 text-xs text-white">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                    </select>
+                                </td>
+                                <td class="p-3">
+                                    <div v-if="c.campaignIssues && Object.keys(c.campaignIssues).length > 0" class="space-y-1 max-w-xs">
+                                        <div v-for="(iss, cmpId) in c.campaignIssues" :key="cmpId" class="text-xs text-rose-300 bg-rose-500/10 p-1 rounded border border-rose-500/20">
+                                            <strong>{{ getCampaignTitle(Number(cmpId)) }}:</strong> {{ iss.issueType }}
+                                        </div>
+                                    </div>
+                                    <span v-else class="text-xs text-slate-500">None</span>
+                                </td>
+                                <td class="p-3">
+                                    <button v-if="!c.isPromoted" @click="promoteClientToEmployee(c)" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 rounded-lg text-xs font-bold transition flex items-center">
+                                        <i class="fa-solid fa-user-plus mr-1"></i> Make Employee
+                                    </button>
+                                    <span v-else class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-check-double mr-1"></i> Promoted</span>
+                                </td>
+                                <td class="p-3">
+                                    <button @click="deleteClient(c.code)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: EMPLOYEE MANAGEMENT WITH PRIVACY MASKING -->
+            <div v-if="adminTab === 'employees'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Employees Overview & Privacy Security</h3>
+                    <span class="text-xs text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+                        <i class="fa-solid fa-shield-halved mr-1"></i> Employee PIN Privacy Enabled
+                    </span>
+                </div>
+                
+                <!-- Add New Employee Form -->
+                <form @submit.prevent="addEmployee" class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <input v-model="newEmp.name" placeholder="Name" required class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                    <input v-model="newEmp.phone" placeholder="Phone" required class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                    <input v-model="newEmp.position" placeholder="Position" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold p-2.5 rounded-lg text-sm">Add Employee</button>
+                </form>
+
+                <!-- Employees List with PIN Privacy Control -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div v-for="emp in employees" :key="emp.id" class="bg-slate-900 border border-slate-700 p-5 rounded-2xl flex flex-col justify-between gap-3">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-white text-base">{{ emp.name }}</p>
+                                <p class="text-xs text-amber-400 font-mono mt-0.5">Code: {{ emp.code }} | PIN: 
+                                    <span class="text-emerald-400 font-bold bg-slate-800 px-2 py-0.5 rounded ml-1">
+                                        {{ emp.showPin ? (emp.pin || '1234') : '••••' }}
+                                    </span>
+                                    <button @click="emp.showPin = !emp.showPin" class="text-[11px] text-slate-400 hover:text-amber-300 ml-1.5 underline">
+                                        {{ emp.showPin ? 'Hide' : 'Reveal' }}
+                                    </button>
+                                </p>
+                                <p class="text-xs text-slate-400 mt-0.5">{{ emp.position }} ({{ emp.phone }})</p>
+                            </div>
+                            <button @click="deleteEmployee(emp.id)" class="text-rose-400 hover:text-rose-300 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+
+                        <!-- Earnings Summary for Admin -->
+                        <div class="grid grid-cols-2 gap-2 bg-slate-800/80 p-2.5 rounded-xl text-xs">
+                            <div>
+                                <span class="text-slate-400 block text-[10px]">Approved Earnings:</span>
+                                <strong class="text-emerald-400 font-bold text-sm">₹ {{ getEmpEarnings(emp.code).totalApproved }}</strong>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 block text-[10px]">Approved Leads:</span>
+                                <strong class="text-amber-400 font-bold text-sm">{{ getEmpEarnings(emp.code).approvedLeadsCount }} Leads</strong>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800">
+                            <div class="flex space-x-2">
+                                <a :href="'tel:' + emp.phone" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition flex items-center">
+                                    <i class="fa-solid fa-phone mr-1"></i> Call
+                                </a>
+                                <a :href="getDirectWhatsAppLink(emp.phone, emp.name)" target="_blank" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition flex items-center">
+                                    <i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp
+                                </a>
+                            </div>
+
+                            <div class="flex space-x-2">
+                                <button @click="openAdminPinModal(emp)" class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition font-bold flex items-center">
+                                    <i class="fa-solid fa-key mr-1"></i> Change PIN
+                                </button>
+                                <button @click="viewEmployeeWork(emp)" class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-lg hover:bg-indigo-600 hover:text-white transition font-bold flex items-center">
+                                    <i class="fa-solid fa-chart-line mr-1"></i> Work Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: ADMIN APPROVE EMPLOYEE EARNINGS -->
+            <div v-if="adminTab === 'earnings_approval'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-8">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-3 text-amber-400"><i class="fa-solid fa-coins mr-2"></i> Approve Employee Campaign Claims (₹10 / Campaign)</h3>
+                    <div v-if="earningsRequests.filter(r => r.type === 'Lead' && r.status === 'Pending').length === 0" class="text-xs text-slate-400 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                        कोई पेंडिंग कैंपेन अर्निंग क्लेम नहीं है।
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div v-for="req in earningsRequests.filter(r => r.type === 'Lead' && r.status === 'Pending')" :key="req.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                            <div class="flex justify-between items-start text-xs">
+                                <div>
+                                    <p class="font-bold text-white">{{ req.empName }} ({{ req.empCode }})</p>
+                                    <p class="text-slate-400">Client: <strong class="text-amber-400">{{ req.clientCode }}</strong></p>
+                                </div>
+                                <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold">Claim: ₹10</span>
+                            </div>
+
+                            <img v-if="req.screenshot" :src="req.screenshot" class="max-h-40 rounded-lg border border-slate-800 object-contain mx-auto">
+
+                            <div class="flex space-x-2 pt-2 border-t border-slate-800">
+                                <button @click="approveLeadClaim(req)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-lg">Approve ₹10 Earning</button>
+                                <button @click="rejectEarningClaim(req)" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 rounded-lg">Reject Claim</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-slate-700">
+                    <h3 class="text-lg font-bold text-white mb-3 text-indigo-400"><i class="fa-solid fa-star-half-stroke mr-2"></i> Approve Extra Work Submissions (₹10 to ₹500)</h3>
+                    <div v-if="earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending').length === 0" class="text-xs text-slate-400 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                        कोई पेंडिंग एक्स्ट्रा वर्क सबमिशन नहीं है।
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div v-for="req in earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending')" :key="req.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                            <div class="flex justify-between items-start text-xs">
+                                <div>
+                                    <p class="font-bold text-white">{{ req.empName }} ({{ req.empCode }})</p>
+                                    <p class="text-slate-300 mt-1">Details: {{ req.description }}</p>
+                                </div>
+                                <span class="text-[10px] text-slate-400">{{ req.date }}</span>
+                            </div>
+
+                            <img v-if="req.screenshot" :src="req.screenshot" class="max-h-48 rounded-lg border border-slate-800 object-contain mx-auto">
+
+                            <div class="space-y-2 pt-2 border-t border-slate-800">
+                                <div class="flex items-center space-x-2">
+                                    <label class="text-xs font-bold text-slate-300 whitespace-nowrap">Set Amount (₹10 - ₹500):</label>
+                                    <input type="number" min="10" max="500" v-model.number="req.amount" class="w-24 bg-slate-800 border border-slate-700 px-2 py-1 text-xs text-white rounded-lg font-bold">
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button @click="approveExtraWorkClaim(req)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-lg">Approve ₹{{ req.amount || 10 }}</button>
+                                    <button @click="rejectEarningClaim(req)" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 rounded-lg">Reject</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL 1: Admin Change Employee PIN -->
+            <div v-if="adminPinModal.show" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+                    <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-user-shield text-amber-400 mr-2"></i> Reset Employee PIN</h3>
+                    <p class="text-xs text-slate-400">Target Employee: <strong class="text-white">{{ adminPinModal.empName }}</strong> ({{ adminPinModal.empCode }})</p>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 mb-1">Set New 4-Digit PIN</label>
+                        <input v-model="adminPinModal.newPin" type="password" maxlength="4" placeholder="e.g. 5678" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="flex justify-end space-x-2 pt-2">
+                        <button @click="adminPinModal.show = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
+                        <button @click="saveAdminEmpPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Update PIN</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL 2: Employee Work Details View -->
+            <div v-if="selectedEmpWork" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                        <div>
+                            <h3 class="text-xl font-extrabold text-white">{{ selectedEmpWork.emp.name }}</h3>
+                            <p class="text-xs text-amber-400 font-mono">Code: {{ selectedEmpWork.emp.code }} | Position: {{ selectedEmpWork.emp.position }}</p>
+                        </div>
+                        <button @click="selectedEmpWork = null" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Total Submitted Reports</p>
+                            <p class="text-xl font-extrabold text-emerald-400">{{ selectedEmpWork.reports.length }}</p>
+                        </div>
+                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Approved Earnings</p>
+                            <p class="text-xl font-extrabold text-amber-400">₹ {{ getEmpEarnings(selectedEmpWork.emp.code).totalApproved }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Submitted Work Reports History</h4>
+                        <div v-if="selectedEmpWork.reports.length === 0" class="text-xs text-slate-400 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                            इस एम्प्लॉई ने अभी तक कोई वर्क रिपोर्ट जमा नहीं की है।
+                        </div>
+                        <div v-for="r in selectedEmpWork.reports" :key="r.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700/80 space-y-1">
+                            <div class="flex justify-between text-xs text-slate-400">
+                                <span class="font-bold text-slate-300"><i class="fa-regular fa-calendar mr-1"></i> {{ r.date }}</span>
+                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Report ID: #{{ r.id }}</span>
+                            </div>
+                            <p class="text-sm text-slate-200 whitespace-pre-line mt-1">{{ r.text }}</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700 text-right">
+                        <button @click="selectedEmpWork = null" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded-xl">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: CAMPAIGN MANAGEMENT -->
+            <div v-if="adminTab === 'campaigns'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
+                <h3 class="text-lg font-bold text-white">Add & Manage Campaigns</h3>
+                <form @submit.prevent="addCampaign" class="flex flex-col sm:flex-row gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <input v-model="newCmp.title" placeholder="Campaign Title" required class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white flex-1">
+                    <input v-model="newCmp.url" type="url" placeholder="https://..." required class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white flex-2">
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2.5 rounded-lg text-sm">Add Link</button>
+                </form>
+
                 <div class="space-y-3">
-                    <textarea v-model="extraWorkForm.description" placeholder="Describe the extra task or work completed..." class="w-full border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 h-20 bg-slate-50 focus:bg-white"></textarea>
-                    <div class="flex items-center gap-4">
-                        <input type="file" @change="handleExtraWorkFile" accept="image/*" class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700">
-                    </div>
-                    <button @click="submitEmpExtraWork" class="bg-indigo-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow">Submit Proof for Approval</button>
-                </div>
-            </div>
-
-            <!-- Daily Work Report / Feedback -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="text-base font-extrabold text-slate-900 mb-3"><i class="fa-solid fa-pen-to-square text-indigo-600"></i> Daily Work Report / Vivran</h3>
-                <div class="flex gap-2">
-                    <input v-model="employeeFeedbackInput" placeholder="Write today's work summary..." class="flex-1 border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 focus:bg-white">
-                    <button @click="submitFeedback" class="bg-slate-900 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow">Submit Report</button>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ==================== 3. CLIENT PRIVATE DASHBOARD ==================== -->
-        <div v-if="currentUser.role === 'client'" class="space-y-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div class="flex justify-between items-center border-b pb-4 mb-4">
-                    <div>
-                        <span class="text-xs font-extrabold text-indigo-600 uppercase tracking-widest">Private Client Portal</span>
-                        <h2 class="text-xl font-black text-slate-900">Welcome, {{ currentUser.name }}</h2>
-                        <p class="text-xs text-slate-500">Client Code: <b>{{ currentUser.code }}</b> | Category: <b>{{ currentUser.jobType }}</b></p>
-                    </div>
-                    <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">Account Active</span>
-                </div>
-
-                <h3 class="text-sm font-extrabold text-slate-800 mb-3">Your Running Campaigns & Work Status</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div v-for="cmp in campaigns" :key="cmp.id" class="border rounded-xl p-4 bg-slate-50 flex justify-between items-center">
+                    <div v-for="cmp in campaigns" :key="cmp.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center">
                         <div>
-                            <p class="font-bold text-slate-800 text-sm">{{ cmp.title }}</p>
-                            <a :href="cmp.url" target="_blank" class="text-xs text-indigo-600 font-mono hover:underline">View Campaign Link</a>
+                            <p class="font-bold text-white">{{ cmp.title }}</p>
+                            <a :href="cmp.url" target="_blank" class="text-xs text-amber-400 underline font-mono">{{ cmp.url }}</a>
                         </div>
-                        <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-2.5 py-1 rounded-lg border border-indigo-200">In Progress</span>
+                        <button @click="deleteCampaign(cmp.id)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
             </div>
-        </div>
 
-    </div>
-
-    <!-- MODAL 1: EMPLOYEE WORK REPORTS & PROOFS -->
-    <div v-if="selectedEmpWork" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-lg font-extrabold text-slate-900"><i class="fa-solid fa-clipboard-user text-indigo-600"></i> Reports & Vivran: {{ selectedEmpWork.name }}</h3>
-                <button @click="selectedEmpWork = null" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
+            <!-- TAB 5: ALL REPORTS -->
+            <div v-if="adminTab === 'feedbacks'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold text-white">All Employee Daily Reports</h3>
+                <div v-if="feedbacks.length === 0" class="text-xs text-slate-400">कोई रिपोर्ट उपलब्ध नहीं है।</div>
+                <div class="space-y-3">
+                    <div v-for="fb in feedbacks" :key="fb.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="font-bold text-amber-400">{{ fb.empName }} (Code: {{ fb.empCode }})</span>
+                            <span class="text-slate-400">{{ fb.date }}</span>
+                        </div>
+                        <p class="text-sm text-slate-200 whitespace-pre-line">{{ fb.text }}</p>
+                    </div>
+                </div>
             </div>
 
-            <div>
-                <h4 class="text-xs font-extrabold uppercase text-slate-500 mb-2">Submitted Claims & Proofs</h4>
-                <div class="space-y-2">
-                    <div v-for="r in earningsRequests.filter(req => req.empCode === selectedEmpWork.code)" :key="r.id" class="p-3 border rounded-xl text-xs flex justify-between items-center bg-slate-50">
+            <!-- TAB 6: SECURITY & SETTINGS -->
+            <div v-if="adminTab === 'settings'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-3">Company Profile Info</h3>
+                    <div class="space-y-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
                         <div>
-                            <span class="font-bold text-slate-800">{{ r.type }} - ₹{{ r.amount }}</span>
-                            <p class="text-slate-500 mt-0.5">{{ r.description || 'No description' }}</p>
-                            <button v-if="r.screenshot" @click="previewScreenshot = r.screenshot" class="text-indigo-600 font-bold hover:underline mt-1 block"><i class="fa-solid fa-image"></i> View Attachment</button>
+                            <label class="block text-xs font-bold text-slate-400 mb-1">About Us Description</label>
+                            <textarea v-model="companyInfo.aboutText" rows="3" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white"></textarea>
                         </div>
-                        <span class="px-2 py-1 rounded font-bold text-[10px]" :class="r.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">{{ r.status }}</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">WhatsApp Number</label>
+                                <input v-model="companyInfo.whatsapp" type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Office Address</label>
+                                <input v-model="companyInfo.address" type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                            </div>
+                        </div>
+                        <button @click="updateCompanySettings" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs">Save Company Info</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-3">Change Admin Security Credentials</h3>
+                    <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Admin Username</label>
+                                <input v-model="adminSettingsForm.username" type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Admin Password</label>
+                                <input v-model="adminSettingsForm.password" type="password" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                            </div>
+                        </div>
+                        <button @click="updateAdminCredentials" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">Update Credentials</button>
                     </div>
                 </div>
             </div>
 
-            <div>
-                <h4 class="text-xs font-extrabold uppercase text-slate-500 mb-2">Daily Reports / Vivran</h4>
-                <div class="space-y-2">
-                    <div v-for="f in feedbacks.filter(fb => fb.empCode === selectedEmpWork.code)" :key="f.id" class="p-3 border rounded-xl text-xs bg-slate-50">
-                        <span class="text-slate-400 font-mono">{{ f.date }}:</span>
-                        <p class="text-slate-800 font-semibold mt-1">{{ f.text }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- MODAL 2: CLIENT CAMPAIGN REVIEW -->
-    <div v-if="selectedReviewClient" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 shadow-2xl">
-            <div class="flex justify-between items-center border-b pb-3">
-                <h3 class="text-base font-bold text-slate-900">Campaigns for {{ selectedReviewClient.name }}</h3>
-                <button @click="selectedReviewClient = null" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="space-y-2">
-                <div v-for="cmp in campaigns" :key="cmp.id" class="p-3 border rounded-xl text-xs flex justify-between items-center">
-                    <span class="font-bold text-slate-800">{{ cmp.title }}</span>
-                    <a :href="cmp.url" target="_blank" class="text-indigo-600 font-bold hover:underline">Link</a>
-                </div>
-            </div>
-        </div>
-    </div>
+    </main>
 
-    <!-- MODAL 3: SCREENSHOT PREVIEW -->
-    <div v-if="previewScreenshot" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" @click="previewScreenshot = null">
-        <div class="bg-white p-2 rounded-2xl max-w-lg w-full">
-            <img :src="previewScreenshot" class="w-full rounded-xl max-h-[80vh] object-contain">
-            <p class="text-center text-xs text-slate-500 py-2">Click anywhere to close</p>
-        </div>
-    </div>
-
-    <!-- MODAL 4: CHANGE PIN -->
-    <div v-if="showSelfPinModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h3 class="text-base font-bold text-slate-900">Change Security PIN</h3>
-            <input v-model="selfPinInput" type="password" maxlength="4" placeholder="New 4-digit PIN" class="w-full border rounded-xl px-3 py-2 text-sm font-mono text-center text-lg outline-none focus:ring-2 focus:ring-indigo-500">
-            <div class="flex justify-end gap-2">
-                <button @click="showSelfPinModal = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
-                <button @click="updateSelfPin" class="px-4 py-2 text-xs bg-indigo-600 text-white font-bold rounded-xl shadow">Save PIN</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL 5: ADMIN RESET EMPLOYEE PIN -->
-    <div v-if="adminPinModal.show" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm space-y-4 shadow-2xl">
-            <h3 class="text-base font-bold text-slate-900">Reset PIN for {{ adminPinModal.empName }}</h3>
-            <input v-model="adminPinModal.newPin" type="text" maxlength="4" class="w-full border rounded-xl px-3 py-2 text-sm font-mono text-center text-lg outline-none focus:ring-2 focus:ring-indigo-500">
-            <div class="flex justify-end gap-2">
-                <button @click="adminPinModal.show = false" class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
-                <button @click="saveAdminEmpPin" class="px-4 py-2 text-xs bg-indigo-600 text-white font-bold rounded-xl shadow">Update PIN</button>
-            </div>
-        </div>
-    </div>
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-auto no-print">
+        <p>&copy; 2026 Ved Capital Rewa. All Rights Reserved.</p>
+    </footer>
 
 </div>
 
-<!-- VUE APP SCRIPT -->
 <script>
 const { createApp } = Vue;
 
 createApp({
     data() {
         return {
-            isLoggedIn: false,
-            unauthView: 'public', // 'public' or 'login'
+            currentView: 'job_form',
+            loginType: 'client',
+            loginInput: { code: '', phone: '', pin: '', username: '', password: '' },
+            loginError: '',
             currentUser: null,
-            adminTab: 'clients',
-            loginForm: { role: 'admin', username: '', password: '' },
-            publicForm: { name: '', phone: '', jobType: 'Lead Gen', message: '' },
-            showToast: false,
-            notificationMessage: '',
-            showSelfPinModal: false,
-            selfPinInput: '',
+
+            toast: { show: false, message: '', type: 'success' },
+
+            jobForm: { name: '', phone: '', jobType: '', address: '' },
+            formError: '',
+            applicationSuccess: false,
+            lastSubmitted: {},
+
+            campaignIssueInputs: {},
+            clientCampaignFileMap: {},
+
+            searchQuery: '',
             employeeFeedbackInput: '',
+            empSubTab: 'clients',
+            showEmpSelfPinModal: false,
+            selfPinInput: '',
+            selectedReviewClient: null,
+
             extraWorkForm: { screenshot: null, description: '' },
-            newClient: { name: '', phone: '', jobType: 'Lead Gen' },
+
+            adminTab: 'clients',
             newEmp: { name: '', phone: '', position: '', pin: '1234' },
             newCmp: { title: '', url: '' },
-            adminPinModal: { show: false, empId: null, empName: '', empCode: '', newPin: '' },
-            adminSettingsForm: { username: 'admin', password: '123' },
-            selectedEmpWork: null,
-            selectedReviewClient: null,
-            previewScreenshot: null,
+            adminSettingsForm: { username: 'admin', password: 'Admin@3307' },
 
-            // Core Data Storage
-            adminSettings: { username: 'admin', password: '123' },
+            adminPinModal: { show: false, empId: null, empName: '', empCode: '', newPin: '' },
+            selectedEmpWork: null,
+
+            companyInfo: {
+                aboutText: 'Ved Capital Rewa is a leading career management and client recruitment firm in Rewa, Madhya Pradesh.',
+                whatsapp: '919000000000',
+                address: 'College Road, Rewa, Madhya Pradesh - 486001'
+            },
+            adminSettings: { username: 'admin', password: 'Admin@3307' },
+            campaigns: [
+                { id: 101, title: 'Primary Promotion Campaign 2026', url: 'https://vedcapitalrewa.com/promo' },
+                { id: 102, title: 'Secondary Telecalling Drive', url: 'https://vedcapitalrewa.com/telecalling' }
+            ],
             clients: [
-                { code: 'CL-101', name: 'Rahul Sharma', phone: '9876543210', jobType: 'Lead Gen', pin: '1234', status: 'Active', isPromoted: false }
+                { 
+                    code: 'CLI-1001', 
+                    name: 'Rajesh Sharma', 
+                    phone: '9827012345', 
+                    jobType: 'Telecalling Job', 
+                    address: 'Rewa, MP', 
+                    status: 'Approved', 
+                    isPromoted: false,
+                    campaignIssues: {},
+                    campaignProofs: []
+                }
             ],
             employees: [
-                { id: 1, code: 'EMP-1001', name: 'Amit Kumar', phone: '9988776655', position: 'Executive', pin: '1234' }
+                { id: 1, code: 'EMP-0001', name: 'Suresh Patel', phone: '9123456789', position: 'Field Officer', pin: '1234', showPin: false }
             ],
-            publicLeads: [],
-            campaigns: [
-                { id: 101, title: 'Demat Account Lead', url: 'https://example.com/demat' }
-            ],
-            earningsRequests: [],
-            feedbacks: []
+            feedbacks: [],
+            earningsRequests: []
+        };
+    },
+    computed: {
+        filteredClients() {
+            if (!this.searchQuery) return this.clients;
+            const q = this.searchQuery.toLowerCase();
+            return this.clients.filter(c => 
+                (c.name && c.name.toLowerCase().includes(q)) ||
+                (c.code && c.code.toLowerCase().includes(q)) ||
+                (c.phone && c.phone.includes(q))
+            );
         }
     },
     mounted() {
         this.loadData();
-        this.adminSettingsForm = { ...this.adminSettings };
+        const savedUser = localStorage.getItem('vcr_current_user');
+        const savedView = localStorage.getItem('vcr_current_view');
+        if (savedUser) {
+            this.currentUser = JSON.parse(savedUser);
+            if (savedView) this.currentView = savedView;
+        }
+        this.initCampaignIssueInputs();
     },
     methods: {
+        initCampaignIssueInputs() {
+            this.campaigns.forEach(cmp => {
+                if (!this.campaignIssueInputs[cmp.id]) {
+                    this.campaignIssueInputs[cmp.id] = { issueType: '', note: '' };
+                }
+            });
+        },
+        showNotification(msg, type = 'success') {
+            this.toast = { show: true, message: msg, type: type };
+            setTimeout(() => { this.toast.show = false; }, 3000);
+        },
+        setView(v) {
+            this.currentView = v;
+            this.loginError = '';
+            if (this.currentUser) {
+                localStorage.setItem('vcr_current_view', v);
+            }
+        },
+        navigateHome() {
+            if (this.currentUser) {
+                if (this.currentUser.role === 'admin') this.setView('admin_dash');
+                else if (this.currentUser.role === 'employee') this.setView('emp_dash');
+                else this.setView('client_dash');
+            } else {
+                this.setView('job_form');
+            }
+        },
         saveData() {
-            localStorage.setItem('ved_clients', JSON.stringify(this.clients));
-            localStorage.setItem('ved_employees', JSON.stringify(this.employees));
-            localStorage.setItem('ved_campaigns', JSON.stringify(this.campaigns));
-            localStorage.setItem('ved_requests', JSON.stringify(this.earningsRequests));
-            localStorage.setItem('ved_feedbacks', JSON.stringify(this.feedbacks));
-            localStorage.setItem('ved_public_leads', JSON.stringify(this.publicLeads));
-            localStorage.setItem('ved_admin', JSON.stringify(this.adminSettings));
+            localStorage.setItem('vcr_company_info', JSON.stringify(this.companyInfo));
+            localStorage.setItem('vcr_admin_settings', JSON.stringify(this.adminSettings));
+            localStorage.setItem('vcr_campaigns', JSON.stringify(this.campaigns));
+            localStorage.setItem('vcr_clients', JSON.stringify(this.clients));
+            localStorage.setItem('vcr_employees', JSON.stringify(this.employees));
+            localStorage.setItem('vcr_feedbacks', JSON.stringify(this.feedbacks));
+            localStorage.setItem('vcr_earnings_requests', JSON.stringify(this.earningsRequests));
+            if (this.currentUser) {
+                localStorage.setItem('vcr_current_user', JSON.stringify(this.currentUser));
+            }
         },
         loadData() {
-            if (localStorage.getItem('ved_clients')) this.clients = JSON.parse(localStorage.getItem('ved_clients'));
-            if (localStorage.getItem('ved_employees')) this.employees = JSON.parse(localStorage.getItem('ved_employees'));
-            if (localStorage.getItem('ved_campaigns')) this.campaigns = JSON.parse(localStorage.getItem('ved_campaigns'));
-            if (localStorage.getItem('ved_requests')) this.earningsRequests = JSON.parse(localStorage.getItem('ved_requests'));
-            if (localStorage.getItem('ved_feedbacks')) this.feedbacks = JSON.parse(localStorage.getItem('ved_feedbacks'));
-            if (localStorage.getItem('ved_public_leads')) this.publicLeads = JSON.parse(localStorage.getItem('ved_public_leads'));
-            if (localStorage.getItem('ved_admin')) this.adminSettings = JSON.parse(localStorage.getItem('ved_admin'));
-        },
-        showNotification(msg) {
-            this.notificationMessage = msg;
-            this.showToast = true;
-            setTimeout(() => { this.showToast = false; }, 3000);
-        },
+            const ci = localStorage.getItem('vcr_company_info');
+            if (ci) this.companyInfo = JSON.parse(ci);
+            const ad = localStorage.getItem('vcr_admin_settings');
+            if (ad) this.adminSettings = JSON.parse(ad);
+            const cmp = localStorage.getItem('vcr_campaigns');
+            if (cmp) this.campaigns = JSON.parse(cmp);
+            const cl = localStorage.getItem('vcr_clients');
+            if (cl) this.clients = JSON.parse(cl);
+            const emp = localStorage.getItem('vcr_employees');
+            if (emp) {
+                this.employees = JSON.parse(emp).map(e => ({ ...e, showPin: false }));
+            }
+            const fb = localStorage.getItem('vcr_feedbacks');
+            if (fb) this.feedbacks = JSON.parse(fb);
+            const er = localStorage.getItem('vcr_earnings_requests');
+            if (er) this.earningsRequests = JSON.parse(er);
 
-        // Public Form Submission
-        submitPublicLead() {
-            if (!this.publicForm.name || !this.publicForm.phone) {
-                alert('Naam aur Phone number dono zaroori hain!');
+            this.adminSettingsForm.username = this.adminSettings.username;
+            this.adminSettingsForm.password = this.adminSettings.password;
+        },
+        submitJobForm() {
+            if (!this.jobForm.phone || this.jobForm.phone.length !== 10) {
+                this.formError = 'कृपया 10 अंकों का सही मोबाइल नंबर दर्ज करें।';
                 return;
             }
-            this.publicLeads.unshift({
-                name: this.publicForm.name.trim(),
-                phone: this.publicForm.phone.trim(),
-                jobType: this.publicForm.jobType,
-                message: this.publicForm.message.trim(),
-                date: new Date().toLocaleDateString('en-IN')
-            });
-            this.publicForm = { name: '', phone: '', jobType: 'Lead Gen', message: '' };
-            this.saveData();
-            this.showNotification('Request submitted successfully! Admin se Sampark karein.');
-        },
-        convertPublicLeadToClient(lead, index) {
-            const code = 'CL-' + String(this.clients.length + 101);
-            this.clients.unshift({
-                code: code,
-                name: lead.name,
-                phone: lead.phone,
-                jobType: lead.jobType,
-                pin: '1234',
-                status: 'Active',
-                isPromoted: false
-            });
-            this.publicLeads.splice(index, 1);
-            this.saveData();
-            this.showNotification(`Public lead converted to Client (${code})`);
-        },
+            this.formError = '';
+            
+            const nextCode = 'CLI-' + String(this.clients.length + 1001);
+            const newClient = {
+                code: nextCode,
+                name: this.jobForm.name.trim(),
+                phone: this.jobForm.phone.trim(),
+                jobType: this.jobForm.jobType,
+                address: this.jobForm.address.trim(),
+                status: 'Pending',
+                isPromoted: false,
+                campaignIssues: {},
+                campaignProofs: []
+            };
 
-        // Unified Login Logic
-        login() {
-            const username = this.loginForm.username.trim();
-            const password = this.loginForm.password.trim();
+            this.clients.unshift(newClient);
+            this.saveData();
 
-            if (this.loginForm.role === 'admin') {
-                if (username === this.adminSettings.username && password === this.adminSettings.password) {
-                    this.currentUser = { role: 'admin', name: 'Admin', code: 'ADMIN' };
-                    this.isLoggedIn = true;
-                    this.showNotification('Welcome Admin!');
-                    return;
-                }
-            } else if (this.loginForm.role === 'employee') {
-                const emp = this.employees.find(e => e.code.toLowerCase() === username.toLowerCase() && e.pin === password);
-                if (emp) {
-                    this.currentUser = { ...emp, role: 'employee' };
-                    this.isLoggedIn = true;
-                    this.showNotification(`Welcome, ${emp.name}!`);
-                    return;
-                }
-            } else if (this.loginForm.role === 'client') {
-                const cl = this.clients.find(c => c.code.toLowerCase() === username.toLowerCase() && (c.pin || '1234') === password);
-                if (cl) {
-                    this.currentUser = { ...cl, role: 'client' };
-                    this.isLoggedIn = true;
-                    this.showNotification(`Welcome, ${cl.name}!`);
-                    return;
-                }
+            this.lastSubmitted = { ...newClient };
+            this.applicationSuccess = true;
+            this.jobForm = { name: '', phone: '', jobType: '', address: '' };
+            this.showNotification('Application Submit Ho Gayi Hai!');
+        },
+        printSlip() { window.print(); },
+        getWhatsAppLink(client) {
+            const num = this.companyInfo.whatsapp || '919000000000';
+            const msg = encodeURIComponent(`Namaste Ved Capital Rewa,\nMaine job form bhara hai:\nName: ${client.name}\nCode: ${client.code}\nPhone: ${client.phone}`);
+            return `https://wa.me/${num}?text=${msg}`;
+        },
+        getDirectWhatsAppLink(phone, name) {
+            const cleanPhone = phone.replace(/\D/g, '');
+            const fullPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+            const msg = encodeURIComponent(`Namaste ${name}, Ved Capital Rewa se sampark kiya ja raha hai.`);
+            return `https://wa.me/${fullPhone}?text=${msg}`;
+        },
+        handleClientLogin() {
+            const code = this.loginInput.code.trim().toUpperCase();
+            const phone = this.loginInput.phone.trim();
+            const found = this.clients.find(c => c.code.toUpperCase() === code && c.phone === phone);
+
+            if (found) {
+                this.currentUser = { ...found, role: 'client' };
+                this.currentView = 'client_dash';
+                this.loginError = '';
+                this.saveSession();
+                this.showNotification('Welcome back, ' + found.name);
+            } else {
+                this.loginError = 'Client Code या Mobile Number गलत है!';
             }
-            alert('Aapka Username, Code ya PIN galat hai!');
+        },
+        handleEmployeeLogin() {
+            const code = this.loginInput.code.trim().toUpperCase();
+            const pin = this.loginInput.pin.trim();
+            const found = this.employees.find(e => e.code.toUpperCase() === code && (e.pin || '1234') === pin);
+
+            if (found) {
+                this.currentUser = { ...found, role: 'employee' };
+                this.currentView = 'emp_dash';
+                this.loginError = '';
+                this.saveSession();
+                this.showNotification('Employee Login Successful!');
+            } else {
+                this.loginError = 'गलत Employee Code या PIN!';
+            }
+        },
+        handleAdminLogin() {
+            if (this.loginInput.username === this.adminSettings.username && this.loginInput.password === this.adminSettings.password) {
+                this.currentUser = { name: this.adminSettings.username, role: 'admin' };
+                this.currentView = 'admin_dash';
+                this.loginError = '';
+                this.saveSession();
+                this.showNotification('Admin Panel Authenticated');
+            } else {
+                this.loginError = 'गलत Admin Username या Password!';
+            }
+        },
+        saveSession() {
+            localStorage.setItem('vcr_current_user', JSON.stringify(this.currentUser));
+            localStorage.setItem('vcr_current_view', this.currentView);
         },
         logout() {
             this.currentUser = null;
-            this.isLoggedIn = false;
-            this.loginForm = { role: 'admin', username: '', password: '' };
+            this.currentView = 'job_form';
+            localStorage.removeItem('vcr_current_user');
+            localStorage.removeItem('vcr_current_view');
+            this.showNotification('Logged out successfully');
         },
-
-        // Client Operations
-        addClient() {
-            if (!this.newClient.name || !this.newClient.phone) return;
-            const code = 'CL-' + String(this.clients.length + 101);
-            this.clients.unshift({
-                code: code,
-                name: this.newClient.name.trim(),
-                phone: this.newClient.phone.trim(),
-                jobType: this.newClient.jobType,
-                pin: '1234',
-                status: 'Active',
-                isPromoted: false
-            });
-            this.newClient = { name: '', phone: '', jobType: 'Lead Gen' };
-            this.saveData();
-            this.showNotification('Naya Client jud gaya!');
+        getStatusBadgeClass(status) {
+            if (status === 'Approved') return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+            if (status === 'Rejected') return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+            return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+        },
+        copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            this.showNotification('Link Copied to Clipboard!');
+        },
+        submitCampaignSpecificIssue(cmpId) {
+            const inp = this.campaignIssueInputs[cmpId];
+            if (!inp || !inp.issueType) {
+                alert('कृपया समस्या का प्रकार (Issue Type) चुनें!');
+                return;
+            }
+            const cl = this.clients.find(c => c.code === this.currentUser.code);
+            if (cl) {
+                if (!cl.campaignIssues) cl.campaignIssues = {};
+                cl.campaignIssues[cmpId] = {
+                    issueType: inp.issueType,
+                    note: inp.note ? inp.note.trim() : ''
+                };
+                this.currentUser.campaignIssues = { ...cl.campaignIssues };
+                this.saveData();
+                this.showNotification('Campaign Issue Report Submitted!');
+            }
+        },
+        getCampaignSpecificIssueText(cmpId) {
+            if (!this.currentUser || !this.currentUser.campaignIssues) return null;
+            const iss = this.currentUser.campaignIssues[cmpId];
+            return iss ? `${iss.issueType} ${iss.note ? '- ' + iss.note : ''}` : null;
+        },
+        handleClientScreenshotUpload(event, cmpId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.clientCampaignFileMap[cmpId] = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        },
+        submitClientCampaignProof(cmpId) {
+            const base64Img = this.clientCampaignFileMap[cmpId];
+            if (!base64Img) {
+                alert('कृपया काम का स्क्रीनशॉट अपलोड करें!');
+                return;
+            }
+            const cl = this.clients.find(c => c.code === this.currentUser.code);
+            if (cl) {
+                if (!cl.campaignProofs) cl.campaignProofs = [];
+                const existingIndex = cl.campaignProofs.findIndex(p => p.cmpId === cmpId);
+                const proofObj = {
+                    cmpId: cmpId,
+                    screenshot: base64Img,
+                    status: 'Submitted - Verification Pending'
+                };
+                if (existingIndex > -1) {
+                    cl.campaignProofs[existingIndex] = proofObj;
+                } else {
+                    cl.campaignProofs.push(proofObj);
+                }
+                this.currentUser.campaignProofs = [...cl.campaignProofs];
+                this.saveData();
+                this.showNotification('Proof Submitted! Pending Verification.');
+            }
+        },
+        getClientCampaignStatus(cmpId) {
+            if (!this.currentUser || !this.currentUser.campaignProofs) return null;
+            const proof = this.currentUser.campaignProofs.find(p => p.cmpId === cmpId);
+            return proof ? proof.status : null;
+        },
+        getClientCampaignScreenshot(cmpId) {
+            if (!this.currentUser || !this.currentUser.campaignProofs) return null;
+            const proof = this.currentUser.campaignProofs.find(p => p.cmpId === cmpId);
+            return proof ? proof.screenshot : null;
+        },
+        getProofStatusClass(status) {
+            if (status === 'Approved') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+            if (status === 'Rejected') return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+            return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
         },
         shiftClientJob(client, newJobType) {
             client.jobType = newJobType;
             this.saveData();
-            this.showNotification('Job type updated!');
+            this.showNotification(`${client.name} ki job category shift ho gayi hai: ${newJobType}`);
         },
-        promoteClientToEmployee(client) {
-            const newEmpCode = 'EMP-' + String(this.employees.length + 1001);
-            this.employees.unshift({
-                id: Date.now(),
-                code: newEmpCode,
-                name: client.name,
-                phone: client.phone,
-                position: client.jobType,
-                pin: client.pin || '1234'
-            });
-            client.isPromoted = true;
-            this.saveData();
-            this.showNotification(`${client.name} promoted to Employee (${newEmpCode})`);
+        getClientPendingProofCount(client) {
+            if (!client.campaignProofs) return 0;
+            return client.campaignProofs.filter(p => p.status === 'Submitted - Verification Pending').length;
         },
-        deleteClient(code) {
-            if (confirm('Delete client?')) {
-                this.clients = this.clients.filter(c => c.code !== code);
-                this.saveData();
-                this.showNotification('Client deleted');
-            }
-        },
-        openClientReviewModal(client) {
+        openCampaignReviewModal(client) {
             this.selectedReviewClient = client;
         },
-
-        // Employee Operations
-        addEmployee() {
-            if (!this.newEmp.name || !this.newEmp.phone) return;
-            const newEmpCode = 'EMP-' + String(this.employees.length + 1001);
-            this.employees.unshift({
-                id: Date.now(),
-                code: newEmpCode,
-                name: this.newEmp.name.trim(),
-                phone: this.newEmp.phone.trim(),
-                position: this.newEmp.position.trim() || 'Executive',
-                pin: this.newEmp.pin || '1234'
-            });
-            this.newEmp = { name: '', phone: '', position: '', pin: '1234' };
+        getCampaignTitle(cmpId) {
+            const cmp = this.campaigns.find(c => c.id === cmpId);
+            return cmp ? cmp.title : 'Campaign #' + cmpId;
+        },
+        verifyClientCampaign(client, proof, isApproved) {
+            proof.status = isApproved ? 'Approved' : 'Rejected';
             this.saveData();
-            this.showNotification('Employee added!');
-        },
-        deleteEmployee(id) {
-            if (confirm('Delete employee?')) {
-                this.employees = this.employees.filter(e => e.id !== id);
-                this.saveData();
-                this.showNotification('Employee removed');
-            }
-        },
-        viewEmployeeWork(emp) {
-            this.selectedEmpWork = emp;
-        },
 
-        // Security PIN Reset
-        updateSelfPin() {
-            if (!this.selfPinInput || this.selfPinInput.length !== 4) return alert('4-digit PIN dalein!');
-            if (this.currentUser.role === 'employee') {
-                const emp = this.employees.find(e => e.code === this.currentUser.code);
-                if (emp) emp.pin = this.selfPinInput;
-            } else if (this.currentUser.role === 'client') {
-                const cl = this.clients.find(c => c.code === this.currentUser.code);
-                if (cl) cl.pin = this.selfPinInput;
-            }
-            this.currentUser.pin = this.selfPinInput;
-            this.selfPinInput = '';
-            this.showSelfPinModal = false;
-            this.saveData();
-            this.showNotification('Security PIN Updated!');
-        },
-        openAdminPinModal(emp) {
-            this.adminPinModal = { show: true, empId: emp.id, empName: emp.name, empCode: emp.code, newPin: emp.pin || '1234' };
-        },
-        saveAdminEmpPin() {
-            if (!this.adminPinModal.newPin || this.adminPinModal.newPin.length !== 4) return alert('4-digit PIN dalein!');
-            const emp = this.employees.find(e => e.id === this.adminPinModal.empId);
-            if (emp) {
-                emp.pin = this.adminPinModal.newPin;
-                this.adminPinModal.show = false;
+            if (isApproved) {
+                this.earningsRequests.unshift({
+                    id: Date.now(),
+                    empCode: this.currentUser.code,
+                    empName: this.currentUser.name,
+                    type: 'Lead',
+                    clientCode: client.code,
+                    cmpId: proof.cmpId,
+                    screenshot: proof.screenshot,
+                    amount: 10,
+                    status: 'Pending',
+                    date: new Date().toLocaleDateString('hi-IN')
+                });
                 this.saveData();
-                this.showNotification(`PIN updated for ${emp.name}`);
+                this.showNotification('Campaign Approved! ₹10 Earning Claim sent to Admin.');
+            } else {
+                this.showNotification('Campaign Proof Rejected.');
             }
         },
-
-        // Proof & Submissions
-        handleExtraWorkFile(e) {
-            const file = e.target.files[0];
+        handleExtraWorkFile(event) {
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = (event) => { this.extraWorkForm.screenshot = event.target.result; };
+            reader.onload = (e) => {
+                this.extraWorkForm.screenshot = e.target.result;
+            };
             reader.readAsDataURL(file);
         },
         submitEmpExtraWork() {
-            if (!this.extraWorkForm.description.trim()) return alert('Detail likhna zaroori hai!');
+            if (!this.extraWorkForm.screenshot || !this.extraWorkForm.description) {
+                alert('कृपया स्क्रीनशॉट और विवरण दोनों भरें!');
+                return;
+            }
             this.earningsRequests.unshift({
                 id: Date.now(),
-                type: 'Extra Work Proof',
                 empCode: this.currentUser.code,
                 empName: this.currentUser.name,
-                description: this.extraWorkForm.description.trim(),
+                type: 'ExtraWork',
                 screenshot: this.extraWorkForm.screenshot,
+                description: this.extraWorkForm.description.trim(),
                 amount: 10,
                 status: 'Pending',
-                date: new Date().toLocaleDateString('en-IN')
+                date: new Date().toLocaleDateString('hi-IN')
             });
+            this.saveData();
             this.extraWorkForm = { screenshot: null, description: '' };
-            this.saveData();
-            this.showNotification('Proof submitted!');
+            this.showNotification('Extra Work Submitted to Admin!');
         },
-        submitLeadClaim(cmp) {
-            this.earningsRequests.unshift({
-                id: Date.now(),
-                type: 'Campaign Lead',
-                empCode: this.currentUser.code,
-                empName: this.currentUser.name,
-                description: `Claimed for ${cmp.title}`,
-                amount: 10,
-                status: 'Pending',
-                date: new Date().toLocaleDateString('en-IN')
-            });
-            this.saveData();
-            this.showNotification('Lead Claim submitted!');
-        },
-        submitFeedback() {
-            if (!this.employeeFeedbackInput.trim()) return;
-            this.feedbacks.unshift({
-                id: Date.now(),
-                empCode: this.currentUser.code,
-                empName: this.currentUser.name,
-                text: this.employeeFeedbackInput.trim(),
-                date: new Date().toLocaleDateString('en-IN')
-            });
-            this.employeeFeedbackInput = '';
-            this.saveData();
-            this.showNotification('Report submitted!');
-        },
-
-        // Earnings Calculation
         getEmpEarnings(empCode) {
             const empReqs = this.earningsRequests.filter(r => r.empCode === empCode);
-            const approved = empReqs.filter(r => r.status === 'Approved');
-            const pending = empReqs.filter(r => r.status === 'Pending');
+            const approvedReqs = empReqs.filter(r => r.status === 'Approved');
+            const totalApproved = approvedReqs.reduce((sum, r) => sum + (r.amount || 0), 0);
+            const approvedLeadsCount = approvedReqs.filter(r => r.type === 'Lead').length;
+            const pendingAmount = empReqs.filter(r => r.status === 'Pending').reduce((sum, r) => sum + (r.amount || 0), 0);
 
-            const totalApproved = approved.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-            const pendingAmount = pending.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-            return { totalApproved, pendingAmount, approvedLeadsCount: approved.length };
+            return { totalApproved, approvedLeadsCount, pendingAmount };
         },
-        getPendingClaimsCount() {
-            return this.earningsRequests.filter(r => r.status === 'Pending').length;
+        getPendingLeadClaimsCount() {
+            return this.earningsRequests.filter(r => r.type === 'Lead' && r.status === 'Pending').length;
+        },
+        getPendingExtraWorkCount() {
+            return this.earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending').length;
         },
         approveLeadClaim(req) {
             req.status = 'Approved';
             this.saveData();
-            this.showNotification('Claim Approved!');
+            this.showNotification(`Approved ₹10 Lead Earning for ${req.empName}!`);
+        },
+        approveExtraWorkClaim(req) {
+            if (!req.amount || req.amount < 10 || req.amount > 500) {
+                alert('कृपया ₹10 से ₹500 तक की राशि तय करें!');
+                return;
+            }
+            req.status = 'Approved';
+            this.saveData();
+            this.showNotification(`Approved ₹${req.amount} Extra Work Earning for ${req.empName}!`);
         },
         rejectEarningClaim(req) {
             req.status = 'Rejected';
             this.saveData();
             this.showNotification('Claim Rejected');
         },
-
-        // Campaigns
+        updateSelfPin() {
+            if (!this.selfPinInput || this.selfPinInput.length !== 4) {
+                alert('कृपया 4 अंकों का नया PIN डालें।');
+                return;
+            }
+            const emp = this.employees.find(e => e.code === this.currentUser.code);
+            if (emp) {
+                emp.pin = this.selfPinInput.trim();
+                this.currentUser.pin = emp.pin;
+                this.saveData();
+                this.showEmpSelfPinModal = false;
+                this.selfPinInput = '';
+                this.showNotification('आपका PIN सफलतापूर्वक बदल गया है!');
+            }
+        },
+        submitFeedback() {
+            if (!this.employeeFeedbackInput.trim()) return;
+            this.feedbacks.unshift({
+                id: Date.now(),
+                empName: this.currentUser ? this.currentUser.name : 'Employee',
+                empCode: this.currentUser ? this.currentUser.code : 'EMP',
+                text: this.employeeFeedbackInput.trim(),
+                date: new Date().toLocaleDateString('hi-IN')
+            });
+            this.saveData();
+            this.employeeFeedbackInput = '';
+            this.showNotification('Work Report Submitted!');
+        },
+        openAdminPinModal(emp) {
+            this.adminPinModal = {
+                show: true,
+                empId: emp.id,
+                empName: emp.name,
+                empCode: emp.code,
+                newPin: emp.pin || '1234'
+            };
+        },
+        saveAdminEmpPin() {
+            if (!this.adminPinModal.newPin || this.adminPinModal.newPin.length !== 4) {
+                alert('4 अंकों का नया PIN दर्ज करें!');
+                return;
+            }
+            const target = this.employees.find(e => e.id === this.adminPinModal.empId);
+            if (target) {
+                target.pin = this.adminPinModal.newPin.trim();
+                this.saveData();
+                this.adminPinModal.show = false;
+                this.showNotification(`${target.name} ka PIN update ho gaya hai!`);
+            }
+        },
+        viewEmployeeWork(emp) {
+            const empReports = this.feedbacks.filter(f => f.empCode === emp.code);
+            this.selectedEmpWork = { emp: emp, reports: empReports };
+        },
+        updateClientStatus(client, status) {
+            client.status = status;
+            this.saveData();
+            this.showNotification('Status Updated!');
+        },
+        promoteClientToEmployee(client) {
+            const nextEmpCode = 'EMP-' + String(this.employees.length + 1).padStart(4, '0');
+            const newEmp = {
+                id: Date.now(),
+                code: nextEmpCode,
+                name: client.name,
+                phone: client.phone,
+                position: 'Promoted Agent (' + client.jobType + ')',
+                pin: '1234',
+                showPin: false
+            };
+            this.employees.push(newEmp);
+            client.isPromoted = true;
+            this.saveData();
+            this.showNotification(`${client.name} ko Employee (${nextEmpCode}) bana diya gaya hai! Default PIN: 1234`);
+        },
+        deleteClient(code) {
+            if (confirm('क्या आप इस रिकॉर्ड को हटाना चाहते हैं?')) {
+                this.clients = this.clients.filter(c => c.code !== code);
+                this.saveData();
+                this.showNotification('Client Deleted');
+            }
+        },
+        addEmployee() {
+            if (!this.newEmp.name || !this.newEmp.phone) return;
+            const nextCode = 'EMP-' + String(this.employees.length + 1).padStart(4, '0');
+            this.employees.push({
+                id: Date.now(),
+                code: nextCode,
+                name: this.newEmp.name.trim(),
+                phone: this.newEmp.phone.trim(),
+                position: this.newEmp.position || 'Field Officer',
+                pin: '1234',
+                showPin: false
+            });
+            this.saveData();
+            this.newEmp = { name: '', phone: '', position: '', pin: '1234' };
+            this.initCampaignIssueInputs();
+            this.showNotification('Employee Added Successfully!');
+        },
+        deleteEmployee(id) {
+            if (confirm('क्या आप इस Employee को हटाना चाहते हैं?')) {
+                this.employees = this.employees.filter(e => e.id !== id);
+                this.saveData();
+                this.showNotification('Employee Removed');
+            }
+        },
         addCampaign() {
             if (!this.newCmp.title || !this.newCmp.url) return;
-            this.campaigns.unshift({ id: Date.now(), title: this.newCmp.title.trim(), url: this.newCmp.url.trim() });
-            this.newCmp = { title: '', url: '' };
+            this.campaigns.push({
+                id: Date.now(),
+                title: this.newCmp.title.trim(),
+                url: this.newCmp.url.trim()
+            });
             this.saveData();
-            this.showNotification('Campaign Published!');
+            this.newCmp = { title: '', url: '' };
+            this.initCampaignIssueInputs();
+            this.showNotification('Campaign Added!');
         },
         deleteCampaign(id) {
-            if (confirm('Delete campaign?')) {
+            if (confirm('क्या आप इस Campaign को हटाना चाहते हैं?')) {
                 this.campaigns = this.campaigns.filter(c => c.id !== id);
                 this.saveData();
                 this.showNotification('Campaign Deleted');
             }
         },
-
-        // Admin Security & CSV Export
-        updateAdminCredentials() {
-            this.adminSettings.username = this.adminSettingsForm.username.trim();
-            this.adminSettings.password = this.adminSettingsForm.password.trim();
+        updateCompanySettings() {
             this.saveData();
-            this.showNotification('Admin credentials updated!');
+            this.showNotification('Company Settings Saved!');
+        },
+        updateAdminCredentials() {
+            this.adminSettings.username = this.adminSettingsForm.username;
+            this.adminSettings.password = this.adminSettingsForm.password;
+            this.saveData();
+            this.showNotification('Admin Credentials Updated!');
         },
         exportCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,Type,Code,Name,Phone,Detail\n";
-            this.clients.forEach(c => { csvContent += `Client,${c.code},"${c.name}",${c.phone},${c.jobType}\n`; });
-            this.employees.forEach(e => { csvContent += `Employee,${e.code},"${e.name}",${e.phone},${e.position}\n`; });
-            this.publicLeads.forEach(l => { csvContent += `Public Lead,N/A,"${l.name}",${l.phone},${l.jobType}\n`; });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "ved_capital_master_data.csv");
-            document.body.appendChild(link);
+            let csv = 'Type,Code,Name,Phone,JobType/Position,Status\n';
+            this.clients.forEach(c => {
+                csv += `Client,${c.code},"${c.name}",${c.phone},"${c.jobType}",${c.status}\n`;
+            });
+            this.employees.forEach(e => {
+                csv += `Employee,${e.code},"${e.name}",${e.phone},"${e.position}",Active\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Ved_Capital_Rewa_Data.csv';
             link.click();
-            document.body.removeChild(link);
+            this.showNotification('CSV Downloaded!');
         }
     }
 }).mount('#app');
