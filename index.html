@@ -16,8 +16,8 @@
         body { font-family: 'Inter', sans-serif; }
         @media print {
             body * { visibility: hidden; }
-            #printable-slip, #printable-slip * { visibility: visible; }
-            #printable-slip { position: absolute; left: 0; top: 0; width: 100%; border: none !important; }
+            #printable-slip, #printable-slip *, #printable-id-card, #printable-id-card * { visibility: visible; }
+            #printable-slip, #printable-id-card { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
             .no-print { display: none !important; }
         }
     </style>
@@ -84,7 +84,17 @@
     </header>
 
     <!-- CONTENT AREA -->
-    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+        <!-- GLOBAL NOTICE BOARD TICKER (Visible to all logged-in users) -->
+        <div v-if="currentUser && announcements.length > 0" class="bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border border-amber-500/30 p-3.5 rounded-2xl flex items-center space-x-3 no-print">
+            <div class="bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-1 rounded-lg uppercase tracking-wider flex items-center">
+                <i class="fa-solid fa-bullhorn mr-1.5 animate-bounce"></i> Notice
+            </div>
+            <div class="text-xs sm:text-sm text-amber-200 font-semibold truncate">
+                {{ announcements[0].text }} <span class="text-[10px] text-slate-400 ml-2">({{ announcements[0].date }})</span>
+            </div>
+        </div>
 
         <!-- 1. PUBLIC JOB APPLICATION FORM -->
         <section v-if="currentView === 'job_form'" class="max-w-3xl mx-auto">
@@ -286,12 +296,17 @@
                             </span>
                         </div>
                     </div>
-                    <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1 rounded-full border">
-                        {{ currentUser.status || 'Pending Review' }}
-                    </span>
+                    <div class="flex items-center space-x-2">
+                        <button @click="openIdCardModal(currentUser)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center shadow-lg shadow-amber-500/10">
+                            <address class="not-italic"><i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card</address>
+                        </button>
+                        <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1.5 rounded-full border">
+                            {{ currentUser.status || 'Pending Review' }}
+                        </span>
+                    </div>
                 </div>
 
-                <!-- CAMPAIGN LIST FOR CLIENT WITH PER-CAMPAIGN ISSUE OPTION -->
+                <!-- CAMPAIGN LIST FOR CLIENT -->
                 <div v-if="currentUser.status === 'Approved'" class="space-y-6">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-lg font-bold text-amber-400 flex items-center">
@@ -317,7 +332,7 @@
                             </button>
                         </div>
 
-                        <!-- Screenshot Proof Upload Section for Campaign Completion -->
+                        <!-- Screenshot Proof Upload Section -->
                         <div class="border-t border-slate-800 pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div class="w-full sm:w-auto flex-grow">
                                 <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Upload Work Screenshot Proof *</label>
@@ -340,7 +355,7 @@
                             <img :src="getClientCampaignScreenshot(cmp.id)" class="h-24 rounded-lg border border-slate-700 object-cover">
                         </div>
 
-                        <!-- PER-CAMPAIGN ISSUE / STUCK OPTION -->
+                        <!-- PER-CAMPAIGN ISSUE OPTION -->
                         <div class="bg-slate-950/70 border border-rose-500/30 p-3 rounded-xl mt-2">
                             <details class="group">
                                 <summary class="text-xs font-bold text-rose-400 cursor-pointer flex items-center justify-between">
@@ -391,10 +406,13 @@
                         <p class="text-xs text-amber-400 font-semibold">{{ currentUser.name }} (Code: {{ currentUser.code }})</p>
                     </div>
                     <div class="flex items-center space-x-3">
+                        <button @click="openIdCardModal(currentUser)" class="bg-indigo-500/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
+                            <i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card
+                        </button>
                         <button @click="showEmpSelfPinModal = true" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
                             <i class="fa-solid fa-key mr-1.5"></i> Change PIN
                         </button>
-                        <input v-model="searchQuery" placeholder="Search applicant..." class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-sm w-56 text-white focus:outline-none focus:border-amber-500">
+                        <input v-model="searchQuery" placeholder="Search applicant..." class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-sm w-48 text-white focus:outline-none focus:border-amber-500">
                     </div>
                 </div>
 
@@ -416,18 +434,19 @@
                     </div>
                     <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center">
                         <div>
-                            <p class="text-[10px] uppercase font-bold text-slate-400">Pending Approval Earnings</p>
-                            <p class="text-2xl font-black text-indigo-400 mt-0.5">₹ {{ getEmpEarnings(currentUser.code).pendingAmount }}</p>
+                            <p class="text-[10px] uppercase font-bold text-slate-400">Available Payout Balance</p>
+                            <p class="text-2xl font-black text-indigo-400 mt-0.5">₹ {{ getEmpAvailableBalance(currentUser.code) }}</p>
                         </div>
-                        <i class="fa-solid fa-hourglass-half text-indigo-400 text-2xl"></i>
+                        <i class="fa-solid fa-wallet text-indigo-400 text-2xl"></i>
                     </div>
                 </div>
             </div>
 
             <!-- Employee Sub Tabs -->
-            <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 space-x-1">
-                <button @click="empSubTab = 'clients'" :class="empSubTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Clients & Campaign Issues</button>
-                <button @click="empSubTab = 'extra_work'" :class="empSubTab === 'extra_work' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-center rounded-lg text-xs transition">Extra Work Submission (Earn ₹10 - ₹500)</button>
+            <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700 space-x-1 overflow-x-auto">
+                <button @click="empSubTab = 'clients'" :class="empSubTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Clients & Campaign Issues</button>
+                <button @click="empSubTab = 'extra_work'" :class="empSubTab === 'extra_work' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Extra Work Submission</button>
+                <button @click="empSubTab = 'payouts'" :class="empSubTab === 'payouts' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Request Payout (Withdrawal)</button>
             </div>
 
             <!-- TAB 1: CLIENTS & CAMPAIGN VERIFICATION -->
@@ -522,60 +541,45 @@
                 </form>
             </div>
 
-            <!-- MODAL: Employee Change Own PIN -->
-            <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-                    <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-2"></i> Update Your Security PIN</h3>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">New 4-Digit PIN</label>
-                        <input v-model="selfPinInput" type="password" maxlength="4" placeholder="Enter new 4 digit PIN" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
-                    </div>
-                    <div class="flex justify-end space-x-2 pt-2">
-                        <button @click="showEmpSelfPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
-                        <button @click="updateSelfPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
-                    </div>
+            <!-- TAB 3: PAYOUT REQUESTS -->
+            <div v-if="empSubTab === 'payouts'" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-wallet text-amber-400 mr-2"></i> Request Payout (Withdrawal)</h3>
+                    <p class="text-xs text-slate-400">अपनी अप्रूव्ड कमाई को अपने बैंक अकाउंट या UPI में ट्रांसफर करने के लिए रिक्वेस्ट भेजें।</p>
                 </div>
-            </div>
 
-            <!-- MODAL: Employee Campaign Screenshot Review -->
-            <div v-if="selectedReviewClient" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <form @submit.prevent="submitPayoutRequest" class="space-y-4 max-w-xl bg-slate-900 p-5 rounded-xl border border-slate-700">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <h3 class="text-lg font-bold text-white">Review Campaign Proofs - {{ selectedReviewClient.name }}</h3>
-                            <p class="text-xs text-amber-400 font-mono">Code: {{ selectedReviewClient.code }}</p>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Withdrawal Amount (₹) *</label>
+                            <input v-model.number="payoutForm.amount" type="number" min="100" :max="getEmpAvailableBalance(currentUser.code)" required placeholder="Min ₹100" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
                         </div>
-                        <button @click="selectedReviewClient = null" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-
-                    <div class="flex-1 overflow-y-auto space-y-4 pr-1">
-                        <div v-if="!selectedReviewClient.campaignProofs || selectedReviewClient.campaignProofs.length === 0" class="text-xs text-slate-400 p-4 bg-slate-900 rounded-xl">
-                            इस क्लाइंट ने अभी तक कोई भी कैंपेन का स्क्रीनशॉट अपलोड नहीं किया है।
-                        </div>
-
-                        <div v-for="proof in selectedReviewClient.campaignProofs" :key="proof.cmpId" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-sm text-slate-200">{{ getCampaignTitle(proof.cmpId) }}</span>
-                                <span :class="getProofStatusClass(proof.status)" class="text-xs font-bold px-2.5 py-0.5 rounded border">
-                                    {{ proof.status }}
-                                </span>
-                            </div>
-
-                            <img v-if="proof.screenshot" :src="proof.screenshot" class="max-h-56 rounded-lg border border-slate-700 object-contain mx-auto bg-slate-950 p-1">
-
-                            <div v-if="proof.status === 'Submitted - Verification Pending'" class="flex space-x-3 pt-2 border-t border-slate-800">
-                                <button @click="verifyClientCampaign(selectedReviewClient, proof, true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-xl">
-                                    <i class="fa-solid fa-check mr-1"></i> Approve Campaign (+₹10 Earning)
-                                </button>
-                                <button @click="verifyClientCampaign(selectedReviewClient, proof, false)" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 rounded-xl">
-                                    <i class="fa-solid fa-xmark mr-1"></i> Reject Proof
-                                </button>
-                            </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 mb-1">Payment Method *</label>
+                            <select v-model="payoutForm.method" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                                <option value="UPI">UPI ID (Google Pay / PhonePe)</option>
+                                <option value="Bank">Bank Account (A/C & IFSC)</option>
+                            </select>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">UPI ID or Bank Account Details *</label>
+                        <input v-model="payoutForm.details" type="text" required placeholder="e.g. 98270XXXXX@ybl or A/C 12345, IFSC: SBIN0001" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    </div>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition">Submit Payout Request</button>
+                </form>
 
-                    <div class="pt-2 border-t border-slate-700 text-right">
-                        <button @click="selectedReviewClient = null" class="px-5 py-2 bg-slate-700 text-white font-bold text-xs rounded-xl">Close</button>
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Your Payout History</h4>
+                    <div v-if="getPayoutHistory(currentUser.code).length === 0" class="text-xs text-slate-400 bg-slate-900 p-3 rounded-xl">कोई विथड्रॉवल हिस्ट्री नहीं है।</div>
+                    <div v-for="p in getPayoutHistory(currentUser.code)" :key="p.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                            <p class="font-bold text-white text-sm">₹ {{ p.amount }} via {{ p.method }}</p>
+                            <p class="text-slate-400">Details: {{ p.details }} | Date: {{ p.date }}</p>
+                        </div>
+                        <span :class="getPayoutStatusClass(p.status)" class="px-2.5 py-1 rounded font-bold border">
+                            {{ p.status }}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -610,19 +614,21 @@
                     <p class="text-3xl font-black text-indigo-400 mt-1">{{ getPendingLeadClaimsCount() }}</p>
                 </div>
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
-                    <p class="text-xs font-bold text-slate-400 uppercase">Pending Extra Work</p>
-                    <p class="text-3xl font-black text-rose-400 mt-1">{{ getPendingExtraWorkCount() }}</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase">Pending Payouts</p>
+                    <p class="text-3xl font-black text-rose-400 mt-1">{{ getPendingPayoutsCount() }}</p>
                 </div>
             </div>
 
             <!-- Admin Tabs -->
             <div class="flex bg-slate-900 p-1.5 rounded-2xl border border-slate-700/80 space-x-1 overflow-x-auto">
-                <button @click="adminTab = 'clients'" :class="adminTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Clients & Issues</button>
-                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Employees & Privacy</button>
-                <button @click="adminTab = 'earnings_approval'" :class="adminTab === 'earnings_approval' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Approve Earnings & Extra Work</button>
-                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Campaign Links</button>
-                <button @click="adminTab = 'feedbacks'" :class="adminTab === 'feedbacks' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Daily Work Reports</button>
-                <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-5 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Security & Settings</button>
+                <button @click="adminTab = 'clients'" :class="adminTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Clients & Issues</button>
+                <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Employees & PINs</button>
+                <button @click="adminTab = 'earnings_approval'" :class="adminTab === 'earnings_approval' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Approve Earnings</button>
+                <button @click="adminTab = 'payouts_admin'" :class="adminTab === 'payouts_admin' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Process Payouts</button>
+                <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Campaign Links</button>
+                <button @click="adminTab = 'notices'" :class="adminTab === 'notices' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Send Notices</button>
+                <button @click="adminTab = 'feedbacks'" :class="adminTab === 'feedbacks' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Daily Reports</button>
+                <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Settings</button>
             </div>
 
             <!-- TAB 1: CLIENT MANAGEMENT -->
@@ -632,7 +638,7 @@
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-900 text-slate-400 text-xs uppercase border-b border-slate-700">
                             <tr>
-                                <th class="p-3">Code</th>
+                                <th class="p-3">Code & ID Card</th>
                                 <th class="p-3">Name</th>
                                 <th class="p-3">Phone</th>
                                 <th class="p-3">Applied Job</th>
@@ -644,7 +650,10 @@
                         </thead>
                         <tbody class="divide-y divide-slate-700/60 text-slate-300">
                             <tr v-for="c in clients" :key="c.code">
-                                <td class="p-3 font-mono font-bold text-amber-400">{{ c.code }}</td>
+                                <td class="p-3">
+                                    <p class="font-mono font-bold text-amber-400">{{ c.code }}</p>
+                                    <button @click="openIdCardModal(c)" class="text-[11px] text-indigo-400 underline mt-0.5"><i class="fa-solid fa-id-card mr-1"></i> ID Card</button>
+                                </td>
                                 <td class="p-3 font-semibold text-white">{{ c.name }}</td>
                                 <td class="p-3">{{ c.phone }}</td>
                                 <td class="p-3">
@@ -703,7 +712,7 @@
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold p-2.5 rounded-lg text-sm">Add Employee</button>
                 </form>
 
-                <!-- Employees List with PIN Privacy Control -->
+                <!-- Employees List -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div v-for="emp in employees" :key="emp.id" class="bg-slate-900 border border-slate-700 p-5 rounded-2xl flex flex-col justify-between gap-3">
                         <div class="flex justify-between items-start">
@@ -745,12 +754,13 @@
                             </div>
 
                             <div class="flex space-x-2">
+                                <button @click="openIdCardModal(emp)" class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-lg hover:bg-indigo-600 hover:text-white transition font-bold flex items-center">
+                                    <i class="fa-solid fa-id-card mr-1"></i> ID Card
+                                </button>
                                 <button @click="openAdminPinModal(emp)" class="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition font-bold flex items-center">
-                                    <i class="fa-solid fa-key mr-1"></i> Change PIN
+                                    <i class="fa-solid fa-key mr-1"></i> PIN
                                 </button>
-                                <button @click="viewEmployeeWork(emp)" class="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-lg hover:bg-indigo-600 hover:text-white transition font-bold flex items-center">
-                                    <i class="fa-solid fa-chart-line mr-1"></i> Work Details
-                                </button>
+                                <button @click="viewEmployeeWork(emp)" class="text-xs bg-slate-700 text-slate-300 px-2.5 py-1 rounded-lg font-bold">Reports</button>
                             </div>
                         </div>
                     </div>
@@ -818,65 +828,29 @@
                 </div>
             </div>
 
-            <!-- MODAL 1: Admin Change Employee PIN -->
-            <div v-if="adminPinModal.show" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-                    <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-user-shield text-amber-400 mr-2"></i> Reset Employee PIN</h3>
-                    <p class="text-xs text-slate-400">Target Employee: <strong class="text-white">{{ adminPinModal.empName }}</strong> ({{ adminPinModal.empCode }})</p>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-1">Set New 4-Digit PIN</label>
-                        <input v-model="adminPinModal.newPin" type="password" maxlength="4" placeholder="e.g. 5678" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
-                    </div>
-                    <div class="flex justify-end space-x-2 pt-2">
-                        <button @click="adminPinModal.show = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
-                        <button @click="saveAdminEmpPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Update PIN</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL 2: Employee Work Details View -->
-            <div v-if="selectedEmpWork" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-4">
-                    <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+            <!-- TAB 4: PROCESS PAYOUTS (ADMIN) -->
+            <div v-if="adminTab === 'payouts_admin'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold text-white mb-2 text-amber-400"><i class="fa-solid fa-wallet mr-2"></i> Employee Payout Requests</h3>
+                <div v-if="payoutRequests.length === 0" class="text-xs text-slate-400 bg-slate-900 p-4 rounded-xl">कोई विथड्रॉवल रिक्वेस्ट नहीं है।</div>
+                
+                <div class="space-y-3">
+                    <div v-for="p in payoutRequests" :key="p.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
                         <div>
-                            <h3 class="text-xl font-extrabold text-white">{{ selectedEmpWork.emp.name }}</h3>
-                            <p class="text-xs text-amber-400 font-mono">Code: {{ selectedEmpWork.emp.code }} | Position: {{ selectedEmpWork.emp.position }}</p>
+                            <p class="font-bold text-white text-sm">{{ p.empName }} ({{ p.empCode }}) - <span class="text-amber-400">₹ {{ p.amount }}</span></p>
+                            <p class="text-slate-400 mt-0.5">Method: <strong>{{ p.method }}</strong> | Details: <strong>{{ p.details }}</strong> | Date: {{ p.date }}</p>
                         </div>
-                        <button @click="selectedEmpWork = null" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
-                            <p class="text-[10px] uppercase font-bold text-slate-400">Total Submitted Reports</p>
-                            <p class="text-xl font-extrabold text-emerald-400">{{ selectedEmpWork.reports.length }}</p>
+                        <div class="flex items-center space-x-2">
+                            <span :class="getPayoutStatusClass(p.status)" class="px-2.5 py-1 rounded font-bold border">
+                                {{ p.status }}
+                            </span>
+                            <button v-if="p.status === 'Pending'" @click="processPayout(p, 'Approved')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg">Pay & Approve</button>
+                            <button v-if="p.status === 'Pending'" @click="processPayout(p, 'Rejected')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1.5 rounded-lg">Reject</button>
                         </div>
-                        <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
-                            <p class="text-[10px] uppercase font-bold text-slate-400">Approved Earnings</p>
-                            <p class="text-xl font-extrabold text-amber-400">₹ {{ getEmpEarnings(selectedEmpWork.emp.code).totalApproved }}</p>
-                        </div>
-                    </div>
-
-                    <div class="flex-1 overflow-y-auto space-y-3 pr-1">
-                        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Submitted Work Reports History</h4>
-                        <div v-if="selectedEmpWork.reports.length === 0" class="text-xs text-slate-400 bg-slate-900 p-4 rounded-xl border border-slate-700">
-                            इस एम्प्लॉई ने अभी तक कोई वर्क रिपोर्ट जमा नहीं की है।
-                        </div>
-                        <div v-for="r in selectedEmpWork.reports" :key="r.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700/80 space-y-1">
-                            <div class="flex justify-between text-xs text-slate-400">
-                                <span class="font-bold text-slate-300"><i class="fa-regular fa-calendar mr-1"></i> {{ r.date }}</span>
-                                <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Report ID: #{{ r.id }}</span>
-                            </div>
-                            <p class="text-sm text-slate-200 whitespace-pre-line mt-1">{{ r.text }}</p>
-                        </div>
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-700 text-right">
-                        <button @click="selectedEmpWork = null" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded-xl">Close</button>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 4: CAMPAIGN MANAGEMENT -->
+            <!-- TAB 5: CAMPAIGN MANAGEMENT -->
             <div v-if="adminTab === 'campaigns'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
                 <h3 class="text-lg font-bold text-white">Add & Manage Campaigns</h3>
                 <form @submit.prevent="addCampaign" class="flex flex-col sm:flex-row gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
@@ -896,7 +870,27 @@
                 </div>
             </div>
 
-            <!-- TAB 5: ALL REPORTS -->
+            <!-- TAB 6: SEND BROADCAST NOTICES -->
+            <div v-if="adminTab === 'notices'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
+                <h3 class="text-lg font-bold text-white mb-2">Send Broadcast Notice / Alert</h3>
+                <form @submit.prevent="sendAnnouncement" class="space-y-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    <textarea v-model="newNoticeText" rows="3" required placeholder="यहाँ नोटिस या घोषणा लिखें जो सभी के डैशबोर्ड पर दिखेगी..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-xs text-white focus:outline-none focus:border-amber-500"></textarea>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs">Publish Notice</button>
+                </form>
+
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase">Published Notices</h4>
+                    <div v-for="n in announcements" :key="n.id" class="bg-slate-900 p-3 rounded-xl border border-slate-700 flex justify-between items-center text-xs">
+                        <div>
+                            <p class="text-white font-medium">{{ n.text }}</p>
+                            <span class="text-[10px] text-slate-400">{{ n.date }}</span>
+                        </div>
+                        <button @click="deleteAnnouncement(n.id)" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 7: ALL REPORTS -->
             <div v-if="adminTab === 'feedbacks'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
                 <h3 class="text-lg font-bold text-white">All Employee Daily Reports</h3>
                 <div v-if="feedbacks.length === 0" class="text-xs text-slate-400">कोई रिपोर्ट उपलब्ध नहीं है।</div>
@@ -911,7 +905,7 @@
                 </div>
             </div>
 
-            <!-- TAB 6: SECURITY & SETTINGS -->
+            <!-- TAB 8: SETTINGS -->
             <div v-if="adminTab === 'settings'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
                 <div>
                     <h3 class="text-lg font-bold text-white mb-3">Company Profile Info</h3>
@@ -935,7 +929,7 @@
                 </div>
 
                 <div>
-                    <h3 class="text-lg font-bold text-white mb-3">Change Admin Security Credentials</h3>
+                    <h3 class="text-lg font-bold text-white mb-3">Change Admin Credentials</h3>
                     <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
@@ -955,6 +949,162 @@
         </section>
 
     </main>
+
+    <!-- DIGITAL ID CARD MODAL -->
+    <div v-if="showIdCardModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
+            <button @click="showIdCardModal = false" class="absolute top-4 right-4 text-slate-400 hover:text-white no-print text-lg"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div id="printable-id-card" class="bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-amber-500/60 rounded-2xl p-6 text-center space-y-4 shadow-xl text-slate-100">
+                <div class="w-14 h-14 bg-amber-500 text-slate-950 font-black text-xl rounded-xl flex items-center justify-center mx-auto shadow-md">
+                    VCR
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-white">Ved Capital Rewa</h3>
+                    <p class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Official Identification Card</p>
+                </div>
+
+                <div class="w-20 h-20 bg-slate-800 border-2 border-amber-400/80 rounded-full flex items-center justify-center mx-auto text-2xl font-black text-amber-300">
+                    {{ idCardData.name ? idCardData.name.charAt(0) : 'U' }}
+                </div>
+
+                <div class="space-y-1 bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs">
+                    <p class="text-amber-400 font-mono font-black text-sm">{{ idCardData.code }}</p>
+                    <p class="font-bold text-white text-base">{{ idCardData.name }}</p>
+                    <p class="text-slate-400">{{ idCardData.jobType || idCardData.position || 'Official Member' }}</p>
+                    <p class="text-slate-400">Phone: {{ idCardData.phone }}</p>
+                </div>
+
+                <div class="pt-2 border-t border-slate-800 text-[10px] text-slate-400 flex justify-between items-center">
+                    <span>Authorized Signature</span>
+                    <span class="font-mono text-emerald-400 font-bold">VERIFIED</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2 no-print">
+                <button @click="printIdCard" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2 rounded-xl text-xs transition">
+                    <i class="fa-solid fa-print mr-1"></i> Print / Download ID
+                </button>
+                <button @click="showIdCardModal = false" class="px-4 py-2 bg-slate-800 text-slate-300 font-bold rounded-xl text-xs">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Employee Change Own PIN -->
+    <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-2"></i> Update Your Security PIN</h3>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">New 4-Digit PIN</label>
+                <input v-model="selfPinInput" type="password" maxlength="4" placeholder="Enter new 4 digit PIN" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button @click="showEmpSelfPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
+                <button @click="updateSelfPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Employee Campaign Screenshot Review -->
+    <div v-if="selectedReviewClient" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Review Campaign Proofs - {{ selectedReviewClient.name }}</h3>
+                    <p class="text-xs text-amber-400 font-mono">Code: {{ selectedReviewClient.code }}</p>
+                </div>
+                <button @click="selectedReviewClient = null" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+                <div v-if="!selectedReviewClient.campaignProofs || selectedReviewClient.campaignProofs.length === 0" class="text-xs text-slate-400 p-4 bg-slate-900 rounded-xl">
+                    इस क्लाइंट ने अभी तक कोई भी कैंपेन का स्क्रीनशॉट अपलोड नहीं किया है।
+                </div>
+
+                <div v-for="proof in selectedReviewClient.campaignProofs" :key="proof.cmpId" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-sm text-slate-200">{{ getCampaignTitle(proof.cmpId) }}</span>
+                        <span :class="getProofStatusClass(proof.status)" class="text-xs font-bold px-2.5 py-0.5 rounded border">
+                            {{ proof.status }}
+                        </span>
+                    </div>
+
+                    <img v-if="proof.screenshot" :src="proof.screenshot" class="max-h-56 rounded-lg border border-slate-700 object-contain mx-auto bg-slate-950 p-1">
+
+                    <div v-if="proof.status === 'Submitted - Verification Pending'" class="flex space-x-3 pt-2 border-t border-slate-800">
+                        <button @click="verifyClientCampaign(selectedReviewClient, proof, true)" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-xl">
+                            <i class="fa-solid fa-check mr-1"></i> Approve Campaign (+₹10 Earning)
+                        </button>
+                        <button @click="verifyClientCampaign(selectedReviewClient, proof, false)" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 rounded-xl">
+                            <i class="fa-solid fa-xmark mr-1"></i> Reject Proof
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-700 text-right">
+                <button @click="selectedReviewClient = null" class="px-5 py-2 bg-slate-700 text-white font-bold text-xs rounded-xl">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: Admin Change Employee PIN -->
+    <div v-if="adminPinModal.show" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-user-shield text-amber-400 mr-2"></i> Reset Employee PIN</h3>
+            <p class="text-xs text-slate-400">Target Employee: <strong class="text-white">{{ adminPinModal.empName }}</strong> ({{ adminPinModal.empCode }})</p>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">Set New 4-Digit PIN</label>
+                <input v-model="adminPinModal.newPin" type="password" maxlength="4" placeholder="e.g. 5678" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button @click="adminPinModal.show = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
+                <button @click="saveAdminEmpPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Update PIN</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Employee Work Details View -->
+    <div v-if="selectedEmpWork" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="text-xl font-extrabold text-white">{{ selectedEmpWork.emp.name }}</h3>
+                    <p class="text-xs text-amber-400 font-mono">Code: {{ selectedEmpWork.emp.code }} | Position: {{ selectedEmpWork.emp.position }}</p>
+                </div>
+                <button @click="selectedEmpWork = null" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Total Submitted Reports</p>
+                    <p class="text-xl font-extrabold text-emerald-400">{{ selectedEmpWork.reports.length }}</p>
+                </div>
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-700">
+                    <p class="text-[10px] uppercase font-bold text-slate-400">Approved Earnings</p>
+                    <p class="text-xl font-extrabold text-amber-400">₹ {{ getEmpEarnings(selectedEmpWork.emp.code).totalApproved }}</p>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Submitted Work Reports History</h4>
+                <div v-if="selectedEmpWork.reports.length === 0" class="text-xs text-slate-400 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                    इस एम्प्लॉई ने अभी तक कोई वर्क रिपोर्ट जमा नहीं की है।
+                </div>
+                <div v-for="r in selectedEmpWork.reports" :key="r.id" class="bg-slate-900 p-4 rounded-xl border border-slate-700/80 space-y-1">
+                    <div class="flex justify-between text-xs text-slate-400">
+                        <span class="font-bold text-slate-300"><i class="fa-regular fa-calendar mr-1"></i> {{ r.date }}</span>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded border border-slate-700">Report ID: #{{ r.id }}</span>
+                    </div>
+                    <p class="text-sm text-slate-200 whitespace-pre-line mt-1">{{ r.text }}</p>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-700 text-right">
+                <button @click="selectedEmpWork = null" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded-xl">Close</button>
+            </div>
+        </div>
+    </div>
 
     <!-- FOOTER -->
     <footer class="bg-slate-950 border-t border-slate-800 py-6 text-center text-xs text-slate-500 mt-auto no-print">
@@ -993,10 +1143,15 @@ createApp({
             selectedReviewClient: null,
 
             extraWorkForm: { screenshot: null, description: '' },
+            payoutForm: { amount: 100, method: 'UPI', details: '' },
+
+            showIdCardModal: false,
+            idCardData: {},
 
             adminTab: 'clients',
             newEmp: { name: '', phone: '', position: '', pin: '1234' },
             newCmp: { title: '', url: '' },
+            newNoticeText: '',
             adminSettingsForm: { username: 'admin', password: 'Admin@3307' },
 
             adminPinModal: { show: false, empId: null, empName: '', empCode: '', newPin: '' },
@@ -1008,6 +1163,9 @@ createApp({
                 address: 'College Road, Rewa, Madhya Pradesh - 486001'
             },
             adminSettings: { username: 'admin', password: 'Admin@3307' },
+            announcements: [
+                { id: 1, text: 'Ved Capital Rewa official portal में आपका स्वागत है। दैनिक लक्ष्य पूरा करें!', date: '19/09/2026' }
+            ],
             campaigns: [
                 { id: 101, title: 'Primary Promotion Campaign 2026', url: 'https://vedcapitalrewa.com/promo' },
                 { id: 102, title: 'Secondary Telecalling Drive', url: 'https://vedcapitalrewa.com/telecalling' }
@@ -1029,7 +1187,8 @@ createApp({
                 { id: 1, code: 'EMP-0001', name: 'Suresh Patel', phone: '9123456789', position: 'Field Officer', pin: '1234', showPin: false }
             ],
             feedbacks: [],
-            earningsRequests: []
+            earningsRequests: [],
+            payoutRequests: []
         };
     },
     computed: {
@@ -1084,11 +1243,13 @@ createApp({
         saveData() {
             localStorage.setItem('vcr_company_info', JSON.stringify(this.companyInfo));
             localStorage.setItem('vcr_admin_settings', JSON.stringify(this.adminSettings));
+            localStorage.setItem('vcr_announcements', JSON.stringify(this.announcements));
             localStorage.setItem('vcr_campaigns', JSON.stringify(this.campaigns));
             localStorage.setItem('vcr_clients', JSON.stringify(this.clients));
             localStorage.setItem('vcr_employees', JSON.stringify(this.employees));
             localStorage.setItem('vcr_feedbacks', JSON.stringify(this.feedbacks));
             localStorage.setItem('vcr_earnings_requests', JSON.stringify(this.earningsRequests));
+            localStorage.setItem('vcr_payout_requests', JSON.stringify(this.payoutRequests));
             if (this.currentUser) {
                 localStorage.setItem('vcr_current_user', JSON.stringify(this.currentUser));
             }
@@ -1098,6 +1259,8 @@ createApp({
             if (ci) this.companyInfo = JSON.parse(ci);
             const ad = localStorage.getItem('vcr_admin_settings');
             if (ad) this.adminSettings = JSON.parse(ad);
+            const an = localStorage.getItem('vcr_announcements');
+            if (an) this.announcements = JSON.parse(an);
             const cmp = localStorage.getItem('vcr_campaigns');
             if (cmp) this.campaigns = JSON.parse(cmp);
             const cl = localStorage.getItem('vcr_clients');
@@ -1110,6 +1273,8 @@ createApp({
             if (fb) this.feedbacks = JSON.parse(fb);
             const er = localStorage.getItem('vcr_earnings_requests');
             if (er) this.earningsRequests = JSON.parse(er);
+            const pr = localStorage.getItem('vcr_payout_requests');
+            if (pr) this.payoutRequests = JSON.parse(pr);
 
             this.adminSettingsForm.username = this.adminSettings.username;
             this.adminSettingsForm.password = this.adminSettings.password;
@@ -1143,6 +1308,13 @@ createApp({
             this.showNotification('Application Submit Ho Gayi Hai!');
         },
         printSlip() { window.print(); },
+        openIdCardModal(person) {
+            this.idCardData = person;
+            this.showIdCardModal = true;
+        },
+        printIdCard() {
+            window.print();
+        },
         getWhatsAppLink(client) {
             const num = this.companyInfo.whatsapp || '919000000000';
             const msg = encodeURIComponent(`Namaste Ved Capital Rewa,\nMaine job form bhara hai:\nName: ${client.name}\nCode: ${client.code}\nPhone: ${client.phone}`);
@@ -1364,11 +1536,49 @@ createApp({
 
             return { totalApproved, approvedLeadsCount, pendingAmount };
         },
+        getEmpAvailableBalance(empCode) {
+            const earnings = this.getEmpEarnings(empCode).totalApproved;
+            const empPayouts = this.payoutRequests.filter(p => p.empCode === empCode && (p.status === 'Approved' || p.status === 'Pending'));
+            const withdrawn = empPayouts.reduce((sum, p) => sum + (p.amount || 0), 0);
+            return Math.max(0, earnings - withdrawn);
+        },
+        submitPayoutRequest() {
+            const bal = this.getEmpAvailableBalance(this.currentUser.code);
+            if (this.payoutForm.amount > bal) {
+                alert('आपके पास पर्याप्त बैलेंस उपलब्ध नहीं है!');
+                return;
+            }
+            if (this.payoutForm.amount < 100) {
+                alert('न्यूनतम विथड्रॉवल राशि ₹100 है!');
+                return;
+            }
+            this.payoutRequests.unshift({
+                id: Date.now(),
+                empCode: this.currentUser.code,
+                empName: this.currentUser.name,
+                amount: this.payoutForm.amount,
+                method: this.payoutForm.method,
+                details: this.payoutForm.details.trim(),
+                status: 'Pending',
+                date: new Date().toLocaleDateString('hi-IN')
+            });
+            this.saveData();
+            this.payoutForm = { amount: 100, method: 'UPI', details: '' };
+            this.showNotification('Payout Request Submitted Successfully!');
+        },
+        getPayoutHistory(empCode) {
+            return this.payoutRequests.filter(p => p.empCode === empCode);
+        },
+        getPayoutStatusClass(status) {
+            if (status === 'Approved') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+            if (status === 'Rejected') return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+            return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        },
         getPendingLeadClaimsCount() {
             return this.earningsRequests.filter(r => r.type === 'Lead' && r.status === 'Pending').length;
         },
-        getPendingExtraWorkCount() {
-            return this.earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending').length;
+        getPendingPayoutsCount() {
+            return this.payoutRequests.filter(p => p.status === 'Pending').length;
         },
         approveLeadClaim(req) {
             req.status = 'Approved';
@@ -1388,6 +1598,11 @@ createApp({
             req.status = 'Rejected';
             this.saveData();
             this.showNotification('Claim Rejected');
+        },
+        processPayout(p, status) {
+            p.status = status;
+            this.saveData();
+            this.showNotification(`Payout request marked as ${status}!`);
         },
         updateSelfPin() {
             if (!this.selfPinInput || this.selfPinInput.length !== 4) {
@@ -1462,7 +1677,7 @@ createApp({
             this.employees.push(newEmp);
             client.isPromoted = true;
             this.saveData();
-            this.showNotification(`${client.name} ko Employee (${nextEmpCode}) bana diya gaya hai! Default PIN: 1234`);
+            this.showNotification(`${client.name} ko Employee (${nextEmpCode}) bana diya gaya है! Default PIN: 1234`);
         },
         deleteClient(code) {
             if (confirm('क्या आप इस रिकॉर्ड को हटाना चाहते हैं?')) {
@@ -1513,6 +1728,22 @@ createApp({
                 this.saveData();
                 this.showNotification('Campaign Deleted');
             }
+        },
+        sendAnnouncement() {
+            if (!this.newNoticeText.trim()) return;
+            this.announcements.unshift({
+                id: Date.now(),
+                text: this.newNoticeText.trim(),
+                date: new Date().toLocaleDateString('hi-IN')
+            });
+            this.saveData();
+            this.newNoticeText = '';
+            this.showNotification('Notice Published Successfully!');
+        },
+        deleteAnnouncement(id) {
+            this.announcements = this.announcements.filter(a => a.id !== id);
+            this.saveData();
+            this.showNotification('Notice Deleted');
         },
         updateCompanySettings() {
             this.saveData();
