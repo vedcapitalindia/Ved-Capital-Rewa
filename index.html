@@ -1941,15 +1941,20 @@ createApp({
     }
 }).mount('#app');
 </script>
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyACaYyjQjsHSkgX4Gc-mz3GtFL6NdgmDM0",
-  authDomain: "vedcapitalindia-7292e.firebaseapp.com",
-  projectId: "vedcapitalindia-7292e",
-  storageBucket: "vedcapitalindia-7292e.firebasestorage.app",
-  messagingSenderId: "903755627911",
-  appId: "1:903755627911:web:39c39d3d82371ae9efa722",
-  measurementId: "G-EHPXN36YDQ"
-};
+      const firebaseConfig = {
+    apiKey: "AIzaSyACaYyjQjsHSkgX4Gc-mz3GtFL6NdgmDM0",
+    authDomain: "vedcapitalindia-7292e.firebaseapp.com",
+    projectId: "vedcapitalindia-7292e",
+    storageBucket: "vedcapitalindia-7292e.firebasestorage.app",
+    messagingSenderId: "903755627911",
+    appId: "1:903755627911:web:39c39d3d82371ae9efa722",
+    measurementId: "G-EHPXN36YDQ"
+  };
+
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const db = firebase.firestore();
+
 </body>
 </html>
