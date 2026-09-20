@@ -738,7 +738,8 @@
                                     <span v-else class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-check-double mr-1"></i> Promoted</span>
                                 </td>
                                 <td class="p-3">
-                                    <button @click="deleteClient(c.code)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                                    <!-- Using the deleteItem method inside client table action -->
+                                    <button @click="deleteItem(c.id || c.code)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -1066,7 +1067,7 @@
             <!-- Message List -->
             <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/50">
                 <div v-if="supportChats.length === 0" class="text-center text-xs text-slate-500 py-10">
-                    कोई संदेश नहीं है। अपनी समस्या लिखकर भेजें।
+                    कोई संदेश नहीं है। अपनी समस्या यहाँ लिखकर भेजें।
                 </div>
                 <div v-for="chat in filteredSupportChats" :key="chat.id" class="flex flex-col" :class="chat.senderCode === currentUser.code ? 'items-end' : 'items-start'">
                     <div class="max-w-[80%] rounded-2xl p-3 text-xs shadow" :class="chat.senderCode === currentUser.code ? 'bg-amber-500 text-slate-950 font-medium rounded-br-none' : 'bg-slate-800 text-slate-100 border border-slate-700 rounded-bl-none'">
@@ -1232,8 +1233,6 @@ const { createApp } = Vue;
 createApp({
     data() {
         return {
-            clients: [], // Aapka main data array
-            loading: false,
             currentView: 'job_form',
             loginType: 'client',
             loginInput: { code: '', phone: '', pin: '', username: '', password: '' },
@@ -1247,12 +1246,11 @@ createApp({
             applicationSuccess: false,
             lastSubmitted: {},
 
-            campaignIssueInputs: {},
-            clientCampaignFileMap: {},
+            // Added properties from your code snippet
+            clients: [], 
+            loading: false,
 
-            searchQuery: '',
-            employeeFeedbackInput: '',
-            empSubTab: 'clients'
+            campaignIssueInputs: {}
         };
     },
 
@@ -1262,7 +1260,7 @@ createApp({
         if (savedData) {
             this.clients = JSON.parse(savedData);
         } else {
-            this.fetchDataFromFirebase(); // Agar local storage mein na ho toh firebase se layein
+            this.fetchDataFromFirebase(); // Agar local storage mein na ho toh firebase से layein
         }
     },
 
@@ -1272,14 +1270,14 @@ createApp({
             localStorage.setItem('portalData', JSON.stringify(this.clients));
         },
 
-        // 3. Firebase se data fetch karne ka function
+        // 3. Firebase से data fetch karne ka function
         async fetchDataFromFirebase() {
             try {
                 this.loading = true;
                 const snapshot = await db.collection("clients").get();
                 this.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                // Firebase se data aane ke baad local storage ko bhi update karein
+                // Firebase से data aane ke baad local storage ko bhi update karein
                 this.saveDataLocally();
             } catch (error) {
                 console.error("Error fetching data: ", error);
@@ -1291,13 +1289,13 @@ createApp({
         // 4. Item delete karne ka function
         async deleteItem(itemId) {
             try {
-                // Firebase Firestore database se delete karein
+                // Firebase Firestore database से delete karein
                 await db.collection("clients").doc(itemId).delete();
                 
-                // Local array se bhi hata dein taaki UI turant update ho jaye
+                // Local array से भी hata dein taaki UI turant update ho jaye
                 this.clients = this.clients.filter(item => item.id !== itemId);
                 
-                // LocalStorage ko bhi update karein
+                // LocalStorage ko भी update karein
                 this.saveDataLocally();
                 
                 console.log("Data successfully deleted!");
