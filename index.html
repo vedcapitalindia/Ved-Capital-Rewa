@@ -456,6 +456,7 @@
                         <input v-model="loginInput.password" placeholder="Enter admin password" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Admin Control Panel</button>
+                    <button type="button" @click="sendAdminPasswordReset" class="w-full text-xs text-amber-400 hover:text-amber-300 py-2">Forgot Admin Password? Send reset email</button>
                 </form>
 
                 <p v-if="loginError" class="mt-4 text-rose-400 text-xs text-center font-bold bg-rose-950/40 p-2.5 rounded-lg border border-rose-800/80">
@@ -1597,6 +1598,7 @@ createApp({
         }
     },
     created() {
+        this.restoreUiState();
         // Restore an existing Firebase Authentication session first.
         // This is intentionally separate from Firestore sync so Admin login
         // does not depend on any public Firestore read.
@@ -1619,6 +1621,7 @@ createApp({
                         this.adminSettingsForm.username = this.adminAuthEmail;
                         this.loadPrivateDataForRole('admin', 'ADMIN');
                         this.currentView = 'admin_dash';
+                        this.persistUiState();
                         return;
                     }
                     const clientSnap = await db.collection('clients').where('authUid', '==', user.uid).limit(1).get();
@@ -1627,6 +1630,7 @@ createApp({
                         this.currentUser = { id: d.id, ...d.data(), role: 'client', authUid: user.uid };
                         this.loadPrivateDataForRole('client', d.id);
                         this.currentView = 'client_dash';
+                        this.persistUiState();
                         return;
                     }
                     const empSnap = await db.collection('employees').where('authUid', '==', user.uid).limit(1).get();
@@ -1635,6 +1639,7 @@ createApp({
                         this.currentUser = { id: d.id, ...d.data(), role: 'employee', authUid: user.uid };
                         this.loadPrivateDataForRole('employee', d.id);
                         this.currentView = 'emp_dash';
+                        this.persistUiState();
                     }
                 } catch (e) {
                     console.error('Auth session restore failed:', e);
@@ -1891,9 +1896,32 @@ createApp({
             }
         },
 
+        persistUiState() {
+            try {
+                localStorage.setItem('vcr_ui_state', JSON.stringify({
+                    currentView: this.currentView,
+                    loginType: this.loginType,
+                    adminTab: this.adminTab,
+                    empSubTab: this.empSubTab
+                }));
+            } catch (_) {}
+        },
+
+        restoreUiState() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('vcr_ui_state') || 'null');
+                if (!saved) return;
+                if (['job_form','about','login'].includes(saved.currentView)) this.currentView = saved.currentView;
+                if (['client','employee','admin'].includes(saved.loginType)) this.loginType = saved.loginType;
+                if (typeof saved.adminTab === 'string') this.adminTab = saved.adminTab;
+                if (typeof saved.empSubTab === 'string') this.empSubTab = saved.empSubTab;
+            } catch (_) {}
+        },
+
         setView(view) {
             this.currentView = view;
             this.loginError = '';
+            this.persistUiState();
         },
 
         navigateHome() {
@@ -1916,6 +1944,7 @@ createApp({
             this.adminPinModal = { show: false, empCode: '', empName: '', newPin: '' };
             this.showSupportChatModal = false;
             this.currentView = 'login';
+            this.persistUiState();
             this.showToast('Successfully logged out', 'success');
         },
 
@@ -1954,6 +1983,7 @@ createApp({
                 photo: this.jobForm.photo,
                 status: 'Pending',
                 role: 'client',
+                source: 'public_job_portal',
                 campaignProofs: [],
                 campaignIssues: {},
                 isPromoted: false,
@@ -2073,10 +2103,12 @@ createApp({
                 return;
             }
             try {
-                if (!firebase.auth || typeof firebase.auth !== 'function') {
-                    throw new Error('Firebase Authentication SDK उपलब्ध नहीं है।');
+                if (!window.firebase || typeof firebase.auth !== 'function') {
+                    throw new Error('Firebase Authentication SDK unavailable');
                 }
-                const credential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const auth = firebase.auth();
+                if (!auth) throw new Error('Firebase Authentication initialize नहीं हुआ।');
+                const credential = await auth.signInWithEmailAndPassword(email, password);
                 const authUser = credential.user;
                 if (!authUser || authUser.email?.toLowerCase() !== this.adminAuthEmail) {
                     await firebase.auth().signOut();
@@ -2087,7 +2119,7 @@ createApp({
                 this.adminSettingsForm.username = this.adminAuthEmail;
                 this.loadPrivateDataForRole('admin', 'ADMIN');
                 this.currentView = 'admin_dash';
-                this.loginInput.username = '';
+                this.persistUiState();
                 this.loginInput.password = '';
                 this.showToast('Admin Access Granted', 'success');
             } catch (error) {
@@ -2108,6 +2140,27 @@ createApp({
                 } else {
                     this.loginError = `Admin login failed: ${code || error?.message || 'unknown error'}`;
                 }
+            }
+        },
+
+        async sendAdminPasswordReset() {
+            const email = String(this.loginInput.username || this.adminAuthEmail || '').trim().toLowerCase();
+            if (email !== this.adminAuthEmail) {
+                this.loginError = 'Password reset केवल registered Admin email पर किया जा सकता है।';
+                return;
+            }
+            try {
+                await firebase.auth().sendPasswordResetEmail(email);
+                this.loginError = '';
+                this.showToast('Password reset email भेज दिया गया है। Inbox/Spam check करें।', 'success');
+            } catch (error) {
+                console.error(error);
+                const code = error?.code || '';
+                this.loginError = code === 'auth/user-not-found'
+                    ? 'इस Firebase project में Admin email वाला Auth user नहीं मिला।'
+                    : code === 'auth/operation-not-allowed'
+                        ? 'Firebase में Email/Password Sign-in Enable नहीं है।'
+                        : `Password reset failed: ${code || error?.message || 'unknown error'}`;
             }
         },
 
