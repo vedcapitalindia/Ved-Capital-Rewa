@@ -1697,7 +1697,7 @@ createApp({
             return `https://wa.me/91${phone}?text=` + encodeURIComponent(`Namaste ${name}, contacting from Ved Capital Rewa.`);
         },
 
-        handleClientLogin() {
+        async handleClientLogin() {
             const code = this.loginInput.code.trim().toUpperCase();
             const phone = this.loginInput.phone.trim();
             const ref = db.collection('clients').doc(code);
