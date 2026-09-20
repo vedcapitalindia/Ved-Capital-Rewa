@@ -646,13 +646,36 @@
                         <input v-model="employeeFeedbackInput" placeholder="आज का काम, कॉल अपडेट या रिपोर्ट यहाँ लिखें..." required class="flex-grow bg-slate-900 border border-slate-700 px-4 py-2.5 rounded-xl text-sm text-white focus:outline-none focus:border-amber-500">
                         <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-5 py-2.5 rounded-xl font-bold text-sm">Submit Report</button>
                     </form>
+                    <div v-if="feedbacks.length" class="mt-4 space-y-2">
+                        <div v-for="fb in feedbacks.slice(0, 10)" :key="fb.id" class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between gap-3 text-xs">
+                            <div><p class="text-slate-300 whitespace-pre-line">{{ fb.text }}</p><span class="text-[10px] text-slate-500">{{ fb.date }}</span></div>
+                            <button @click="deleteFeedback(fb.id)" class="self-start text-rose-400 hover:text-rose-300" title="Delete your report"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Client Table for Employee with Approval Authority -->
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
-                    <div class="px-6 py-4 bg-slate-900/80 border-b border-slate-700 flex justify-between items-center">
-                        <span class="font-bold text-slate-200 text-sm">Registered Applicants & Approval Authority (Earn ₹3 per Approval)</span>
-                        <span class="text-xs font-bold bg-slate-800 px-3 py-1 rounded-full text-amber-400 border border-slate-700">Total: {{ filteredClients.length }}</span>
+                    <div class="px-6 py-4 bg-slate-900/80 border-b border-slate-700 space-y-3">
+                        <div class="flex flex-wrap justify-between items-center gap-2">
+                            <span class="font-bold text-slate-200 text-sm">Registered Applicants & Approval Authority (Earn ₹3 per Approval)</span>
+                            <span class="text-xs font-bold bg-slate-800 px-3 py-1 rounded-full text-amber-400 border border-slate-700">Showing: {{ filteredClients.length }} / {{ clientStatusCounts.all }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <select v-model="employeeClientStatusFilter" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
+                                <option value="Pending">Pending ({{ clientStatusCounts.pending }})</option>
+                                <option value="All">All ({{ clientStatusCounts.all }})</option>
+                                <option value="Approved">Approved ({{ clientStatusCounts.approved }})</option>
+                                <option value="Rejected">Rejected ({{ clientStatusCounts.rejected }})</option>
+                            </select>
+                            <select v-model="employeeDecisionFilter" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
+                                <option value="All">All decision owners</option>
+                                <option value="Mine">My decisions</option>
+                                <option value="Unassigned">Unassigned / Pending</option>
+                            </select>
+                            <input v-model="searchQuery" placeholder="Search name/code/mobile..." class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white w-56">
+                        </div>
+                        <p class="text-[10px] text-slate-400">Pending applicants ऊपर दिखते हैं। एक बार किसी employee ने final decision (Approve/Reject) कर दिया तो दूसरा employee उसे बदल नहीं सकता।</p>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
@@ -696,13 +719,17 @@
                                         </select>
                                     </td>
                                     <td class="p-4">
-                                        <div class="space-y-1">
-                                            <select :value="c.status" @change="employeeApproveClient(c, $event.target.value)" class="bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-1.5 font-bold">
+                                        <div class="space-y-1.5">
+                                            <select v-if="(c.status || 'Pending') === 'Pending'" :value="c.status || 'Pending'" @change="employeeApproveClient(c, $event.target.value)" class="bg-slate-900 border border-slate-700 text-xs text-white rounded-lg p-1.5 font-bold">
                                                 <option value="Pending">Pending</option>
-                                                <option value="Approved">Approved (Earn ₹3)</option>
-                                                <option value="Rejected">Rejected</option>
+                                                <option value="Approved">Approve (Earn ₹3)</option>
+                                                <option value="Rejected">Reject</option>
                                             </select>
-                                            <p v-if="c.approvedByEmp" class="text-[10px] text-emerald-400 font-semibold">Approved by: {{ c.approvedByEmp }}</p>
+                                            <span v-else :class="c.status === 'Approved' ? 'text-emerald-400' : 'text-rose-400'" class="inline-flex items-center gap-1 text-xs font-bold">
+                                                <i :class="c.status === 'Approved' ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'"></i>{{ c.status }} — Locked
+                                            </span>
+                                            <p v-if="c.decisionBy || c.approvedByEmp" class="text-[10px] text-slate-400 font-semibold">{{ c.status === 'Approved' ? 'Accepted' : 'Rejected' }} by: <span class="text-amber-300">{{ c.decisionBy || c.approvedByEmp }}</span></p>
+                                            <p v-if="c.decisionAt" class="text-[9px] text-slate-500">{{ c.decisionAt }}</p>
                                         </div>
                                     </td>
                                     <td class="p-4 text-center">
@@ -735,6 +762,13 @@
                     </div>
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs transition">Submit Extra Work to Admin</button>
                 </form>
+                <div v-if="earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending').length" class="space-y-2">
+                    <h4 class="text-xs font-bold text-slate-300 uppercase">Your Pending Submissions</h4>
+                    <div v-for="req in earningsRequests.filter(r => r.type === 'ExtraWork' && r.status === 'Pending')" :key="req.id" class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between gap-3 text-xs">
+                        <div><p class="text-white">{{ req.description }}</p><span class="text-[10px] text-slate-500">Pending review</span></div>
+                        <button @click="deleteOwnPendingExtraWork(req)" class="self-start text-rose-400 hover:text-rose-300" title="Delete pending submission"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
             </div>
 
             <!-- TAB 3: PAYOUT REQUESTS -->
@@ -834,7 +868,23 @@
 
             <!-- TAB 1: CLIENT MANAGEMENT -->
             <div v-if="adminTab === 'clients'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
-                <h3 class="text-lg font-bold text-white">Client Management & Campaign Issues</h3>
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <h3 class="text-lg font-bold text-white">Client Management & Campaign Issues</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <select v-model="adminClientStatusFilter" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
+                            <option value="All">All ({{ clientStatusCounts.all }})</option>
+                            <option value="Pending">Pending ({{ clientStatusCounts.pending }})</option>
+                            <option value="Approved">Approved ({{ clientStatusCounts.approved }})</option>
+                            <option value="Rejected">Rejected ({{ clientStatusCounts.rejected }})</option>
+                        </select>
+                        <select v-model="adminClientDecisionFilter" class="bg-slate-900 border border-slate-700 px-3 py-2 rounded-lg text-xs text-white">
+                            <option value="All">All decision owners</option>
+                            <option value="Pending">Unassigned / Pending</option>
+                            <option v-for="e in employees" :key="e.code" :value="e.code">{{ e.name }} ({{ e.code }})</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-[10px] text-slate-400">Approved/Rejected client का final decision owner और time नीचे दिखेगा। Employee के final decision को दूसरा employee बदल नहीं सकता।</p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-900 text-slate-400 text-xs uppercase border-b border-slate-700">
@@ -874,11 +924,16 @@
                                     </select>
                                 </td>
                                 <td class="p-3">
-                                    <select :value="c.status" @change="updateClientStatus(c, $event.target.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1 text-xs text-white">
-                                        <option value="Pending">Pending</option>
-                                        <option value="Approved">Approved</option>
-                                        <option value="Rejected">Rejected</option>
-                                    </select>
+                                    <div class="space-y-1.5">
+                                        <select v-if="(c.status || 'Pending') === 'Pending'" :value="c.status || 'Pending'" @change="updateClientStatus(c, $event.target.value)" class="bg-slate-900 border border-slate-700 rounded-lg p-1 text-xs text-white">
+                                            <option value="Pending">Pending</option>
+                                            <option value="Approved">Approve (Admin)</option>
+                                            <option value="Rejected">Reject (Admin)</option>
+                                        </select>
+                                        <span v-else :class="c.status === 'Approved' ? 'text-emerald-400' : 'text-rose-400'" class="text-xs font-bold">{{ c.status }} — Locked</span>
+                                        <p v-if="c.decisionBy || c.approvedByEmp" class="text-[10px] text-slate-400">By: <span class="text-amber-300">{{ c.decisionBy || c.approvedByEmp || 'Legacy record' }}</span></p>
+                                        <p v-if="c.decisionAt" class="text-[9px] text-slate-500">{{ c.decisionAt }}</p>
+                                    </div>
                                 </td>
                                 <td class="p-3">
                                     <div v-if="c.campaignIssues && Object.keys(c.campaignIssues).length > 0" class="space-y-1 max-w-xs">
@@ -1114,6 +1169,11 @@
                             <span class="text-slate-400">{{ fb.date }}</span>
                         </div>
                         <p class="text-sm text-slate-200 whitespace-pre-line">{{ fb.text }}</p>
+                        <div class="mt-3 flex justify-end">
+                            <button @click="deleteFeedback(fb.id)" class="text-[11px] text-rose-400 hover:text-rose-300 border border-rose-500/20 px-2 py-1 rounded-lg">
+                                <i class="fa-solid fa-trash mr-1"></i> Delete Report
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1233,6 +1293,9 @@
                             <span class="text-[9px] opacity-70">{{ chat.date }}</span>
                         </div>
                         <p class="whitespace-pre-line">{{ chat.message }}</p>
+                        <div class="mt-2 flex justify-end" v-if="currentUser.role === 'admin' || chat.senderCode === currentUser.code">
+                            <button @click="deleteSupportMessage(chat)" class="text-[9px] opacity-70 hover:opacity-100 underline">Delete</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1426,6 +1489,10 @@ createApp({
             clientCampaignFileMap: {},
 
             searchQuery: '',
+            employeeClientStatusFilter: 'Pending',
+            employeeDecisionFilter: 'All',
+            adminClientStatusFilter: 'All',
+            adminClientDecisionFilter: 'All',
             employeeFeedbackInput: '',
             empSubTab: 'clients',
             showEmpSelfPinModal: false,
@@ -1475,9 +1542,42 @@ createApp({
     },
     computed: {
         filteredClients() {
-            if (!this.searchQuery) return this.clients;
-            const q = this.searchQuery.toLowerCase();
-            return this.clients.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.phone.includes(q));
+            const q = String(this.searchQuery || '').trim().toLowerCase();
+            const statusFilter = this.employeeClientStatusFilter || 'All';
+            const decisionFilter = this.employeeDecisionFilter || 'All';
+            return this.clients.filter(c => {
+                const status = c.status || 'Pending';
+                const decisionBy = c.decisionBy || c.approvedByEmp || '';
+                const matchesSearch = !q || String(c.name || '').toLowerCase().includes(q) || String(c.code || '').toLowerCase().includes(q) || String(c.phone || '').includes(q);
+                const matchesStatus = statusFilter === 'All' || status === statusFilter;
+                const matchesDecision = decisionFilter === 'All' || (decisionFilter === 'Unassigned' ? status === 'Pending' : decisionFilter === 'Mine' ? String(decisionBy).includes(`(${String(this.currentUser?.code || '')})`) : String(decisionBy).toLowerCase().includes(decisionFilter.toLowerCase()));
+                return matchesSearch && matchesStatus && matchesDecision;
+            }).sort((a, b) => {
+                const order = { Pending: 0, Approved: 1, Rejected: 2 };
+                return (order[a.status || 'Pending'] ?? 9) - (order[b.status || 'Pending'] ?? 9);
+            });
+        },
+        adminFilteredClients() {
+            const statusFilter = this.adminClientStatusFilter || 'All';
+            const decisionFilter = this.adminClientDecisionFilter || 'All';
+            return this.clients.filter(c => {
+                const status = c.status || 'Pending';
+                const decisionBy = c.decisionBy || c.approvedByEmp || '';
+                const matchesStatus = statusFilter === 'All' || status === statusFilter;
+                const matchesDecision = decisionFilter === 'All' || (decisionFilter === 'Pending' ? status === 'Pending' : String(decisionBy).toLowerCase().includes(decisionFilter.toLowerCase()));
+                return matchesStatus && matchesDecision;
+            }).sort((a, b) => {
+                const order = { Pending: 0, Approved: 1, Rejected: 2 };
+                return (order[a.status || 'Pending'] ?? 9) - (order[b.status || 'Pending'] ?? 9);
+            });
+        },
+        clientStatusCounts() {
+            return {
+                all: this.clients.length,
+                pending: this.clients.filter(c => (c.status || 'Pending') === 'Pending').length,
+                approved: this.clients.filter(c => c.status === 'Approved').length,
+                rejected: this.clients.filter(c => c.status === 'Rejected').length
+            };
         },
         filteredSupportChats() {
             return this.supportChats;
@@ -1508,7 +1608,7 @@ createApp({
         clearPrivateData() {
             (this._privateUnsubs || []).forEach(fn => { try { fn(); } catch (_) {} });
             this._privateUnsubs = [];
-            this.clients = []; this.employees = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = [];
+            this.clients = []; this.employees = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = []; this._employeeOwnChats = []; this._employeeAdminChats = []; this._employeeScopedCode = null;
         },
 
         loadPrivateDataForRole(role, userId) {
@@ -1521,11 +1621,55 @@ createApp({
                 return;
             }
             if (role === 'employee') {
-                watch(db.collection('employees').doc(userId), doc => { if (doc.exists) this.currentUser = { id: doc.id, ...doc.data() }; });
-                watch(db.collection('clients'), snapshot => { this.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
-                watch(db.collection('earningsRequests'), snapshot => { this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
-                watch(db.collection('supportChats'), snapshot => { this.supportChats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
-                watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                // Fetch the employee profile first. The previous implementation created
+                // scoped queries using this.currentUser.code before the profile listener
+                // had necessarily populated it, which could create empty/wrong listeners.
+                watch(db.collection('employees').doc(userId), doc => {
+                    if (!doc.exists) return;
+                    const employee = { id: doc.id, ...doc.data() };
+                    this.currentUser = employee;
+                    const code = String(employee.code || '').trim();
+                    if (!code || this._employeeScopedCode === code) return;
+                    this._employeeScopedCode = code;
+
+                    // Applicants are intentionally visible to employees because the existing
+                    // approval-authority feature requires them. Private activity data is scoped
+                    // to the logged-in employee instead of downloading every employee's records.
+                    watch(db.collection('clients'), snapshot => {
+                        this.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    watch(db.collection('earningsRequests').where('empCode', '==', code), snapshot => {
+                        this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    watch(db.collection('feedbacks').where('empCode', '==', code), snapshot => {
+                        this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+
+                    // Support messages are scoped to this employee: own messages plus only
+                    // admin replies explicitly addressed to this employee.
+                    const mergeChats = () => {
+                        const own = this._employeeOwnChats || [];
+                        const admin = this._employeeAdminChats || [];
+                        const seen = new Set();
+                        this.supportChats = [...own, ...admin].filter(chat => {
+                            if (seen.has(chat.id)) return false;
+                            seen.add(chat.id);
+                            return true;
+                        }).sort((a, b) => {
+                            const ad = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : Date.parse(a.date || '') || 0;
+                            const bd = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : Date.parse(b.date || '') || 0;
+                            return ad - bd;
+                        });
+                    };
+                    watch(db.collection('supportChats').where('senderCode', '==', code), snapshot => {
+                        this._employeeOwnChats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        mergeChats();
+                    });
+                    watch(db.collection('supportChats').where('recipientCode', '==', code), snapshot => {
+                        this._employeeAdminChats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        mergeChats();
+                    });
+                });
                 return;
             }
             if (role === 'admin') {
@@ -1566,6 +1710,13 @@ createApp({
         nextEmployeeCode() {
             const nums = this.employees.map(e => Number(String(e.code || '').match(/(\d+)$/)?.[1] || 0)).filter(Number.isFinite);
             return `EMP-${String(Math.max(0, ...nums) + 1).padStart(4, '0')}`;
+        },
+
+        generateUniqueNumericCode(prefix, length = 8) {
+            const now = Date.now().toString().slice(-length);
+            const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+            const raw = (now + rand).slice(-length);
+            return `${prefix}-${raw}`;
         },
 
         async hashCredential(secret, saltHex) {
@@ -1660,11 +1811,12 @@ createApp({
                 return;
             }
             this.formError = '';
-            const existingNumbers = this.clients.map(c => Number(String(c.code || '').replace('CLI-', ''))).filter(Number.isFinite);
-            const codeNum = Math.max(1000, ...existingNumbers) + 1;
-            const clientCode = `CLI-${codeNum}`;
-
-            const newClient = {
+            let clientCode = '';
+            let newClient = null;
+            let created = false;
+            for (let attempt = 0; attempt < 5 && !created; attempt++) {
+                clientCode = this.generateUniqueNumericCode('CLI', 10);
+                newClient = {
                 code: clientCode,
                 name: this.jobForm.name,
                 phone: this.jobForm.phone,
@@ -1677,9 +1829,20 @@ createApp({
                 campaignIssues: {},
                 isPromoted: false,
                 createdAt: new Date().toISOString()
-            };
-
-            await db.collection('clients').doc(clientCode).set(newClient);
+                };
+                const clientRef = db.collection('clients').doc(clientCode);
+                try {
+                    await db.runTransaction(async tx => {
+                        const existing = await tx.get(clientRef);
+                        if (existing.exists) throw new Error('CLIENT_CODE_COLLISION');
+                        tx.set(clientRef, newClient);
+                    });
+                    created = true;
+                } catch (error) {
+                    if (error.message !== 'CLIENT_CODE_COLLISION') throw error;
+                }
+            }
+            if (!created) throw new Error('Could not allocate a unique client code.');
             this.lastSubmitted = newClient;
             this.applicationSuccess = true;
             this.jobForm = { name: '', phone: '', jobType: '', address: '', photo: null };
@@ -1700,37 +1863,60 @@ createApp({
         async handleClientLogin() {
             const code = this.loginInput.code.trim().toUpperCase();
             const phone = this.loginInput.phone.trim();
-            const ref = db.collection('clients').doc(code);
-            const snap = await ref.get();
-            const found = snap.exists ? { id: snap.id, ...snap.data() } : null;
-            if (found && found.phone === phone) {
-                this.currentUser = found;
-                this.loadPrivateDataForRole('client', found.id);
-                this.currentView = 'client_dash';
-                this.loginInput.code = '';
-                this.loginInput.phone = '';
-                this.showToast('Welcome back, ' + found.name, 'success');
-            } else {
-                this.loginError = 'अमान्य Client Code या Mobile Number!';
+            if (!code || !this.isValidPhone(phone)) {
+                this.loginError = 'कृपया valid Client Code और 10 अंकों का Mobile Number दर्ज करें।';
+                return;
+            }
+            try {
+                const ref = db.collection('clients').doc(code);
+                const snap = await ref.get();
+                const found = snap.exists ? { id: snap.id, ...snap.data() } : null;
+                if (found && this.normalizePhone(found.phone) === phone) {
+                    this.currentUser = found;
+                    this.loadPrivateDataForRole('client', found.id);
+                    this.currentView = 'client_dash';
+                    this.loginInput.code = '';
+                    this.loginInput.phone = '';
+                    this.showToast('Welcome back, ' + found.name, 'success');
+                } else {
+                    this.loginError = 'अमान्य Client Code या Mobile Number!';
+                }
+            } catch (error) {
+                console.error(error);
+                this.loginError = error?.code === 'permission-denied' ? 'Client login के लिए Firebase Security Rules access आवश्यक है।' : 'Client login अभी उपलब्ध नहीं है।';
             }
         },
 
         async handleEmployeeLogin() {
             const code = this.loginInput.code.trim().toUpperCase();
             const pin = this.loginInput.pin.trim();
-            const snap = await db.collection('employees').where('code', '==', code).limit(1).get();
-            const found = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
-            const validPin = found && ((found.pin && found.pin === pin) || (found.pinHash && await this.verifyStoredCredential(pin, found.pinHash)));
-            if (found && validPin) {
-                if (found.pin && !found.pinHash) { const migratedPinHash = await this.hashCredential(pin); await db.collection('employees').doc(found.id).update({ pinHash: migratedPinHash, pin: firebase.firestore.FieldValue.delete(), mustChangePin: false }); found.pinHash = migratedPinHash; delete found.pin; }
-                this.currentUser = found;
-                this.loadPrivateDataForRole('employee', found.id);
-                this.currentView = 'emp_dash';
-                this.loginInput.code = '';
-                this.loginInput.pin = '';
-                this.showToast('Welcome Employee, ' + found.name, 'success');
-            } else {
-                this.loginError = 'अमान्य Employee Code या Secret PIN!';
+            if (!code || !this.isValidPin(pin)) {
+                this.loginError = 'कृपया Employee Code और 4 अंकों का Secret PIN दर्ज करें।';
+                return;
+            }
+            try {
+                const snap = await db.collection('employees').where('code', '==', code).limit(1).get();
+                const found = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+                const validPin = found && ((found.pin && found.pin === pin) || (found.pinHash && await this.verifyStoredCredential(pin, found.pinHash)));
+                if (found && validPin) {
+                    if (found.pin && !found.pinHash) {
+                        const migratedPinHash = await this.hashCredential(pin);
+                        await db.collection('employees').doc(found.id).update({ pinHash: migratedPinHash, pin: firebase.firestore.FieldValue.delete(), mustChangePin: false });
+                        found.pinHash = migratedPinHash;
+                        delete found.pin;
+                    }
+                    this.currentUser = found;
+                    this.loadPrivateDataForRole('employee', found.id);
+                    this.currentView = 'emp_dash';
+                    this.loginInput.code = '';
+                    this.loginInput.pin = '';
+                    this.showToast('Welcome Employee, ' + found.name, 'success');
+                } else {
+                    this.loginError = 'अमान्य Employee Code या Secret PIN!';
+                }
+            } catch (error) {
+                console.error(error);
+                this.loginError = error?.code === 'permission-denied' ? 'Employee login के लिए Firebase Security Rules access आवश्यक है।' : 'Employee login अभी उपलब्ध नहीं है।';
             }
         },
 
@@ -1739,7 +1925,36 @@ createApp({
             const password = this.loginInput.password;
             if (!username || !password) { this.loginError = 'Username और Password दोनों भरें।'; return; }
             try {
-                const valid = username === this.adminSettingsForm.username && await this.verifyAdminPassword(password);
+                // Always read the stored admin record before deciding whether bootstrap is allowed.
+                // This prevents the old bootstrap path from overwriting an already-initialized admin.
+                const adminRef = db.collection('settings').doc('admin');
+                const adminSnap = await adminRef.get();
+                let adminData = adminSnap.exists ? (adminSnap.data() || {}) : null;
+                let valid = false;
+
+                if (adminData && adminData.passwordHash?.salt && adminData.passwordHash?.hash) {
+                    this.adminSettingsForm.username = String(adminData.username || 'admin');
+                    this.adminPasswordHash = adminData.passwordHash;
+                    valid = username === this.adminSettingsForm.username && await this.verifyAdminPassword(password);
+                } else if (!adminData) {
+                    // Bootstrap is permitted only when the admin document truly does not exist.
+                    if (username === 'admin' && password === 'Admin@3307') {
+                        const bootstrapHash = await this.hashCredential(password);
+                        await adminRef.create({
+                            username: 'admin',
+                            passwordHash: bootstrapHash,
+                            initializedAt: new Date().toISOString()
+                        });
+                        this.adminSettingsForm.username = 'admin';
+                        this.adminPasswordHash = bootstrapHash;
+                        valid = true;
+                    }
+                } else {
+                    // Existing record without a valid hash must not fall back to a known password.
+                    this.loginError = 'Admin account initialization अधूरी है। Firebase में settings/admin जाँचें।';
+                    return;
+                }
+
                 if (valid) {
                     this.currentUser = { name: 'Super Admin', role: 'admin', code: 'ADMIN' };
                     this.loadPrivateDataForRole('admin', 'ADMIN');
@@ -1752,7 +1967,9 @@ createApp({
                 }
             } catch (error) {
                 console.error(error);
-                this.loginError = 'Admin login अभी उपलब्ध नहीं है।';
+                this.loginError = error?.code === 'permission-denied'
+                    ? 'Admin login के लिए Firebase Security Rules में settings/admin access आवश्यक है।'
+                    : 'Admin login अभी उपलब्ध नहीं है।';
             }
         },
 
@@ -1784,17 +2001,18 @@ createApp({
                 this.showToast('कृपया पहले स्क्रीनशॉट अपलोड करें।', 'error');
                 return;
             }
-            if (!this.currentUser.campaignProofs) this.currentUser.campaignProofs = [];
-            const existingIndex = this.currentUser.campaignProofs.findIndex(p => p.cmpId === cmpId);
+            const clientRef = db.collection('clients').doc(this.currentUser.code);
             const proofObj = { cmpId, screenshot, status: 'Submitted - Verification Pending', date: new Date().toLocaleDateString() };
-            if (existingIndex >= 0) {
-                this.currentUser.campaignProofs[existingIndex] = proofObj;
-            } else {
-                this.currentUser.campaignProofs.push(proofObj);
-            }
-
-            await db.collection('clients').doc(this.currentUser.code).update({
-                campaignProofs: this.currentUser.campaignProofs
+            await db.runTransaction(async tx => {
+                const snap = await tx.get(clientRef);
+                if (!snap.exists) throw new Error('Client not found');
+                const current = snap.data() || {};
+                const proofs = Array.isArray(current.campaignProofs) ? [...current.campaignProofs] : [];
+                const existingIndex = proofs.findIndex(p => String(p.cmpId) === String(cmpId));
+                if (existingIndex >= 0) proofs[existingIndex] = proofObj;
+                else proofs.push(proofObj);
+                tx.update(clientRef, { campaignProofs: proofs });
+                this.currentUser.campaignProofs = proofs;
             });
             this.showToast('Campaign proof submitted successfully!', 'success');
         },
@@ -1860,8 +2078,10 @@ createApp({
             const newMsg = {
                 senderCode: this.currentUser.code,
                 senderName: this.currentUser.name,
+                recipientCode: 'ADMIN',
                 message: this.supportMessageInput,
-                date: new Date().toLocaleString()
+                date: new Date().toLocaleString(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection('supportChats').add(newMsg);
             this.supportMessageInput = '';
@@ -1907,36 +2127,68 @@ createApp({
         },
 
         async employeeApproveClient(client, newStatus) {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल logged-in employee ही approval दे सकता है।', 'error');
+                return;
+            }
+            if (!['Approved', 'Rejected'].includes(newStatus)) {
+                this.showToast('Pending client के लिए केवल Approve या Reject चुनें।', 'error');
+                return;
+            }
+            const employeeCode = String(this.currentUser.code || '').trim();
+            if (!employeeCode) {
+                this.showToast('Employee identity नहीं मिली।', 'error');
+                return;
+            }
             try {
                 const clientRef = db.collection('clients').doc(client.code);
                 const earningRef = db.collection('earningsRequests').doc(`approval_${client.code}`);
                 let credited = false;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(clientRef);
-                    if (!snap.exists) throw new Error('Client not found');
+                    if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
                     const current = snap.data() || {};
-                    const wasApproved = current.status === 'Approved';
-                    const approvedByEmp = `${this.currentUser.name} (${this.currentUser.code})`;
-                    tx.update(clientRef, { status: newStatus, approvedByEmp });
-                    if (newStatus === 'Approved' && !wasApproved) {
-                        credited = true;
-                        tx.set(earningRef, {
-                            empCode: this.currentUser.code,
-                            empName: this.currentUser.name,
-                            clientCode: client.code,
-                            type: 'LeadApproval',
-                            amount: 3,
-                            status: 'Approved',
-                            date: new Date().toLocaleDateString()
-                        }, { merge: true });
+                    const currentStatus = current.status || 'Pending';
+                    // First employee to make a final decision wins. Other employees cannot
+                    // reject/approve/undo an already decided client.
+                    if (currentStatus !== 'Pending') throw new Error('CLIENT_ALREADY_DECIDED');
+                    const decisionAt = new Date().toISOString();
+                    const decisionBy = `${this.currentUser.name} (${employeeCode})`;
+                    const decision = { status: newStatus, decisionBy, decisionRole: 'employee', decisionAt, approvalLocked: true, decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'employee', decisionAt }) };
+                    tx.update(clientRef, decision);
+                    if (newStatus === 'Approved') {
+                        const earningSnap = await tx.get(earningRef);
+                        if (earningSnap.exists) {
+                            const existing = earningSnap.data() || {};
+                            if (existing.empCode && existing.empCode !== employeeCode) throw new Error('EARNING_ALREADY_ASSIGNED');
+                        } else {
+                            credited = true;
+                            tx.set(earningRef, {
+                                empCode: employeeCode,
+                                empName: this.currentUser.name,
+                                clientCode: client.code,
+                                type: 'LeadApproval',
+                                amount: 3,
+                                status: 'Approved',
+                                decisionBy,
+                                decisionAt,
+                                date: new Date().toLocaleDateString()
+                            });
+                        }
                     }
                 });
                 client.status = newStatus;
-                client.approvedByEmp = `${this.currentUser.name} (${this.currentUser.code})`;
-                this.showToast('Client status updated' + (credited ? ' & ₹3 credited' : ''), 'success');
+                client.decisionBy = `${this.currentUser.name} (${employeeCode})`;
+                client.approvedByEmp = newStatus === 'Approved' ? client.decisionBy : undefined;
+                client.decisionRole = 'employee';
+                client.decisionAt = new Date().toISOString();
+                client.approvalLocked = true;
+                this.showToast((newStatus === 'Approved' ? 'Client accepted' : 'Client rejected') + (credited ? ' & ₹3 credited' : ''), 'success');
             } catch (error) {
                 console.error(error);
-                this.showToast('Client status update नहीं हो पाया।', 'error');
+                if (error.message === 'CLIENT_ALREADY_DECIDED') this.showToast(`यह client पहले ही ${client.status || 'final'} हो चुका है — ${client.decisionBy || client.approvedByEmp || 'दूसरे employee'} ने decision दिया है।`, 'error');
+                else if (error.message === 'EARNING_ALREADY_ASSIGNED') this.showToast('यह ₹3 earning पहले किसी दूसरे employee को assign हो चुकी है।', 'error');
+                else this.showToast('Client status update नहीं हो पाया।', 'error');
             }
         },
 
@@ -2032,23 +2284,39 @@ createApp({
         },
 
         async submitPayoutRequest() {
-            const balance = this.getEmpAvailableBalance(this.currentUser.code);
             const payoutAmount = Number(this.payoutForm.amount);
-            if (!Number.isFinite(payoutAmount) || !Number.isInteger(payoutAmount) || payoutAmount > balance || payoutAmount < 100) {
-                this.showToast('अमान्य राशि! न्यूनतम ₹100 या उपलब्ध बैलेंस से कम होना चाहिए।', 'error');
+            const method = String(this.payoutForm.method || '').trim();
+            const details = String(this.payoutForm.details || '').trim();
+            if (!Number.isFinite(payoutAmount) || !Number.isInteger(payoutAmount) || payoutAmount < 100 || payoutAmount > 100000) {
+                this.showToast('अमान्य payout राशि। ₹100 से ₹1,00,000 तक राशि दर्ज करें।', 'error');
                 return;
             }
-            await db.collection('payoutRequests').add({
-                empCode: this.currentUser.code,
-                empName: this.currentUser.name,
-                amount: payoutAmount,
-                method: this.payoutForm.method,
-                details: this.payoutForm.details,
-                status: 'Pending',
-                date: new Date().toLocaleDateString()
-            });
-            this.payoutForm = { amount: 100, method: 'UPI', details: '' };
-            this.showToast('Payout withdrawal request submitted!', 'success');
+            if (!['UPI', 'Bank'].includes(method) || !details || details.length > 200) {
+                this.showToast('Valid payout method और payment details दर्ज करें।', 'error');
+                return;
+            }
+            try {
+                const empCode = String(this.currentUser.code || '').trim();
+                const empName = String(this.currentUser.name || '').trim();
+                const payoutRef = db.collection('payoutRequests').doc();
+                await db.runTransaction(async tx => {
+                    const earningsSnap = await tx.get(db.collection('earningsRequests').where('empCode', '==', empCode).where('status', '==', 'Approved'));
+                    const payoutsSnap = await tx.get(db.collection('payoutRequests').where('empCode', '==', empCode).where('status', 'in', ['Approved', 'Pending']));
+                    const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
+                    const alreadyWithdrawn = payoutsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
+                    const available = Math.max(0, totalEarned - alreadyWithdrawn);
+                    if (payoutAmount > available) throw new Error('INSUFFICIENT_BALANCE');
+                    tx.set(payoutRef, {
+                        empCode, empName, amount: payoutAmount, method, details, status: 'Pending',
+                        date: new Date().toLocaleDateString(), createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                this.payoutForm = { amount: 100, method: 'UPI', details: '' };
+                this.showToast('Payout withdrawal request submitted!', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast(error.message === 'INSUFFICIENT_BALANCE' ? 'उपलब्ध payout balance से अधिक राशि मांगी गई है।' : 'Payout request submit नहीं हो पाई।', 'error');
+            }
         },
 
         getPayoutHistory(empCode) {
@@ -2070,60 +2338,212 @@ createApp({
         },
 
         async updateClientStatus(client, newStatus) {
-            client.status = newStatus;
-            await db.collection('clients').doc(client.code).update({ status: newStatus });
-            this.showToast('Client status updated', 'success');
+            const allowedStatuses = ['Pending', 'Approved', 'Rejected'];
+            if (!allowedStatuses.includes(newStatus)) {
+                this.showToast('Invalid client status.', 'error');
+                return;
+            }
+            if ((client.status || 'Pending') !== 'Pending') {
+                this.showToast('Final employee decision locked है। Admin भी बिना अलग correction workflow के इसे बदल नहीं सकता।', 'error');
+                return;
+            }
+            if (newStatus === 'Pending') return;
+            if (!confirm(`Client ${client.code} को ${newStatus} mark करना है? यह employee earning नहीं बनाएगा और decision Admin के नाम से दर्ज होगा।`)) return;
+            try {
+                const ref = db.collection('clients').doc(client.code);
+                const decisionAt = new Date().toISOString();
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
+                    const current = snap.data() || {};
+                    if ((current.status || 'Pending') !== 'Pending') throw new Error('CLIENT_ALREADY_DECIDED');
+                    const decisionBy = `Admin (${this.adminSettingsForm.username || 'admin'})`;
+                    tx.update(ref, {
+                        status: newStatus,
+                        decisionBy,
+                        decisionRole: 'admin',
+                        decisionAt,
+                        approvalLocked: true,
+                        decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'admin', decisionAt })
+                    });
+                });
+                client.status = newStatus;
+                client.decisionBy = `Admin (${this.adminSettingsForm.username || 'admin'})`;
+                client.decisionRole = 'admin';
+                client.decisionAt = decisionAt;
+                client.approvalLocked = true;
+                this.showToast('Client final status recorded.', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Client status update नहीं हो पाया या किसी ने पहले decision दे दिया।', 'error');
+            }
         },
 
         async promoteClientToEmployee(client) {
-            client.isPromoted = true;
-            await db.collection('clients').doc(client.code).update({ isPromoted: true });
+            try {
+                const clientRef = db.collection('clients').doc(client.code);
+                let empCode = '';
+                let promoted = false;
+                for (let attempt = 0; attempt < 5 && !promoted; attempt++) {
+                    empCode = this.generateUniqueNumericCode('EMP', 8);
+                    const empRef = db.collection('employees').doc(empCode);
+                    try {
+                        await db.runTransaction(async tx => {
+                            const clientSnap = await tx.get(clientRef);
+                            if (!clientSnap.exists) throw new Error('Client not found');
+                            const currentClient = clientSnap.data() || {};
+                            if (currentClient.isPromoted) return;
+                            const empSnap = await tx.get(empRef);
+                            if (empSnap.exists) throw new Error('EMP_CODE_COLLISION');
+                            tx.update(clientRef, { isPromoted: true });
+                            tx.set(empRef, {
+                                code: empCode,
+                                name: currentClient.name,
+                                phone: currentClient.phone,
+                                position: currentClient.jobType,
+                                photo: currentClient.photo,
+                                pinHash: null,
+                                mustChangePin: true,
+                                role: 'employee',
+                                createdAt: new Date().toISOString()
+                            });
+                            promoted = true;
+                        });
+                    } catch (e) {
+                        if (e.message !== 'EMP_CODE_COLLISION') throw e;
+                    }
+                }
+                if (!promoted) throw new Error('Could not allocate a unique employee code.');
+                this.showToast('Client promoted to employee successfully! Code: ' + empCode, 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Client promotion नहीं हो पाया। कृपया फिर कोशिश करें।', 'error');
+            }
+        },
 
-            const empCode = this.nextEmployeeCode();
-            const newEmpObj = {
-                code: empCode,
-                name: client.name,
-                phone: client.phone,
-                position: client.jobType,
-                photo: client.photo,
-                pinHash: null,
-                mustChangePin: true,
-                role: 'employee',
-                createdAt: new Date().toISOString()
-            };
-            await db.collection('employees').add(newEmpObj);
-            this.showToast('Client promoted to employee successfully! Code: ' + empCode, 'success');
+        async deleteFeedback(id) {
+            const doc = this.feedbacks.find(f => f.id === id);
+            if (!doc) return;
+            const isAdmin = this.currentUser?.role === 'admin';
+            if (!isAdmin && doc.empCode !== this.currentUser?.code) {
+                this.showToast('आप केवल अपनी report delete कर सकते हैं।', 'error');
+                return;
+            }
+            if (!confirm('क्या आप इस daily report को delete करना चाहते हैं?')) return;
+            try {
+                await db.collection('feedbacks').doc(id).delete();
+                this.showToast('Report deleted', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Report delete नहीं हो पाई।', 'error');
+            }
+        },
+
+        async deleteSupportMessage(chat) {
+            const isAdmin = this.currentUser?.role === 'admin';
+            if (!isAdmin && chat.senderCode !== this.currentUser?.code) {
+                this.showToast('आप केवल अपना message delete कर सकते हैं।', 'error');
+                return;
+            }
+            if (!confirm('क्या आप यह support message delete करना चाहते हैं?')) return;
+            try {
+                await db.collection('supportChats').doc(chat.id).delete();
+                this.showToast('Message deleted', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Message delete नहीं हो पाया।', 'error');
+            }
+        },
+
+        async deleteOwnPendingExtraWork(req) {
+            if (this.currentUser?.role !== 'employee' || req.empCode !== this.currentUser.code || req.status !== 'Pending' || req.type !== 'ExtraWork') {
+                this.showToast('यह submission delete नहीं की जा सकती।', 'error');
+                return;
+            }
+            if (!confirm('इस pending extra-work submission को delete करें?')) return;
+            try {
+                const ref = db.collection('earningsRequests').doc(req.id);
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    if (!snap.exists) throw new Error('NOT_FOUND');
+                    const data = snap.data() || {};
+                    if (data.empCode !== this.currentUser.code || data.type !== 'ExtraWork' || data.status !== 'Pending') throw new Error('NOT_ALLOWED');
+                    tx.delete(ref);
+                });
+                this.showToast('Pending submission deleted', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Submission delete नहीं हो पाई या Admin ने process कर दी है।', 'error');
+            }
         },
 
         async deleteClient(code) {
-            if (confirm('क्या आप इस client को हटाना चाहते हैं?')) {
+            const client = this.clients.find(c => c.code === code);
+            if (!client) return;
+            const hasFinancialHistory = this.earningsRequests.some(r => r.clientCode === code) || this.payoutRequests.some(p => p.clientCode === code);
+            const warning = hasFinancialHistory
+                ? 'इस client की financial/earning history मौजूद है। केवल client profile हटेगी; financial history सुरक्षित रहेगी। फिर भी delete करना है?'
+                : 'क्या आप इस client को हटाना चाहते हैं?';
+            if (!confirm(warning)) return;
+            try {
                 await db.collection('clients').doc(code).delete();
-                this.showToast('Client deleted', 'success');
+                this.showToast('Client profile deleted; financial history preserved.', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Client delete नहीं हो पाया।', 'error');
             }
         },
 
         async addEmployee() {
             if (!this.newEmp.name || !this.isValidPhone(this.newEmp.phone)) { this.showToast('कृपया नाम और वैध 10 अंकों का मोबाइल नंबर दर्ज करें।', 'error'); return; }
-            const empCode = this.nextEmployeeCode();
-            const empObj = {
-                code: empCode,
-                name: this.newEmp.name,
-                phone: this.newEmp.phone,
-                position: this.newEmp.position,
-                pinHash: null,
-                mustChangePin: true,
-                role: 'employee',
-                createdAt: new Date().toISOString()
-            };
-            await db.collection('employees').add(empObj);
-            this.newEmp = { name: '', phone: '', position: 'Telecaller' };
-            this.showToast('Employee added successfully!', 'success');
+            try {
+                let empCode = '';
+                let created = false;
+                for (let attempt = 0; attempt < 5 && !created; attempt++) {
+                    empCode = this.generateUniqueNumericCode('EMP', 8);
+                    const empRef = db.collection('employees').doc(empCode);
+                    await db.runTransaction(async tx => {
+                        const existing = await tx.get(empRef);
+                        if (existing.exists) throw new Error('EMP_CODE_COLLISION');
+                        tx.set(empRef, {
+                            code: empCode,
+                            name: this.newEmp.name,
+                            phone: this.newEmp.phone,
+                            position: this.newEmp.position,
+                            pinHash: null,
+                            mustChangePin: true,
+                            role: 'employee',
+                            createdAt: new Date().toISOString()
+                        });
+                        created = true;
+                    }).catch(error => {
+                        if (error.message !== 'EMP_CODE_COLLISION') throw error;
+                    });
+                }
+                if (!created) throw new Error('Could not allocate a unique employee code.');
+                this.newEmp = { name: '', phone: '', position: 'Telecaller' };
+                this.showToast('Employee added successfully! Code: ' + empCode, 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Employee add नहीं हो पाया।', 'error');
+            }
         },
 
         async deleteEmployee(id) {
-            if (confirm('क्या आप इस employee को हटाना चाहते हैं?')) {
+            const emp = this.employees.find(e => e.id === id);
+            if (!emp) return;
+            const code = String(emp.code || '').trim();
+            const hasFinancialHistory = this.earningsRequests.some(r => r.empCode === code) || this.payoutRequests.some(p => p.empCode === code);
+            const warning = hasFinancialHistory
+                ? 'इस employee की earnings/payout history मौजूद है। Employee login/profile हटेगा, लेकिन financial और audit history नहीं हटेगी। फिर भी remove करना है?'
+                : 'क्या आप इस employee को हटाना चाहते हैं?';
+            if (!confirm(warning)) return;
+            try {
                 await db.collection('employees').doc(id).delete();
-                this.showToast('Employee removed', 'success');
+                this.showToast('Employee profile removed; financial/audit history preserved.', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Employee remove नहीं हो पाया।', 'error');
             }
         },
 
@@ -2152,27 +2572,68 @@ createApp({
         },
 
         async approveLeadClaim(req) {
-            if (req.status !== 'Pending') { this.showToast('यह earning request पहले ही process हो चुकी है।', 'error'); return; }
-            req.status = 'Approved';
-            await db.collection('earningsRequests').doc(req.id).update({ status: 'Approved' });
-            this.showToast('Lead claim approved!', 'success');
+            try {
+                const ref = db.collection('earningsRequests').doc(req.id);
+                let changed = false;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    if (!snap.exists) throw new Error('Request not found');
+                    if ((snap.data() || {}).status !== 'Pending') return;
+                    tx.update(ref, { status: 'Approved', processedAt: new Date().toISOString() });
+                    changed = true;
+                });
+                if (changed) this.showToast('Lead claim approved!', 'success');
+                else this.showToast('यह earning request पहले ही process हो चुकी है।', 'error');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Lead claim process नहीं हो पाया।', 'error');
+            }
         },
 
         async approveExtraWorkClaim(req) {
-            if (req.status !== 'Pending') { this.showToast('यह earning request पहले ही process हो चुकी है।', 'error'); return; }
-            req.status = 'Approved';
-            await db.collection('earningsRequests').doc(req.id).update({ status: 'Approved', amount: req.amount || 10 });
-            this.showToast('Extra work approved with ₹' + (req.amount || 10), 'success');
+            const amount = Math.min(500, Math.max(10, Number(req.amount) || 10));
+            try {
+                const ref = db.collection('earningsRequests').doc(req.id);
+                let changed = false;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    if (!snap.exists) throw new Error('Request not found');
+                    if ((snap.data() || {}).status !== 'Pending') return;
+                    tx.update(ref, { status: 'Approved', amount, processedAt: new Date().toISOString() });
+                    changed = true;
+                });
+                if (changed) this.showToast('Extra work approved with ₹' + amount, 'success');
+                else this.showToast('यह earning request पहले ही process हो चुकी है।', 'error');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Extra work process नहीं हो पाया।', 'error');
+            }
         },
 
         async rejectEarningClaim(req) {
-            if (req.status !== 'Pending') { this.showToast('यह earning request पहले ही process हो चुकी है।', 'error'); return; }
-            req.status = 'Rejected';
-            await db.collection('earningsRequests').doc(req.id).update({ status: 'Rejected' });
-            this.showToast('Claim rejected', 'error');
+            try {
+                const ref = db.collection('earningsRequests').doc(req.id);
+                let changed = false;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    if (!snap.exists) throw new Error('Request not found');
+                    if ((snap.data() || {}).status !== 'Pending') return;
+                    tx.update(ref, { status: 'Rejected', processedAt: new Date().toISOString() });
+                    changed = true;
+                });
+                if (changed) this.showToast('Claim rejected', 'error');
+                else this.showToast('यह earning request पहले ही process हो चुकी है।', 'error');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Claim process नहीं हो पाया।', 'error');
+            }
         },
 
         async processPayout(payout, status) {
+            if (!['Approved', 'Rejected'].includes(status)) {
+                this.showToast('Invalid payout status.', 'error');
+                return;
+            }
             try {
                 const ref = db.collection('payoutRequests').doc(payout.id);
                 let changed = false;
@@ -2181,7 +2642,26 @@ createApp({
                     if (!snap.exists) throw new Error('Payout request not found');
                     const current = snap.data() || {};
                     if (current.status !== 'Pending') return;
-                    tx.update(ref, { status });
+                    if (status === 'Approved') {
+                        const empCode = String(current.empCode || '').trim();
+                        const requestedAmount = Number(current.amount) || 0;
+                        if (!empCode || !Number.isInteger(requestedAmount) || requestedAmount < 100 || requestedAmount > 100000) {
+                            throw new Error('INVALID_PAYOUT');
+                        }
+                        const earningsSnap = await tx.get(db.collection('earningsRequests').where('empCode', '==', empCode).where('status', '==', 'Approved'));
+                        // Reserve every other pending/approved payout while approving this one.
+                        // Otherwise two admins could approve two pending payouts concurrently
+                        // against the same balance.
+                        const payoutsSnap = await tx.get(db.collection('payoutRequests').where('empCode', '==', empCode).where('status', 'in', ['Approved', 'Pending']));
+                        const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
+                        const reservedOther = payoutsSnap.docs.reduce((sum, d) => {
+                            if (d.id === ref.id) return sum;
+                            const amount = Number(d.data()?.amount) || 0;
+                            return sum + amount;
+                        }, 0);
+                        if (requestedAmount > Math.max(0, totalEarned - reservedOther)) throw new Error('INSUFFICIENT_BALANCE');
+                    }
+                    tx.update(ref, { status, processedAt: firebase.firestore.FieldValue.serverTimestamp() });
                     changed = true;
                 });
                 if (changed) {
@@ -2192,7 +2672,8 @@ createApp({
                 }
             } catch (error) {
                 console.error(error);
-                this.showToast('Payout process नहीं हो पाया।', 'error');
+                const msg = error.message === 'INSUFFICIENT_BALANCE' ? 'इस payout के लिए पर्याप्त approved earning balance नहीं है।' : error.message === 'INVALID_PAYOUT' ? 'Payout request का data invalid है।' : 'Payout process नहीं हो पाया।';
+                this.showToast(msg, 'error');
             }
         },
 
@@ -2208,8 +2689,14 @@ createApp({
         },
 
         async deleteCampaign(id) {
-            await db.collection('campaigns').doc(id).delete();
-            this.showToast('Campaign deleted', 'success');
+            if (!confirm('क्या आप यह campaign link delete करना चाहते हैं?')) return;
+            try {
+                await db.collection('campaigns').doc(id).delete();
+                this.showToast('Campaign deleted', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Campaign delete नहीं हो पाया।', 'error');
+            }
         },
 
         async sendAnnouncement() {
@@ -2224,8 +2711,14 @@ createApp({
         },
 
         async deleteAnnouncement(id) {
-            await db.collection('announcements').doc(id).delete();
-            this.showToast('Notice deleted', 'success');
+            if (!confirm('क्या आप यह notice delete करना चाहते हैं?')) return;
+            try {
+                await db.collection('announcements').doc(id).delete();
+                this.showToast('Notice deleted', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Notice delete नहीं हो पाया।', 'error');
+            }
         },
 
         async updateCompanySettings() {
