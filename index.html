@@ -267,7 +267,7 @@
                     <i class="fa-solid fa-star mr-1.5"></i> Direct Recruitment Drive 2026 (Cloud Sync)
                 </span>
                 <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Ved Capital Rewa Career Portal</h2>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें, फोटो अपलोड करें और तुरंत अपना ऑफिशियल Client Code प्राप्त करें।</p>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और Registration Number प्राप्त करें। Approval के बाद ही Client Code जारी होगा।</p>
             </div>
 
             <div v-if="applicationSuccess" id="printable-slip" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-100">
@@ -286,8 +286,8 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/60 p-5 rounded-xl border border-slate-700/60 mb-6 text-sm">
                     <div>
-                        <p class="text-xs text-slate-400 font-semibold">Client Code</p>
-                        <p class="text-lg font-mono font-black text-amber-400">{{ lastSubmitted.code }}</p>
+                        <p class="text-xs text-slate-400 font-semibold">Registration Number</p>
+                        <p class="text-lg font-mono font-black text-amber-400">{{ lastSubmitted.registrationNo }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-slate-400 font-semibold">Status</p>
@@ -316,7 +316,7 @@
                         <i class="fa-solid fa-print mr-2"></i> Print / Save PDF
                     </button>
                     <a v-if="companyInfo.whatsapp" :href="getWhatsAppLink(lastSubmitted)" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition flex items-center shadow-lg shadow-emerald-600/20">
-                        <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Send Code on WhatsApp
+                        <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Send Registration No. on WhatsApp
                     </a>
                     <button @click="applicationSuccess = false" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-sm font-bold transition">
                         Submit Another Form
@@ -453,19 +453,17 @@
 
                 <form v-if="loginType === 'client'" @submit.prevent="handleClientLogin" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Client Code</label>
-                        <input v-model="loginInput.code" placeholder="e.g. CLI-1001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registration Number</label>
+                        <input v-model="loginInput.registrationNo" placeholder="e.g. REG-1234567890" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
                         <input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 Digit Mobile Number" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
-                    <div class="flex gap-2">
-                        <input v-model="loginInput.otp" placeholder="6 Digit OTP" type="tel" inputmode="numeric" maxlength="6" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
-                        <button type="button" @click="sendPhoneOtp('client')" class="px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl">{{ phoneAuth.otpSent ? 'Resend OTP' : 'Send OTP' }}</button>
+                    <div class="text-[11px] text-slate-400 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
+                        Approval के बाद इसी Registration Number + Mobile से Client Code access होगा। Rejected application को Client Code नहीं मिलेगा।
                     </div>
-                    <div id="recaptcha-container-client"></div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Dashboard Login</button>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Portal Login / Get Client Code</button>
                 </form>
 
                 <form v-if="loginType === 'employee'" @submit.prevent="handleEmployeeLogin" class="space-y-4">
@@ -474,14 +472,13 @@
                         <input v-model="loginInput.code" placeholder="e.g. EMP-0001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
+                        <input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 Digit Mobile Number" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Secret PIN (4 Digit)</label>
-                        <input v-model="loginInput.pin" placeholder="Enter PIN" required type="password" maxlength="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                        <input v-model="loginInput.pin" placeholder="Enter PIN" required type="password" maxlength="4" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
-                    <div class="flex gap-2">
-                        <input v-model="loginInput.otp" placeholder="6 Digit OTP" type="tel" inputmode="numeric" maxlength="6" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
-                        <button type="button" @click="sendPhoneOtp('employee')" class="px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl">{{ phoneAuth.otpSent ? 'Resend OTP' : 'Send OTP' }}</button>
-                    </div>
-                    <div id="recaptcha-container-employee"></div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Employee Login</button>
                 </form>
 
@@ -622,6 +619,61 @@
                     </div>
                 </div>
 
+                <!-- CLIENT SOCIAL LINKS -->
+                <div v-if="currentUser.status === 'Approved' && (companyInfo.youtubeEnabled || companyInfo.telegramEnabled || companyInfo.instagramEnabled)" class="bg-slate-900/70 border border-slate-700 p-4 rounded-2xl">
+                    <h3 class="text-sm font-bold text-white mb-3"><i class="fa-solid fa-link text-amber-400 mr-2"></i>Official Social Channels</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <a v-if="companyInfo.youtubeEnabled && companyInfo.youtube" :href="companyInfo.youtube" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-bold"><i class="fa-brands fa-youtube mr-1"></i>YouTube</a>
+                        <a v-if="companyInfo.telegramEnabled && companyInfo.telegram" :href="companyInfo.telegram" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-bold"><i class="fa-brands fa-telegram mr-1"></i>Telegram</a>
+                        <a v-if="companyInfo.instagramEnabled && companyInfo.instagram" :href="companyInfo.instagram" target="_blank" rel="noopener noreferrer" class="px-4 py-2 rounded-xl bg-pink-600 text-white text-xs font-bold"><i class="fa-brands fa-instagram mr-1"></i>Instagram</a>
+                    </div>
+                </div>
+
+                <!-- CLIENT TASKS & EXTRA INCOME -->
+                <div v-if="currentUser.status === 'Approved'" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4"><p class="text-[10px] text-slate-400 uppercase font-bold">Total Income</p><p class="text-2xl font-black text-emerald-400">₹ {{ getClientIncome(currentUser.code).total }}</p></div>
+                        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4"><p class="text-[10px] text-slate-400 uppercase font-bold">Withdrawn / Reserved</p><p class="text-2xl font-black text-amber-400">₹ {{ getClientIncome(currentUser.code).withdrawn }}</p></div>
+                        <div class="bg-slate-900 border border-slate-700 rounded-xl p-4"><p class="text-[10px] text-slate-400 uppercase font-bold">Available</p><p class="text-2xl font-black text-indigo-400">₹ {{ getClientAvailableBalance(currentUser.code) }}</p></div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                        <div class="flex justify-between items-center mb-3"><h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-amber-400 mr-2"></i>New Task</h3><span class="text-xs text-slate-400">Payout हर task के साथ</span></div>
+                        <div v-if="workItems.filter(x => x.targetRole === 'client' && x.targetCode === currentUser.code && x.type === 'Task').length" class="space-y-3">
+                            <div v-for="item in workItems.filter(x => x.targetRole === 'client' && x.targetCode === currentUser.code && x.type === 'Task')" :key="item.id" class="bg-slate-900 border border-slate-700 rounded-xl p-4">
+                                <div class="flex flex-wrap justify-between gap-2"><div><p class="font-bold text-white">{{ item.title }}</p><p class="text-xs text-slate-400 whitespace-pre-line mt-1">{{ item.description }}</p></div><span class="text-emerald-400 font-black">₹ {{ item.payout }}</span></div>
+                                <a v-if="item.link" :href="item.link" target="_blank" rel="noopener noreferrer" class="text-xs text-amber-400 underline break-all inline-block mt-2"><i class="fa-solid fa-link mr-1"></i>{{ item.link }}</a>
+                                <img v-if="item.media" :src="item.media" class="max-h-40 rounded-lg border border-slate-700 mt-3 object-contain">
+                                <div class="mt-3 text-[11px] font-bold" :class="item.status === 'Approved' ? 'text-emerald-400' : item.status === 'Rejected' ? 'text-rose-400' : 'text-amber-400'">Status: {{ item.status }}</div>
+                            </div>
+                        </div><div v-else class="text-xs text-slate-500">अभी कोई New Task नहीं है।</div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                        <div class="flex justify-between items-center mb-3"><h3 class="text-lg font-bold text-white"><i class="fa-solid fa-sack-dollar text-emerald-400 mr-2"></i>Extra Income</h3><span class="text-xs text-slate-400">Approved होने पर income में जुड़ेगा</span></div>
+                        <div v-if="workItems.filter(x => x.targetRole === 'client' && x.targetCode === currentUser.code && x.type === 'ExtraIncome').length" class="space-y-3">
+                            <div v-for="item in workItems.filter(x => x.targetRole === 'client' && x.targetCode === currentUser.code && x.type === 'ExtraIncome')" :key="item.id" class="bg-slate-900 border border-slate-700 rounded-xl p-4">
+                                <div class="flex flex-wrap justify-between gap-2"><div><p class="font-bold text-white">{{ item.title }}</p><p class="text-xs text-slate-400 whitespace-pre-line mt-1">{{ item.description }}</p></div><span class="text-emerald-400 font-black">₹ {{ item.payout }}</span></div>
+                                <a v-if="item.link" :href="item.link" target="_blank" rel="noopener noreferrer" class="text-xs text-amber-400 underline break-all inline-block mt-2">{{ item.link }}</a>
+                                <img v-if="item.media" :src="item.media" class="max-h-40 rounded-lg border border-slate-700 mt-3 object-contain">
+                                <div class="mt-3 text-[11px] font-bold" :class="item.status === 'Approved' ? 'text-emerald-400' : item.status === 'Rejected' ? 'text-rose-400' : 'text-amber-400'">Status: {{ item.status }}</div>
+                            </div>
+                        </div><div v-else class="text-xs text-slate-500">अभी कोई Extra Income नहीं है।</div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5">
+                        <h3 class="text-lg font-bold text-white mb-1"><i class="fa-solid fa-wallet text-indigo-400 mr-2"></i>Income Withdrawal</h3>
+                        <p class="text-xs text-slate-400 mb-4">पहले कोई employee request confirm करेगा, फिर Admin final verify करेगा।</p>
+                        <form @submit.prevent="submitClientPayout" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                            <input v-model.number="clientPayoutForm.amount" type="number" min="100" :max="getClientAvailableBalance(currentUser.code)" required placeholder="Amount" class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                            <select v-model="clientPayoutForm.method" class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option>UPI</option><option>Bank</option></select>
+                            <input v-model="clientPayoutForm.details" required maxlength="200" placeholder="UPI / Bank details" class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs">Request Withdrawal</button>
+                        </form>
+                        <div class="mt-4 space-y-2"><div v-for="p in clientPayoutRequests" :key="p.id" class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between text-xs"><span>₹ {{ p.amount }} • {{ p.method }}</span><strong :class="p.status === 'Approved' ? 'text-emerald-400' : p.status === 'Rejected' ? 'text-rose-400' : 'text-amber-400'">{{ p.status }}</strong></div></div>
+                    </div>
+                </div>
+
                 <div v-else class="bg-slate-900/80 border border-slate-700/80 p-6 rounded-2xl text-center space-y-2">
                     <i class="fa-solid fa-clock-rotate-left text-amber-400 text-3xl mb-2"></i>
                     <p class="font-bold text-slate-200">आपका अकाउंट रिव्यू में है।</p>
@@ -694,6 +746,7 @@
                 <button @click="empSubTab = 'clients'" :class="empSubTab === 'clients' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Clients & Approval Authority (₹3)</button>
                 <button @click="empSubTab = 'extra_work'" :class="empSubTab === 'extra_work' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Extra Work Submission</button>
                 <button @click="empSubTab = 'payouts'" :class="empSubTab === 'payouts' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">Request Payout (Withdrawal)</button>
+                <button @click="empSubTab = 'tasks'" :class="empSubTab === 'tasks' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 px-3 text-center rounded-lg text-xs whitespace-nowrap transition">New Task / Extra Income</button>
             </div>
 
             <!-- TAB 1: CLIENTS & APPROVAL AUTHORITY -->
@@ -755,7 +808,7 @@
                                                 <img :src="c.photo" class="w-full h-full object-cover">
                                             </div>
                                             <div>
-                                                <p class="font-mono font-bold text-amber-400 text-xs">{{ c.code }}</p>
+                                                <p class="font-mono font-bold text-amber-400 text-xs">{{ c.code || c.registrationNo }}</p>
                                                 <p class="font-bold text-white text-sm">{{ c.name }}</p>
                                             </div>
                                         </div>
@@ -873,6 +926,25 @@
                 </div>
             </div>
 
+            <!-- TAB 4: TASK / EXTRA INCOME MANAGEMENT -->
+            <div v-if="empSubTab === 'tasks'" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-6">
+                <div><h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-amber-400 mr-2"></i>New Task / Extra Income Create Karein</h3><p class="text-xs text-slate-400 mt-1">Employee client या employee के लिए item बना सकता है। हर item का payout साफ दिखाई देगा।</p></div>
+                <form @submit.prevent="createWorkItem" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 p-5 rounded-xl border border-slate-700">
+                    <select v-model="newWorkItem.targetRole" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="client">Client</option><option value="employee">Employee</option></select>
+                    <select v-model="newWorkItem.type" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="Task">New Task</option><option value="ExtraIncome">Extra Income</option></select>
+                    <input v-model="newWorkItem.targetCode" required placeholder="Target Client Code / Employee Code" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input v-model="newWorkItem.title" required maxlength="120" placeholder="Title" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <textarea v-model="newWorkItem.description" required maxlength="1000" rows="3" placeholder="Task / Extra income details" class="sm:col-span-2 bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"></textarea>
+                    <input v-model.number="newWorkItem.payout" type="number" min="1" max="100000" required placeholder="Payout ₹" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input v-model="newWorkItem.link" placeholder="Optional link (http/https)" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input type="file" accept="image/*" @change="handleWorkMediaUpload" class="sm:col-span-2 w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500 file:text-slate-950">
+                    <button type="submit" class="sm:col-span-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Create Task / Extra Income</button>
+                </form>
+                <div class="bg-slate-900 border border-slate-700 rounded-xl p-4"><div class="flex justify-between mb-3"><h4 class="text-xs font-bold text-amber-400 uppercase">Your Employee Tasks</h4><span class="text-xs text-emerald-400 font-bold">Approved: ₹ {{ getEmployeeTaskIncome(currentUser.code) }}</span></div><div v-if="workItems.filter(x => x.targetRole === 'employee' && x.targetCode === currentUser.code).length" class="space-y-2"><div v-for="item in workItems.filter(x => x.targetRole === 'employee' && x.targetCode === currentUser.code)" :key="item.id" class="bg-slate-800 border border-slate-700 p-3 rounded-xl flex justify-between gap-3 text-xs"><div><p class="font-bold text-white">{{ item.title }}</p><p class="text-slate-400">{{ item.description }}</p></div><span class="text-emerald-400 font-black">₹{{ item.payout }} • {{ item.status }}</span></div></div><div v-else class="text-xs text-slate-500">कोई employee task नहीं है।</div></div>
+                <div><h4 class="text-xs font-bold text-slate-300 uppercase mb-2">Items needing employee confirmation</h4><div v-for="item in workItems.filter(x => x.status === 'Pending' && x.createdByRole !== 'admin')" :key="item.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl mb-2 flex flex-wrap justify-between gap-3 text-xs"><div><p class="font-bold text-white">{{ item.title }} — ₹{{ item.payout }}</p><p class="text-slate-400">{{ item.targetRole }}: {{ item.targetCode }} | {{ item.type }}</p></div><button v-if="item.createdByCode !== currentUser.code" @click="confirmWorkItem(item)" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">Confirm</button></div></div>
+                <div><h4 class="text-xs font-bold text-slate-300 uppercase mb-2">Client payout requests</h4><div v-for="p in clientPayoutRequests.filter(x => x.status === 'PendingEmployee' || x.status === 'EmployeeConfirmed')" :key="p.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl mb-2 flex flex-wrap justify-between gap-3 text-xs"><div><p class="font-bold text-white">{{ p.clientName }} — ₹{{ p.amount }}</p><p class="text-slate-400">{{ p.method }} | {{ p.details }}</p></div><button v-if="p.status === 'PendingEmployee'" @click="confirmClientPayout(p)" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">Confirm</button><span v-else class="text-amber-400 font-bold">Employee Confirmed — Admin Pending</span></div></div>
+            </div>
+
         </section>
 
         <!-- 6. ADMIN DASHBOARD -->
@@ -919,6 +991,8 @@
                 <button @click="adminTab = 'employees'" :class="adminTab === 'employees' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Employees & PINs</button>
                 <button @click="adminTab = 'earnings_approval'" :class="adminTab === 'earnings_approval' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Approve Earnings</button>
                 <button @click="adminTab = 'payouts_admin'" :class="adminTab === 'payouts_admin' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Process Payouts</button>
+                <button @click="adminTab = 'work_management'" :class="adminTab === 'work_management' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Tasks & Extra Income</button>
+                <button @click="adminTab = 'client_payouts'" :class="adminTab === 'client_payouts' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Client Payouts</button>
                 <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Campaign Links</button>
                 <button @click="adminTab = 'notices'" :class="adminTab === 'notices' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Send Notices</button>
                 <button @click="adminTab = 'feedbacks'" :class="adminTab === 'feedbacks' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Daily Reports</button>
@@ -966,7 +1040,7 @@
                                             <img :src="c.photo" class="w-full h-full object-cover">
                                         </div>
                                         <div>
-                                            <p class="font-mono font-bold text-amber-400">{{ c.code }}</p>
+                                            <p class="font-mono font-bold text-amber-400">{{ c.code || c.registrationNo }}</p>
                                             <button @click="openIdCardModal(c)" class="text-[11px] text-indigo-400 underline mt-0.5"><i class="fa-solid fa-id-card mr-1"></i> ID Card</button>
                                         </div>
                                     </div>
@@ -1009,7 +1083,7 @@
                                     <span v-else class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-check-double mr-1"></i> Promoted</span>
                                 </td>
                                 <td class="p-3">
-                                    <button @click="deleteClient(c.code)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                                    <button @click="deleteClient(c)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -1177,7 +1251,33 @@
                 </div>
             </div>
 
-            <!-- TAB 5: CAMPAIGN MANAGEMENT -->
+            <!-- TASKS & EXTRA INCOME MANAGEMENT -->
+            <div v-if="adminTab === 'work_management'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
+                <h3 class="text-lg font-bold text-white">Tasks & Extra Income — Admin Control</h3>
+                <form @submit.prevent="createWorkItem" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 p-5 rounded-xl border border-slate-700">
+                    <select v-model="newWorkItem.targetRole" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="client">Client</option><option value="employee">Employee</option></select>
+                    <select v-model="newWorkItem.type" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="Task">New Task</option><option value="ExtraIncome">Extra Income</option></select>
+                    <input v-model="newWorkItem.targetCode" required placeholder="Target Client/Employee Code" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input v-model="newWorkItem.title" required placeholder="Title" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <textarea v-model="newWorkItem.description" required rows="3" placeholder="Details" class="sm:col-span-2 bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"></textarea>
+                    <input v-model.number="newWorkItem.payout" type="number" min="1" max="100000" required placeholder="Payout ₹" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input v-model="newWorkItem.link" placeholder="Optional http/https link" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input type="file" accept="image/*" @change="handleWorkMediaUpload" class="sm:col-span-2 w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500 file:text-slate-950">
+                    <button class="sm:col-span-2 bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl text-xs">Create & Publish</button>
+                </form>
+                <div class="space-y-2"><div v-for="item in workItems" :key="item.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex flex-wrap justify-between gap-3 text-xs"><div><p class="font-bold text-white">{{ item.title }} — ₹{{ item.payout }}</p><p class="text-slate-400">{{ item.targetRole }}: {{ item.targetCode }} | {{ item.type }} | {{ item.status }}</p></div><div class="flex gap-2"><button v-if="item.status === 'EmployeeConfirmed'" @click="verifyWorkItem(item, 'Approved')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">Admin Approve</button><button v-if="item.status === 'EmployeeConfirmed'" @click="verifyWorkItem(item, 'Rejected')" class="bg-rose-600 text-white px-3 py-1.5 rounded-lg font-bold">Reject</button></div></div></div>
+            </div>
+
+            <!-- CLIENT PAYOUT MANAGEMENT -->
+            <div v-if="adminTab === 'client_payouts'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold text-white">Client Payout — Employee Confirmation → Admin Verification</h3>
+                <div v-for="p in clientPayoutRequests" :key="p.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex flex-wrap justify-between gap-3 text-xs">
+                    <div><p class="font-bold text-white">{{ p.clientName }} ({{ p.clientCode }}) — ₹{{ p.amount }}</p><p class="text-slate-400">{{ p.method }} | {{ p.details }} | {{ p.status }}</p><p v-if="p.confirmedBy" class="text-amber-300">Confirmed by {{ p.confirmedBy }}</p></div>
+                    <div class="flex gap-2"><button v-if="p.status === 'EmployeeConfirmed'" @click="processClientPayout(p,'Approved')" class="bg-emerald-600 text-white px-3 py-1.5 rounded-lg font-bold">Verify & Approve</button><button v-if="p.status === 'EmployeeConfirmed'" @click="processClientPayout(p,'Rejected')" class="bg-rose-600 text-white px-3 py-1.5 rounded-lg font-bold">Reject</button></div>
+                </div>
+            </div>
+
+                        <!-- TAB 5: CAMPAIGN MANAGEMENT -->
             <div v-if="adminTab === 'campaigns'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
                 <h3 class="text-lg font-bold text-white">Add & Manage Campaigns</h3>
                 <form @submit.prevent="addCampaign" class="flex flex-col sm:flex-row gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
@@ -1255,6 +1355,15 @@
                                 <label class="block text-xs font-bold text-slate-400 mb-1">Office Address</label>
                                 <input v-model="companyInfo.address" type="text" class="w-full bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                             </div>
+                        </div>
+                        <div class="border-t border-slate-700 pt-4 space-y-3">
+                            <h4 class="text-xs font-bold text-amber-400 uppercase">Client Social Channels</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <input v-model="companyInfo.youtube" placeholder="YouTube URL" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                                <input v-model="companyInfo.telegram" placeholder="Telegram URL" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                                <input v-model="companyInfo.instagram" placeholder="Instagram URL" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                            </div>
+                            <div class="flex flex-wrap gap-4 text-xs text-slate-300"><label><input type="checkbox" v-model="companyInfo.youtubeEnabled" class="mr-1"> Show YouTube</label><label><input type="checkbox" v-model="companyInfo.telegramEnabled" class="mr-1"> Show Telegram</label><label><input type="checkbox" v-model="companyInfo.instagramEnabled" class="mr-1"> Show Instagram</label></div>
                         </div>
                         <button @click="updateCompanySettings" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs">Save Company Info</button>
                     </div>
@@ -1531,7 +1640,7 @@ createApp({
         return {
             currentView: 'job_form',
             loginType: 'client',
-            loginInput: { code: '', phone: '', pin: '', otp: '', username: '', password: '' },
+            loginInput: { code: '', registrationNo: '', phone: '', pin: '', otp: '', username: '', password: '' },
             phoneAuth: { confirmationResult: null, otpSent: false, role: '', verifier: null },
             loginError: '',
             currentUser: null,
@@ -1564,6 +1673,12 @@ createApp({
 
             extraWorkForm: { screenshot: null, description: '' },
             payoutForm: { amount: 100, method: 'UPI', details: '' },
+            clientPayoutForm: { amount: 100, method: 'UPI', details: '' },
+            workItems: [],
+            _employeeOwnWorkItems: [],
+            _employeePendingWorkItems: [],
+            clientPayoutRequests: [],
+            newWorkItem: { targetRole: 'client', targetCode: '', type: 'Task', title: '', description: '', payout: 10, link: '', media: '' },
 
             showIdCardModal: false,
             idCardData: {},
@@ -1579,11 +1694,13 @@ createApp({
             newEmp: { name: '', phone: '', position: 'Telecaller' },
             newCmp: { title: '', url: '' },
             newNoticeText: '',
+            socialLinks: { youtube: '', telegram: '', instagram: '', youtubeEnabled: false, telegramEnabled: false, instagramEnabled: false },
 
             companyInfo: {
                 aboutText: 'Ved Capital Rewa is a premier financial and corporate service provider in Madhya Pradesh, dedicated to empowering careers, offering telecalling & corporate jobs, and ensuring seamless client onboarding.',
                 whatsapp: '91982703307',
-                address: 'Rewa, Madhya Pradesh, India'
+                address: 'Rewa, Madhya Pradesh, India',
+                youtube: '', telegram: '', instagram: '', youtubeEnabled: false, telegramEnabled: false, instagramEnabled: false
             },
 
             adminSettingsForm: { username: 'vedcapitalindia@gmail.com', password: '' },
@@ -1674,6 +1791,21 @@ createApp({
                         this.persistUiState();
                         return;
                     }
+                    if (user.isAnonymous) {
+                        const profileSnap = await db.collection('authProfiles').doc(user.uid).get();
+                        if (profileSnap.exists) {
+                            const p = profileSnap.data() || {};
+                            if (p.role === 'client' && p.registrationNo) {
+                                const clientSnap = await db.collection('clients').doc(p.registrationNo).get();
+                                if (clientSnap.exists) { this.currentUser = { id: clientSnap.id, ...clientSnap.data(), role: 'client', authUid: user.uid }; this.loadPrivateDataForRole('client', clientSnap.id); this.currentView = 'client_dash'; this.persistUiState(); return; }
+                            }
+                            if (p.role === 'employee' && p.code) {
+                                const empSnap = await db.collection('employees').doc(p.code).get();
+                                if (empSnap.exists) { this.currentUser = { id: empSnap.id, ...empSnap.data(), role: 'employee', authUid: user.uid }; this.loadPrivateDataForRole('employee', empSnap.id); this.currentView = 'emp_dash'; this.persistUiState(); return; }
+                            }
+                        }
+                        return;
+                    }
                     const clientSnap = await db.collection('clients').where('authUid', '==', user.uid).limit(1).get();
                     if (!clientSnap.empty) {
                         const d = clientSnap.docs[0];
@@ -1697,61 +1829,6 @@ createApp({
             });
         },
 
-        async ensurePhoneVerifier(role) {
-            if (!firebase.auth || typeof firebase.auth !== 'function') throw new Error('Firebase Authentication SDK उपलब्ध नहीं है।');
-            const containerId = role === 'employee' ? 'recaptcha-container-employee' : 'recaptcha-container-client';
-            if (this.phoneAuth.verifier && this.phoneAuth.role === role) return this.phoneAuth.verifier;
-            try {
-                if (this.phoneAuth.verifier?.clear) this.phoneAuth.verifier.clear();
-            } catch (_) {}
-            const verifier = new firebase.auth.RecaptchaVerifier(containerId, { size: 'invisible' });
-            this.phoneAuth.verifier = verifier;
-            this.phoneAuth.role = role;
-            await verifier.render();
-            return verifier;
-        },
-
-        async sendPhoneOtp(role) {
-            const phone = this.normalizePhone(this.loginInput.phone);
-            if (!this.isValidPhone(phone)) {
-                this.loginError = 'कृपया valid 10 digit mobile number दर्ज करें।';
-                return;
-            }
-            try {
-                const verifier = await this.ensurePhoneVerifier(role);
-                const confirmation = await firebase.auth().signInWithPhoneNumber('+91' + phone, verifier);
-                this.phoneAuth.confirmationResult = confirmation;
-                this.phoneAuth.otpSent = true;
-                this.phoneAuth.role = role;
-                this.loginError = '';
-                this.showToast('OTP आपके registered mobile पर भेज दिया गया है।', 'success');
-            } catch (error) {
-                console.error(error);
-                try { if (this.phoneAuth.verifier?.clear) this.phoneAuth.verifier.clear(); } catch (_) {}
-                this.phoneAuth.verifier = null;
-                this.phoneAuth.confirmationResult = null;
-                this.phoneAuth.otpSent = false;
-                this.loginError = error?.code === 'auth/operation-not-allowed'
-                    ? 'Firebase Console में Phone Authentication enable करें।'
-                    : 'OTP भेजा नहीं जा सका। कृपया number और Firebase Phone Auth setting check करें।';
-            }
-        },
-
-        async confirmPhoneOtp() {
-            const otp = String(this.loginInput.otp || '').trim();
-            if (!/^\d{6}$/.test(otp) || !this.phoneAuth.confirmationResult) {
-                throw new Error('OTP_REQUIRED');
-            }
-            const credential = await this.phoneAuth.confirmationResult.confirm(otp);
-            return credential.user;
-        },
-
-        resetPhoneAuthState() {
-            try { if (this.phoneAuth.verifier?.clear) this.phoneAuth.verifier.clear(); } catch (_) {}
-            this.phoneAuth = { confirmationResult: null, otpSent: false, role: '', verifier: null };
-            this.loginInput.otp = '';
-        },
-
         syncFirestoreData() {
             // Public data only: never download private clients/employees/support/earnings on the landing page.
             this._publicUnsubs = [];
@@ -1768,15 +1845,33 @@ createApp({
         clearPrivateData() {
             (this._privateUnsubs || []).forEach(fn => { try { fn(); } catch (_) {} });
             this._privateUnsubs = [];
-            this.clients = []; this.employees = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = []; this._employeeOwnChats = []; this._employeeAdminChats = []; this._employeeScopedCode = null;
+            this.clients = []; this.employees = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = []; this.workItems = []; this._employeeOwnWorkItems = []; this._employeePendingWorkItems = []; this.clientPayoutRequests = []; this._employeeOwnChats = []; this._employeeAdminChats = []; this._employeeScopedCode = null; this._clientScopedCode = null;
         },
 
         loadPrivateDataForRole(role, userId) {
             this.clearPrivateData();
             const watch = (ref, cb) => { const unsub = ref.onSnapshot(cb, err => { console.error('Firestore listener error:', err); this.showToast('डेटा लोड नहीं हो पाया।', 'error'); }); this._privateUnsubs.push(unsub); };
             if (role === 'client') {
+                // Scope client listeners at the Firestore query level. Rules are not filters,
+                // so an unscoped query would be rejected even if the UI filtered afterwards.
+                const clientCodeReady = () => {
+                    const code = String(this.currentUser?.code || '').trim().toUpperCase();
+                    if (!code) return false;
+                    watch(db.collection('workItems').where('targetRole', '==', 'client').where('targetCode', '==', code).where('status', '==', 'Approved'), snapshot => {
+                        this.workItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    watch(db.collection('clientPayoutRequests').where('clientCode', '==', code), snapshot => {
+                        this.clientPayoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    return true;
+                };
                 watch(db.collection('clients').doc(userId), doc => {
-                    if (doc.exists) { const data = { id: doc.id, ...doc.data() }; if (!data.campaignIssues) data.campaignIssues = {}; this.currentUser = data; }
+                    if (doc.exists) {
+                        const data = { id: doc.id, ...doc.data() };
+                        if (!data.campaignIssues) data.campaignIssues = {};
+                        this.currentUser = data;
+                        if (!this._clientScopedCode && clientCodeReady()) this._clientScopedCode = String(data.code || '').trim().toUpperCase();
+                    }
                 });
                 return;
             }
@@ -1800,6 +1895,29 @@ createApp({
                     });
                     watch(db.collection('earningsRequests').where('empCode', '==', code), snapshot => {
                         this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
+                    // Employees receive only: (1) their own employee-targeted items,
+                    // and (2) pending items created by another employee that need confirmation.
+                    const mergeWorkItems = () => {
+                        const own = this._employeeOwnWorkItems || [];
+                        const pending = this._employeePendingWorkItems || [];
+                        const seen = new Set();
+                        this.workItems = [...own, ...pending].filter(item => {
+                            if (seen.has(item.id)) return false;
+                            seen.add(item.id);
+                            return true;
+                        });
+                    };
+                    watch(db.collection('workItems').where('targetRole', '==', 'employee').where('targetCode', '==', code), snapshot => {
+                        this._employeeOwnWorkItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        mergeWorkItems();
+                    });
+                    watch(db.collection('workItems').where('status', '==', 'Pending'), snapshot => {
+                        this._employeePendingWorkItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(x => x.createdByCode !== code);
+                        mergeWorkItems();
+                    });
+                    watch(db.collection('clientPayoutRequests').where('status', '==', 'PendingEmployee'), snapshot => {
+                        this.clientPayoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     });
                     watch(db.collection('feedbacks').where('empCode', '==', code), snapshot => {
                         this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -1837,6 +1955,8 @@ createApp({
                 watch(db.collection('employees'), snapshot => { this.employees = snapshot.docs.map(doc => ({ id: doc.id, showPin: false, ...doc.data() })); });
                 watch(db.collection('supportChats'), snapshot => { this.supportChats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('earningsRequests'), snapshot => { this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('workItems'), snapshot => { this.workItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('clientPayoutRequests'), snapshot => { this.clientPayoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('payoutRequests'), snapshot => { this.payoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('settings').doc('admin'), doc => { if (doc.exists) { const data = doc.data() || {}; this.adminSettingsForm.username = String(data.username || 'admin'); if (data.passwordHash?.hash && data.passwordHash?.salt) this.adminPasswordHash = data.passwordHash; } });
@@ -1846,6 +1966,11 @@ createApp({
         showToast(message, type = 'success') {
             this.toast = { show: true, message, type };
             setTimeout(() => { this.toast.show = false; }, 3500);
+        },
+
+        clientDocId(clientOrId) {
+            if (typeof clientOrId === 'string') return clientOrId;
+            return String(clientOrId?.id || clientOrId?.registrationNo || clientOrId?.code || '');
         },
 
         normalizePhone(value) {
@@ -1988,8 +2113,7 @@ createApp({
             try { if (firebase.auth && firebase.auth().currentUser) firebase.auth().signOut(); } catch (_) {}
             this.clearPrivateData();
             this.currentUser = null;
-            this.loginInput = { code: '', phone: '', pin: '', otp: '', username: '', password: '' };
-            this.resetPhoneAuthState();
+            this.loginInput = { code: '', registrationNo: '', phone: '', pin: '', otp: '', username: '', password: '' };
             this.selfPinInput = '';
             this.adminPinModal = { show: false, empCode: '', empName: '', newPin: '' };
             this.showSupportChatModal = false;
@@ -2004,7 +2128,7 @@ createApp({
             try {
                 const photo = await this.readImageFile(file);
                 if (role === 'client' && this.currentUser.role === 'client') {
-                    await db.collection('clients').doc(this.currentUser.code).update({ photo });
+                    await db.collection('clients').doc(this.clientDocId(this.currentUser)).update({ photo });
                     this.currentUser.photo = photo;
                     this.showToast('Profile photo updated successfully.', 'success');
                 } else if (role === 'employee' && this.currentUser.role === 'employee') {
@@ -2034,13 +2158,14 @@ createApp({
                 return;
             }
             this.formError = '';
-            let clientCode = '';
+            let registrationNo = '';
             let newClient = null;
             let created = false;
             for (let attempt = 0; attempt < 8 && !created; attempt++) {
-                clientCode = this.generateUniqueNumericCode('CLI', 10);
+                registrationNo = this.generateUniqueNumericCode('REG', 10);
                 newClient = {
-                    code: clientCode,
+                    code: null,
+                    registrationNo,
                     name,
                     phone,
                     jobType,
@@ -2062,7 +2187,8 @@ createApp({
                 try {
                     // create() is used instead of a transaction so public applicants
                     // never need read permission on the clients collection.
-                    await db.collection('clients').doc(clientCode).create(newClient);
+                    await db.collection('clients').doc(registrationNo).create(newClient);
+                    await db.collection('clientAccess').doc(registrationNo).set({ registrationNo, phoneHash: await this.hashLookupValue(phone), status: 'Pending', clientCode: null, createdAt: new Date().toISOString() });
                     created = true;
                 } catch (error) {
                     if (error?.code === 'already-exists' || error?.code === 'failed-precondition') continue;
@@ -2073,7 +2199,7 @@ createApp({
             this.lastSubmitted = newClient;
             this.applicationSuccess = true;
             this.jobForm = { name: '', phone: '', jobType: '', address: '', email: '', education: '', experience: '', workMode: '', expectedSalary: '', skills: '' };
-            this.showToast('Application submitted successfully! Code: ' + clientCode, 'success');
+            this.showToast('Application submitted successfully! Registration No: ' + registrationNo, 'success');
             } catch (error) {
                 console.error('Job application submit error:', error);
                 const code = error?.code || '';
@@ -2087,43 +2213,66 @@ createApp({
         printIdCard() { window.print(); },
 
         getWhatsAppLink(c) {
-            const msg = `Namaste ${c.name}, Your Ved Capital Rewa Client Code is *${c.code}* and Status is Pending Review. Official Portal.`;
+            const msg = `Namaste ${c.name}, Your Ved Capital Rewa Registration Number is *${c.registrationNo || c.code}* and Status is Pending Review. Official Portal.`;
             return `https://wa.me/91${c.phone}?text=` + encodeURIComponent(msg);
         },
         getDirectWhatsAppLink(phone, name) {
             return `https://wa.me/91${phone}?text=` + encodeURIComponent(`Namaste ${name}, contacting from Ved Capital Rewa.`);
         },
 
+        async hashLookupValue(value) {
+            const enc = new TextEncoder();
+            const key = await crypto.subtle.importKey('raw', enc.encode(String(value)), 'PBKDF2', false, ['deriveBits']);
+            const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: enc.encode('VCR-ACCESS-2026'), iterations: 80000, hash: 'SHA-256' }, key, 256);
+            return Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2,'0')).join('');
+        },
+
+        async ensureAnonymousSession() {
+            if (!firebase.auth || typeof firebase.auth !== 'function') throw new Error('AUTH_UNAVAILABLE');
+            const current = firebase.auth().currentUser;
+            if (current) return current;
+            const result = await firebase.auth().signInAnonymously();
+            return result.user;
+        },
+
         async handleClientLogin() {
-            const code = String(this.loginInput.code || '').trim().toUpperCase();
+            const registrationNo = String(this.loginInput.registrationNo || '').trim().toUpperCase();
             const phone = this.normalizePhone(this.loginInput.phone);
-            if (!code || !this.isValidPhone(phone)) { this.loginError = 'कृपया Client Code और valid registered mobile number दर्ज करें।'; return; }
-            if (!this.phoneAuth.confirmationResult || this.phoneAuth.role !== 'client') { this.loginError = 'पहले Send OTP करें।'; return; }
+            if (!registrationNo || !/^REG-\d{10}$/.test(registrationNo) || !this.isValidPhone(phone)) {
+                this.loginError = 'Registration Number और valid registered mobile number दर्ज करें।'; return;
+            }
             try {
-                const authUser = await this.confirmPhoneOtp();
-                const ref = db.collection('clients').doc(code);
-                const snap = await ref.get();
+                await this.ensureAnonymousSession();
+                const accessSnap = await db.collection('clientAccess').doc(registrationNo).get();
+                if (!accessSnap.exists) throw new Error('CLIENT_NOT_FOUND');
+                const access = accessSnap.data() || {};
+                if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
+                if (access.status !== 'Approved') throw new Error(access.status === 'Rejected' ? 'CLIENT_REJECTED' : 'CLIENT_PENDING');
+                if (!access.clientCode) throw new Error('CLIENT_CODE_NOT_READY');
+                const authUser = firebase.auth().currentUser;
+                if (!authUser) throw new Error('AUTH_UNAVAILABLE');
+                if (access.authUid && access.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
+                if (!access.authUid) await db.collection('clientAccess').doc(registrationNo).update({ authUid: authUser.uid });
+                const snap = await db.collection('clients').doc(registrationNo).get();
                 if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const found = { id: snap.id, ...snap.data() };
-                if (this.normalizePhone(found.phone) !== phone) throw new Error('PHONE_MISMATCH');
                 if (found.authUid && found.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
-                if (!found.authUid) await ref.update({ authUid: authUser.uid, authPhone: authUser.phoneNumber || '+91' + phone });
-                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'client', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                if (!found.authUid) await db.collection('clients').doc(found.id).update({ authUid: authUser.uid, authMode: 'anonymous_login' });
+                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'client', code: found.code, registrationNo, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 this.currentUser = { ...found, authUid: authUser.uid, role: 'client' };
                 this.loadPrivateDataForRole('client', found.id);
                 this.currentView = 'client_dash';
-                this.loginInput.code = ''; this.loginInput.phone = '';
-                this.resetPhoneAuthState();
-                this.showToast('Welcome, ' + found.name, 'success');
+                this.loginInput = { ...this.loginInput, code: found.code, registrationNo: '', phone: '' };
+                this.persistUiState();
+                this.showToast('Welcome, ' + found.name + ' | Client Code: ' + found.code, 'success');
             } catch (error) {
                 console.error(error);
-                try { await firebase.auth().signOut(); } catch (_) {}
-                this.resetPhoneAuthState();
-                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Client Code से match नहीं करता.'
-                    : error.message === 'ACCOUNT_BOUND' ? 'यह client account पहले से किसी दूसरे Auth account से linked है.'
-                    : error.message === 'CLIENT_NOT_FOUND' ? 'Client Code नहीं मिला.'
-                    : error.message === 'OTP_REQUIRED' ? 'कृपया valid 6 digit OTP दर्ज करें.'
-                    : 'Client login नहीं हो पाया। OTP और registered mobile check करें।';
+                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Registration Number से match नहीं करता.'
+                    : error.message === 'CLIENT_NOT_FOUND' ? 'Registration Number नहीं मिला.'
+                    : error.message === 'CLIENT_REJECTED' ? 'Application rejected है। Client Code generate नहीं किया गया.'
+                    : error.message === 'CLIENT_PENDING' ? 'Application अभी approval में है। Approval के बाद Client Code मिलेगा.'
+                    : error.message === 'CLIENT_CODE_NOT_READY' ? 'Client Code अभी generate नहीं हुआ.'
+                    : 'Client login नहीं हो पाया। Registration Number और mobile check करें।';
             }
         },
 
@@ -2131,41 +2280,41 @@ createApp({
             const code = String(this.loginInput.code || '').trim().toUpperCase();
             const pin = String(this.loginInput.pin || '').trim();
             const phone = this.normalizePhone(this.loginInput.phone);
-            if (!code || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'कृपया Employee Code, registered mobile और 4 अंकों का PIN दर्ज करें।'; return; }
-            if (!this.phoneAuth.confirmationResult || this.phoneAuth.role !== 'employee') { this.loginError = 'पहले Send OTP करें।'; return; }
+            if (!code || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'Employee Code, registered mobile और 4 अंकों का PIN दर्ज करें।'; return; }
             try {
-                const authUser = await this.confirmPhoneOtp();
+                await this.ensureAnonymousSession();
+                const accessSnap = await db.collection('employeeAccess').doc(code).get();
+                if (!accessSnap.exists) throw new Error('EMP_NOT_FOUND');
+                const access = accessSnap.data() || {};
+                if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
+                let validPin = false;
+                if (access.pinHash) validPin = await this.verifyStoredCredential(pin, access.pinHash);
+                if (!validPin) throw new Error('BAD_PIN');
+                const authUser = firebase.auth().currentUser;
+                if (!authUser) throw new Error('AUTH_UNAVAILABLE');
+                if (access.authUid && access.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
+                if (!access.authUid) await db.collection('employeeAccess').doc(code).update({ authUid: authUser.uid });
                 const snap = await db.collection('employees').doc(code).get();
                 if (!snap.exists) throw new Error('EMP_NOT_FOUND');
                 const found = { id: snap.id, ...snap.data() };
-                if (this.normalizePhone(found.phone) !== phone) throw new Error('PHONE_MISMATCH');
-                let validPin = false;
-                if (found.pinHash) validPin = await this.verifyStoredCredential(pin, found.pinHash);
-                else if (found.pin) validPin = found.pin === pin;
-                if (!validPin) throw new Error('BAD_PIN');
                 if (found.authUid && found.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
-                const update = { authUid: authUser.uid, authPhone: authUser.phoneNumber || '+91' + phone };
-                if (found.pin) update.pin = firebase.firestore.FieldValue.delete();
-                if (found.pin) update.pinHash = await this.hashCredential(pin);
-                if (found.pin) update.mustChangePin = false;
-                if (!found.authUid || found.pin) await db.collection('employees').doc(code).update(update);
+                const update = { authUid: authUser.uid, authMode: 'anonymous_login' };
+                if (found.pin) { update.pin = firebase.firestore.FieldValue.delete(); update.pinHash = access.pinHash; update.mustChangePin = false; }
+                await db.collection('employees').doc(code).update(update);
                 await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'employee', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 this.currentUser = { ...found, ...update, role: 'employee', authUid: authUser.uid };
                 this.loadPrivateDataForRole('employee', found.id);
                 this.currentView = 'emp_dash';
-                this.loginInput.code = ''; this.loginInput.phone = ''; this.loginInput.pin = '';
-                this.resetPhoneAuthState();
+                this.loginInput = { ...this.loginInput, code: '', phone: '', pin: '' };
+                this.persistUiState();
                 this.showToast('Welcome Employee, ' + found.name, 'success');
             } catch (error) {
                 console.error(error);
-                try { await firebase.auth().signOut(); } catch (_) {}
-                this.resetPhoneAuthState();
                 this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Employee Code से match नहीं करता.'
-                    : error.message === 'ACCOUNT_BOUND' ? 'यह employee account पहले से किसी दूसरे Auth account से linked है.'
                     : error.message === 'EMP_NOT_FOUND' ? 'Employee Code नहीं मिला.'
                     : error.message === 'BAD_PIN' ? 'Secret PIN गलत है.'
-                    : error.message === 'OTP_REQUIRED' ? 'कृपया valid 6 digit OTP दर्ज करें.'
-                    : 'Employee login नहीं हो पाया। OTP, mobile और PIN check करें।';
+                    : error.message === 'ACCOUNT_BOUND' ? 'यह employee account पहले से दूसरे session से linked है.'
+                    : 'Employee login नहीं हो पाया। Code, mobile और PIN check करें।';
             }
         },
 
@@ -2267,7 +2416,7 @@ createApp({
                 this.showToast('कृपया पहले स्क्रीनशॉट अपलोड करें।', 'error');
                 return;
             }
-            const clientRef = db.collection('clients').doc(this.currentUser.code);
+            const clientRef = db.collection('clients').doc(this.clientDocId(this.currentUser));
             const proofObj = { cmpId, screenshot, status: 'Submitted - Verification Pending', date: new Date().toLocaleDateString() };
             await db.runTransaction(async tx => {
                 const snap = await tx.get(clientRef);
@@ -2311,7 +2460,7 @@ createApp({
             const safeNote = String(issueData.note || '').trim().slice(0, 500);
             this.currentUser.campaignIssues[cmpId] = { issueType: issueData.issueType, note: safeNote, date: new Date().toLocaleDateString() };
 
-            await db.collection('clients').doc(this.currentUser.code).update({
+            await db.collection('clients').doc(this.clientDocId(this.currentUser)).update({
                 campaignIssues: this.currentUser.campaignIssues
             });
             this.showToast('Campaign issue reported to admin!', 'success');
@@ -2375,6 +2524,7 @@ createApp({
                 pin: firebase.firestore.FieldValue.delete(),
                 mustChangePin: false
             });
+            await db.collection('employeeAccess').doc(this.currentUser.code).set({ code: this.currentUser.code, pinHash, updatedAt: new Date().toISOString() }, { merge: true });
             this.showEmpSelfPinModal = false;
             this.selfPinInput = '';
             this.showToast('PIN updated successfully!', 'success');
@@ -2404,8 +2554,21 @@ createApp({
                 return;
             }
             client.jobType = newJob;
-            await db.collection('clients').doc(client.code).update({ jobType: newJob });
+            await db.collection('clients').doc(this.clientDocId(client)).update({ jobType: newJob });
             this.showToast('Client job updated to ' + newJob, 'success');
+        },
+
+        async generateApprovedClientCodeTx(tx, currentClient) {
+            if (currentClient.code) return currentClient.code;
+            for (let attempt = 0; attempt < 10; attempt++) {
+                const candidate = this.generateUniqueNumericCode('CLI', 8);
+                const codeRef = db.collection('clients').doc('CODE_' + candidate);
+                const codeSnap = await tx.get(codeRef);
+                if (codeSnap.exists) continue;
+                tx.set(codeRef, { type: 'clientCodeReservation', clientCode: candidate, createdAt: new Date().toISOString() });
+                return candidate;
+            }
+            throw new Error('CLIENT_CODE_COLLISION');
         },
 
         async employeeApproveClient(client, newStatus) {
@@ -2423,8 +2586,11 @@ createApp({
                 return;
             }
             try {
-                const clientRef = db.collection('clients').doc(client.code);
-                const earningRef = db.collection('earningsRequests').doc(`approval_${client.code}`);
+                const clientRef = db.collection('clients').doc(this.clientDocId(client));
+                const earningRef = db.collection('earningsRequests').doc(`approval_${client.registrationNo || client.id || client.code}`);
+                const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
+                const clientPhoneHash = await this.hashLookupValue(client.phone);
+                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateUniqueNumericCode('CLI', 8)) : null;
                 let credited = false;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(clientRef);
@@ -2437,7 +2603,9 @@ createApp({
                     const decisionAt = new Date().toISOString();
                     const decisionBy = `${this.currentUser.name} (${employeeCode})`;
                     const decision = { status: newStatus, decisionBy, decisionRole: 'employee', decisionAt, approvalLocked: true, decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'employee', decisionAt }) };
+                    if (newStatus === 'Approved') decision.code = approvedClientCode;
                     tx.update(clientRef, decision);
+                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? decision.code : null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                     if (newStatus === 'Approved') {
                         const earningSnap = await tx.get(earningRef);
                         if (earningSnap.exists) {
@@ -2460,6 +2628,7 @@ createApp({
                     }
                 });
                 client.status = newStatus;
+                if (newStatus === 'Approved' && !client.code) client.code = approvedClientCode;
                 client.decisionBy = `${this.currentUser.name} (${employeeCode})`;
                 client.approvedByEmp = newStatus === 'Approved' ? client.decisionBy : undefined;
                 client.decisionRole = 'employee';
@@ -2489,7 +2658,7 @@ createApp({
                 return;
             }
             try {
-                const clientRef = db.collection('clients').doc(client.code);
+                const clientRef = db.collection('clients').doc(this.clientDocId(client));
                 const earningRef = db.collection('earningsRequests').doc(`campaign_${client.code}_${proof.cmpId}`);
                 let credited = false;
                 await db.runTransaction(async tx => {
@@ -2558,9 +2727,13 @@ createApp({
             this.showToast('Extra work submitted to admin successfully!', 'success');
         },
 
+        getEmployeeTaskIncome(empCode) {
+            return this.workItems.filter(x => x.targetRole === 'employee' && x.targetCode === empCode && x.status === 'Approved').reduce((sum, x) => sum + (Number(x.payout) || 0), 0);
+        },
+
         getEmpEarnings(empCode) {
             const approvedReqs = this.earningsRequests.filter(r => r.empCode === empCode && r.status === 'Approved');
-            const totalApproved = approvedReqs.reduce((sum, r) => sum + (r.amount || 0), 0);
+            const totalApproved = approvedReqs.reduce((sum, r) => sum + (r.amount || 0), 0) + this.getEmployeeTaskIncome(empCode);
             const approvedLeadsCount = approvedReqs.filter(r => r.type === 'Lead' || r.type === 'LeadApproval').length;
             return { totalApproved, approvedLeadsCount };
         },
@@ -2596,7 +2769,7 @@ createApp({
                 await db.runTransaction(async tx => {
                     const earningsSnap = await tx.get(db.collection('earningsRequests').where('empCode', '==', empCode).where('status', '==', 'Approved'));
                     const payoutsSnap = await tx.get(db.collection('payoutRequests').where('empCode', '==', empCode).where('status', 'in', ['Approved', 'Pending']));
-                    const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
+                    const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0) + taskSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.payout) || 0), 0);
                     const alreadyWithdrawn = payoutsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
                     const available = Math.max(0, totalEarned - alreadyWithdrawn);
                     if (payoutAmount > available) throw new Error('INSUFFICIENT_BALANCE');
@@ -2642,9 +2815,12 @@ createApp({
                 return;
             }
             if (newStatus === 'Pending') return;
-            if (!confirm(`Client ${client.code} को ${newStatus} mark करना है? यह employee earning नहीं बनाएगा और decision Admin के नाम से दर्ज होगा।`)) return;
+            if (!confirm(`Client ${client.code || client.registrationNo} को ${newStatus} mark करना है? यह employee earning नहीं बनाएगा और decision Admin के नाम से दर्ज होगा।`)) return;
             try {
-                const ref = db.collection('clients').doc(client.code);
+                const ref = db.collection('clients').doc(this.clientDocId(client));
+                const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
+                const clientPhoneHash = await this.hashLookupValue(client.phone);
+                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateUniqueNumericCode('CLI', 8)) : null;
                 const decisionAt = new Date().toISOString();
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(ref);
@@ -2652,16 +2828,20 @@ createApp({
                     const current = snap.data() || {};
                     if ((current.status || 'Pending') !== 'Pending') throw new Error('CLIENT_ALREADY_DECIDED');
                     const decisionBy = `Admin (${this.adminSettingsForm.username || 'admin'})`;
+                    const clientCode = newStatus === 'Approved' ? approvedClientCode : (current.code || null);
                     tx.update(ref, {
                         status: newStatus,
+                        ...(newStatus === 'Approved' ? { code: clientCode } : {}),
                         decisionBy,
                         decisionRole: 'admin',
                         decisionAt,
                         approvalLocked: true,
                         decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'admin', decisionAt })
                     });
+                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? clientCode : null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 });
                 client.status = newStatus;
+                if (newStatus === 'Approved' && !client.code) client.code = approvedClientCode;
                 client.decisionBy = `Admin (${this.adminSettingsForm.username || 'admin'})`;
                 client.decisionRole = 'admin';
                 client.decisionAt = decisionAt;
@@ -2675,7 +2855,8 @@ createApp({
 
         async promoteClientToEmployee(client) {
             try {
-                const clientRef = db.collection('clients').doc(client.code);
+                const clientPhoneHash = await this.hashLookupValue(client.phone);
+                const clientRef = db.collection('clients').doc(this.clientDocId(client));
                 let empCode = '';
                 let promoted = false;
                 for (let attempt = 0; attempt < 5 && !promoted; attempt++) {
@@ -2690,6 +2871,7 @@ createApp({
                             const empSnap = await tx.get(empRef);
                             if (empSnap.exists) throw new Error('EMP_CODE_COLLISION');
                             tx.update(clientRef, { isPromoted: true });
+                            tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: clientPhoneHash, pinHash: null, updatedAt: new Date().toISOString() });
                             tx.set(empRef, {
                                 code: empCode,
                                 name: currentClient.name,
@@ -2771,16 +2953,18 @@ createApp({
             }
         },
 
-        async deleteClient(code) {
-            const client = this.clients.find(c => c.code === code);
+        async deleteClient(clientOrId) {
+            const client = typeof clientOrId === 'object' ? clientOrId : this.clients.find(c => this.clientDocId(c) === clientOrId);
             if (!client) return;
-            const hasFinancialHistory = this.earningsRequests.some(r => r.clientCode === code) || this.payoutRequests.some(p => p.clientCode === code);
+            const docId = this.clientDocId(client);
+            const code = client.code || client.registrationNo || docId;
+            const hasFinancialHistory = this.earningsRequests.some(r => r.clientCode === code) || this.payoutRequests.some(p => p.clientCode === code) || this.clientPayoutRequests.some(p => p.clientCode === code);
             const warning = hasFinancialHistory
                 ? 'इस client की financial/earning history मौजूद है। केवल client profile हटेगी; financial history सुरक्षित रहेगी। फिर भी delete करना है?'
                 : 'क्या आप इस client को हटाना चाहते हैं?';
             if (!confirm(warning)) return;
             try {
-                await db.collection('clients').doc(code).delete();
+                await db.collection('clients').doc(docId).delete();
                 this.showToast('Client profile deleted; financial history preserved.', 'success');
             } catch (error) {
                 console.error(error);
@@ -2793,6 +2977,8 @@ createApp({
             try {
                 let empCode = '';
                 let created = false;
+                const empPhoneHash = await this.hashLookupValue(this.newEmp.phone);
+                const empPinHash = null;
                 for (let attempt = 0; attempt < 5 && !created; attempt++) {
                     empCode = this.generateUniqueNumericCode('EMP', 8);
                     const empRef = db.collection('employees').doc(empCode);
@@ -2809,6 +2995,7 @@ createApp({
                             role: 'employee',
                             createdAt: new Date().toISOString()
                         });
+                        await db.collection('employeeAccess').doc(empCode).set({ code: empCode, phoneHash: empPhoneHash, pinHash: null, updatedAt: new Date().toISOString() });
                         created = true;
                     }).catch(error => {
                         if (error.message !== 'EMP_CODE_COLLISION') throw error;
@@ -2856,6 +3043,7 @@ createApp({
                 pin: firebase.firestore.FieldValue.delete(),
                 mustChangePin: true
             });
+            await db.collection('employeeAccess').doc(this.adminPinModal.empCode).set({ code: this.adminPinModal.empCode, pinHash, updatedAt: new Date().toISOString() }, { merge: true });
             this.adminPinModal.show = false;
             this.showToast('Employee PIN updated successfully!', 'success');
         },
@@ -2943,6 +3131,7 @@ createApp({
                             throw new Error('INVALID_PAYOUT');
                         }
                         const earningsSnap = await tx.get(db.collection('earningsRequests').where('empCode', '==', empCode).where('status', '==', 'Approved'));
+                        const taskSnap = await tx.get(db.collection('workItems').where('targetRole', '==', 'employee').where('targetCode', '==', empCode).where('status', '==', 'Approved'));
                         // Reserve every other pending/approved payout while approving this one.
                         // Otherwise two admins could approve two pending payouts concurrently
                         // against the same balance.
@@ -2969,6 +3158,126 @@ createApp({
                 const msg = error.message === 'INSUFFICIENT_BALANCE' ? 'इस payout के लिए पर्याप्त approved earning balance नहीं है।' : error.message === 'INVALID_PAYOUT' ? 'Payout request का data invalid है।' : 'Payout process नहीं हो पाया।';
                 this.showToast(msg, 'error');
             }
+        },
+
+        getClientApprovedWorkItems(clientCode) {
+            return this.workItems.filter(x => x.targetRole === 'client' && x.targetCode === clientCode && x.status === 'Approved');
+        },
+
+        getClientIncome(clientCode) {
+            const total = this.getClientApprovedWorkItems(clientCode).reduce((sum, x) => sum + (Number(x.payout) || 0), 0);
+            const withdrawn = this.clientPayoutRequests
+                .filter(x => x.clientCode === clientCode && ['PendingEmployee','EmployeeConfirmed','Approved'].includes(x.status))
+                .reduce((sum, x) => sum + (Number(x.amount) || 0), 0);
+            return { total, withdrawn };
+        },
+
+        getClientAvailableBalance(clientCode) {
+            return Math.max(0, this.getClientIncome(clientCode).total - this.getClientIncome(clientCode).withdrawn);
+        },
+
+        async handleWorkMediaUpload(e) {
+            const file = e?.target?.files?.[0];
+            if (!file) return;
+            try { this.newWorkItem.media = await this.readImageFile(file, 250000); this.showToast('Task image ready.', 'success'); }
+            catch (error) { this.newWorkItem.media = ''; this.showToast('Image upload/processing नहीं हुआ।', 'error'); }
+        },
+
+        async createWorkItem() {
+            if (!['admin','employee'].includes(this.currentUser?.role)) { this.showToast('केवल Admin/Employee task बना सकते हैं।', 'error'); return; }
+            const f = this.newWorkItem;
+            const targetRole = ['client','employee'].includes(f.targetRole) ? f.targetRole : 'client';
+            const targetCode = String(f.targetCode || '').trim().toUpperCase();
+            const type = ['Task','ExtraIncome'].includes(f.type) ? f.type : 'Task';
+            const title = String(f.title || '').trim();
+            const description = String(f.description || '').trim();
+            const payout = Number(f.payout);
+            if (!targetCode || !title || !description || !Number.isInteger(payout) || payout < 1 || payout > 100000) { this.showToast('Target, title, detail और valid payout जरूरी हैं।', 'error'); return; }
+            const link = String(f.link || '').trim();
+            if (link && !this.isSafeHttpUrl(link)) { this.showToast('Link केवल http/https होना चाहिए।', 'error'); return; }
+            const media = String(f.media || '').trim();
+            if (media.length > 350000) { this.showToast('Photo/data बहुत बड़ी है।', 'error'); return; }
+            const isAdmin = this.currentUser.role === 'admin';
+            try {
+                await db.collection('workItems').add({ targetRole, targetCode, type, title, description, payout, link, media, status: isAdmin ? 'Approved' : 'Pending', createdByRole: this.currentUser.role, createdByCode: this.currentUser.code, createdByName: this.currentUser.name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                this.newWorkItem = { targetRole: 'client', targetCode: '', type: 'Task', title: '', description: '', payout: 10, link: '', media: '' };
+                this.showToast(isAdmin ? 'Task/Extra Income published.' : 'Item created. दूसरे employee confirmation के बाद Admin verify करेगा.', 'success');
+            } catch (error) { console.error(error); this.showToast('Task/Extra Income save नहीं हुआ।', 'error'); }
+        },
+
+        async confirmWorkItem(item) {
+            if (this.currentUser?.role !== 'employee' || item.createdByCode === this.currentUser.code || item.status !== 'Pending') { this.showToast('यह item अभी confirm नहीं किया जा सकता।', 'error'); return; }
+            try {
+                const ref = db.collection('workItems').doc(item.id);
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref); if (!snap.exists) throw new Error('NOT_FOUND');
+                    const d = snap.data() || {};
+                    if (d.status !== 'Pending' || d.createdByCode === this.currentUser.code) throw new Error('LOCKED');
+                    tx.update(ref, { status: 'EmployeeConfirmed', confirmedBy: `${this.currentUser.name} (${this.currentUser.code})`, confirmedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                });
+                this.showToast('Item employee-confirmed; Admin verification pending.', 'success');
+            } catch (error) { console.error(error); this.showToast('Item confirm नहीं हुआ।', 'error'); }
+        },
+
+        async verifyWorkItem(item, status) {
+            if (this.currentUser?.role !== 'admin' || !['Approved','Rejected'].includes(status)) return;
+            try {
+                const ref = db.collection('workItems').doc(item.id);
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref); if (!snap.exists) throw new Error('NOT_FOUND');
+                    const d = snap.data() || {};
+                    if (d.status !== 'EmployeeConfirmed') throw new Error('LOCKED');
+                    tx.update(ref, { status, verifiedBy: 'Admin', verifiedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                });
+                this.showToast('Work item ' + status + '.', status === 'Approved' ? 'success' : 'error');
+            } catch (error) { console.error(error); this.showToast('Work item verify नहीं हुआ।', 'error'); }
+        },
+
+        async submitClientPayout() {
+            if (this.currentUser?.role !== 'client' || this.currentUser.status !== 'Approved') return;
+            const amount = Number(this.clientPayoutForm.amount);
+            const method = String(this.clientPayoutForm.method || '');
+            const details = String(this.clientPayoutForm.details || '').trim();
+            if (!Number.isInteger(amount) || amount < 100 || amount > this.getClientAvailableBalance(this.currentUser.code)) { this.showToast('Available balance के अंदर valid payout amount डालें।', 'error'); return; }
+            if (!['UPI','Bank'].includes(method) || !details || details.length > 200) { this.showToast('Valid payout method/details दें।', 'error'); return; }
+            try {
+                await db.collection('clientPayoutRequests').add({ clientCode: this.currentUser.code, clientName: this.currentUser.name, amount, method, details, status: 'PendingEmployee', createdAt: firebase.firestore.FieldValue.serverTimestamp(), date: new Date().toLocaleString() });
+                this.clientPayoutForm = { amount: 100, method: 'UPI', details: '' };
+                this.showToast('Payout request employee confirmation के लिए भेजी गई।', 'success');
+            } catch (error) { console.error(error); this.showToast('Client payout request save नहीं हुई।', 'error'); }
+        },
+
+        async confirmClientPayout(payout) {
+            if (this.currentUser?.role !== 'employee' || payout.status !== 'PendingEmployee') return;
+            try {
+                const ref = db.collection('clientPayoutRequests').doc(payout.id);
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref); if (!snap.exists) throw new Error('NOT_FOUND');
+                    const d = snap.data() || {}; if (d.status !== 'PendingEmployee') throw new Error('LOCKED');
+                    tx.update(ref, { status: 'EmployeeConfirmed', confirmedBy: `${this.currentUser.name} (${this.currentUser.code})`, confirmedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                });
+                this.showToast('Client payout employee-confirmed.', 'success');
+            } catch (error) { console.error(error); this.showToast('Payout confirm नहीं हुआ।', 'error'); }
+        },
+
+        async processClientPayout(payout, status) {
+            if (this.currentUser?.role !== 'admin' || !['Approved','Rejected'].includes(status)) return;
+            try {
+                const ref = db.collection('clientPayoutRequests').doc(payout.id);
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref); if (!snap.exists) throw new Error('NOT_FOUND');
+                    const d = snap.data() || {}; if (d.status !== 'EmployeeConfirmed') throw new Error('LOCKED');
+                    if (status === 'Approved') {
+                        const earningsSnap = await tx.get(db.collection('workItems').where('targetRole','==','client').where('targetCode','==',d.clientCode).where('status','==','Approved'));
+                        const payoutSnap = await tx.get(db.collection('clientPayoutRequests').where('clientCode','==',d.clientCode).where('status','in',['PendingEmployee','EmployeeConfirmed','Approved']));
+                        const total = earningsSnap.docs.reduce((sum, x) => sum + (Number(x.data()?.payout)||0), 0);
+                        const reserved = payoutSnap.docs.reduce((sum, x) => x.id === ref.id ? sum : sum + (Number(x.data()?.amount)||0), 0);
+                        if (Number(d.amount) > Math.max(0,total-reserved)) throw new Error('INSUFFICIENT');
+                    }
+                    tx.update(ref, { status, processedBy: 'Admin', processedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                });
+                this.showToast('Client payout ' + status + '.', status === 'Approved' ? 'success' : 'error');
+            } catch (error) { console.error(error); this.showToast(error.message === 'INSUFFICIENT' ? 'Client balance पर्याप्त नहीं है।' : 'Client payout process नहीं हुआ।', 'error'); }
         },
 
         async addCampaign() {
