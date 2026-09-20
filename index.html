@@ -307,7 +307,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-slate-400 font-semibold">Location / Address</p>
-                        <p class="font-bold text-slate-200">{{ lastSubmitted.address }}</p>
+                        <p class="font-bold text-slate-200">{{ lastSubmitted.address || 'Not provided' }}</p>
                     </div>
                 </div>
 
@@ -328,7 +328,7 @@
                 <form @submit.prevent="submitJobForm" class="space-y-5">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">पूरा नाम (Full Name) *</label>
-                        <input v-model="jobForm.name" required type="text" placeholder="अपना नाम दर्ज करें" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                        <input v-model="jobForm.name" required type="text" maxlength="100" placeholder="अपना नाम दर्ज करें" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -340,24 +340,63 @@
                             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">जॉब केटेगरी *</label>
                             <select v-model="jobForm.jobType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
                                 <option value="" disabled>केटेगरी का चयन करें</option>
-                                <option value="Telecalling Job">Telecalling Job</option>
-                                <option value="Corporate Job">Corporate Job</option>
-                                <option value="Field & Delivery">Field & Delivery Job</option>
-                                <option value="Security Officer">Security Officer</option>
-                                <option value="Office Administration">Office Administration</option>
+                                <option v-for="job in jobCategories" :key="job" :value="job">{{ job }}</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">शहर / पता (Address) *</label>
-                            <input v-model="jobForm.address" required type="text" placeholder="e.g. Rewa, Madhya Pradesh" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">ईमेल (Optional)</label>
+                            <input v-model="jobForm.email" type="email" maxlength="120" placeholder="example@email.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">ID Card Photo (Passport Size) *</label>
-                            <input type="file" accept="image/*" @change="handleJobPhotoUpload" required data-max-bytes="700000" class="w-full text-xs text-slate-300 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">शहर / पता (Optional)</label>
+                            <input v-model="jobForm.address" type="text" maxlength="200" placeholder="Rewa, Madhya Pradesh" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">शैक्षणिक योग्यता (Optional)</label>
+                            <select v-model="jobForm.education" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                <option value="">नहीं बताना / Select</option>
+                                <option v-for="item in educationOptions" :key="item" :value="item">{{ item }}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Experience (Optional)</label>
+                            <select v-model="jobForm.experience" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                <option value="">नहीं बताना / Select</option>
+                                <option v-for="item in experienceOptions" :key="item" :value="item">{{ item }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">काम का तरीका (Optional)</label>
+                            <select v-model="jobForm.workMode" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                                <option value="">नहीं बताना / Select</option>
+                                <option value="Office">Office</option>
+                                <option value="Field">Field</option>
+                                <option value="Work From Home">Work From Home</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Expected Salary (Optional)</label>
+                            <input v-model="jobForm.expectedSalary" type="text" maxlength="50" placeholder="जैसे ₹12,000 - ₹20,000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Skills / Job Details (Optional)</label>
+                        <textarea v-model="jobForm.skills" rows="4" maxlength="800" placeholder="अपनी skills, पसंद का काम, licence, computer knowledge, sales experience आदि लिख सकते हैं। नहीं है तो खाली छोड़ दें।" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"></textarea>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-700 bg-slate-900/50 p-4 text-xs text-slate-400">
+                        <i class="fa-solid fa-circle-info text-amber-400 mr-1"></i> केवल <strong class="text-slate-200">नाम, मोबाइल और Job Category</strong> जरूरी हैं। बाकी जानकारी उपलब्ध हो तो भरें, नहीं हो तो खाली छोड़ सकते हैं।
                     </div>
 
                     <p v-if="formError" class="text-rose-400 text-xs font-semibold bg-rose-950/50 p-3 rounded-lg border border-rose-800">
@@ -486,6 +525,10 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
+                        <label class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center cursor-pointer">
+                            <i class="fa-solid fa-camera mr-1.5"></i> Add Profile Photo
+                            <input type="file" accept="image/*" @change="handleProfilePhotoUpload($event, 'client')" class="hidden">
+                        </label>
                         <button @click="openIdCardModal(currentUser)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center shadow-lg shadow-amber-500/10">
                             <span class="not-italic flex items-center"><i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card</span>
                         </button>
@@ -603,6 +646,10 @@
                         </div>
                     </div>
                     <div class="flex items-center space-x-3">
+                        <label class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center cursor-pointer">
+                            <i class="fa-solid fa-camera mr-1.5"></i> Add Photo
+                            <input type="file" accept="image/*" @change="handleProfilePhotoUpload($event, 'employee')" class="hidden">
+                        </label>
                         <button @click="openIdCardModal(currentUser)" class="bg-indigo-500/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
                             <i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card
                         </button>
@@ -1493,7 +1540,10 @@ createApp({
             sessionTimer: null,
             lastActivityAt: Date.now(),
 
-            jobForm: { name: '', phone: '', jobType: '', address: '', photo: null },
+            jobForm: { name: '', phone: '', jobType: '', address: '', email: '', education: '', experience: '', workMode: '', expectedSalary: '', skills: '' },
+            jobCategories: ['Telecalling / BPO', 'Sales Executive', 'Field Executive', 'Delivery / Logistics', 'Security Guard / Security Officer', 'Office Assistant / Back Office', 'Data Entry / Computer Operator', 'Receptionist / Front Desk', 'Accountant / Billing', 'HR / Recruitment', 'Digital Marketing / Social Media', 'Customer Support', 'Banking / Finance', 'Insurance Advisor', 'Driver', 'Electrician / Technician', 'Hospital / Healthcare', 'Teacher / Tutor', 'Hotel / Restaurant', 'Retail / Store Staff', 'Factory / Manufacturing', 'Construction / Site Work', 'Work From Home', 'Internship / Fresher', 'Other'],
+            educationOptions: ['8th Pass', '10th Pass', '12th Pass', 'ITI', 'Diploma', 'Graduate', 'Post Graduate', 'Other'],
+            experienceOptions: ['Fresher', 'Less than 1 Year', '1-2 Years', '2-5 Years', '5+ Years'],
             formError: '',
             applicationSuccess: false,
             lastSubmitted: {},
@@ -1948,23 +1998,38 @@ createApp({
             this.showToast('Successfully logged out', 'success');
         },
 
-        async handleJobPhotoUpload(e) {
+        async handleProfilePhotoUpload(e, role) {
+            const file = e?.target?.files?.[0];
+            if (!file || !this.currentUser) return;
             try {
-                this.jobForm.photo = await this.readImageFile(e.target.files[0]);
-                this.formError = '';
+                const photo = await this.readImageFile(file);
+                if (role === 'client' && this.currentUser.role === 'client') {
+                    await db.collection('clients').doc(this.currentUser.code).update({ photo });
+                    this.currentUser.photo = photo;
+                    this.showToast('Profile photo updated successfully.', 'success');
+                } else if (role === 'employee' && this.currentUser.role === 'employee') {
+                    await db.collection('employees').doc(this.currentUser.code).update({ photo });
+                    this.currentUser.photo = photo;
+                    this.showToast('Profile photo updated successfully.', 'success');
+                }
             } catch (error) {
-                this.jobForm.photo = null;
-                e.target.value = '';
-                this.formError = error.message;
+                console.error(error);
+                this.showToast(error?.message || 'Profile photo save नहीं हो पाया।', 'error');
+            } finally {
+                if (e?.target) e.target.value = '';
             }
         },
 
         async submitJobForm() {
-            if (!this.jobForm.name || !this.jobForm.phone || !this.jobForm.jobType || !this.jobForm.address || !this.jobForm.photo) {
-                this.formError = 'कृपया सभी अनिवार्य फील्ड्स भरें और फोटो अपलोड करें।';
+            try {
+            const name = String(this.jobForm.name || '').trim();
+            const phone = this.normalizePhone(this.jobForm.phone);
+            const jobType = String(this.jobForm.jobType || '').trim();
+            if (!name || !phone || !jobType) {
+                this.formError = 'नाम, मोबाइल नंबर और Job Category जरूरी हैं। बाकी जानकारी optional है।';
                 return;
             }
-            if (!this.isValidPhone(this.jobForm.phone)) {
+            if (!this.isValidPhone(phone)) {
                 this.formError = 'कृपया 6-9 से शुरू होने वाला वैध 10 अंकों का मोबाइल नंबर दर्ज करें।';
                 return;
             }
@@ -1972,40 +2037,50 @@ createApp({
             let clientCode = '';
             let newClient = null;
             let created = false;
-            for (let attempt = 0; attempt < 5 && !created; attempt++) {
+            for (let attempt = 0; attempt < 8 && !created; attempt++) {
                 clientCode = this.generateUniqueNumericCode('CLI', 10);
                 newClient = {
-                code: clientCode,
-                name: this.jobForm.name,
-                phone: this.jobForm.phone,
-                jobType: this.jobForm.jobType,
-                address: this.jobForm.address,
-                photo: this.jobForm.photo,
-                status: 'Pending',
-                role: 'client',
-                source: 'public_job_portal',
-                campaignProofs: [],
-                campaignIssues: {},
-                isPromoted: false,
-                createdAt: new Date().toISOString()
+                    code: clientCode,
+                    name,
+                    phone,
+                    jobType,
+                    address: String(this.jobForm.address || '').trim(),
+                    email: String(this.jobForm.email || '').trim(),
+                    education: String(this.jobForm.education || '').trim(),
+                    experience: String(this.jobForm.experience || '').trim(),
+                    workMode: String(this.jobForm.workMode || '').trim(),
+                    expectedSalary: String(this.jobForm.expectedSalary || '').trim(),
+                    skills: String(this.jobForm.skills || '').trim(),
+                    status: 'Pending',
+                    role: 'client',
+                    source: 'public_job_portal',
+                    campaignProofs: [],
+                    campaignIssues: {},
+                    isPromoted: false,
+                    createdAt: new Date().toISOString()
                 };
-                const clientRef = db.collection('clients').doc(clientCode);
                 try {
-                    await db.runTransaction(async tx => {
-                        const existing = await tx.get(clientRef);
-                        if (existing.exists) throw new Error('CLIENT_CODE_COLLISION');
-                        tx.set(clientRef, newClient);
-                    });
+                    // create() is used instead of a transaction so public applicants
+                    // never need read permission on the clients collection.
+                    await db.collection('clients').doc(clientCode).create(newClient);
                     created = true;
                 } catch (error) {
-                    if (error.message !== 'CLIENT_CODE_COLLISION') throw error;
+                    if (error?.code === 'already-exists' || error?.code === 'failed-precondition') continue;
+                    throw error;
                 }
             }
             if (!created) throw new Error('Could not allocate a unique client code.');
             this.lastSubmitted = newClient;
             this.applicationSuccess = true;
-            this.jobForm = { name: '', phone: '', jobType: '', address: '', photo: null };
+            this.jobForm = { name: '', phone: '', jobType: '', address: '', email: '', education: '', experience: '', workMode: '', expectedSalary: '', skills: '' };
             this.showToast('Application submitted successfully! Code: ' + clientCode, 'success');
+            } catch (error) {
+                console.error('Job application submit error:', error);
+                const code = error?.code || '';
+                this.formError = code === 'permission-denied'
+                    ? 'Application submit blocked by Firestore Rules. नीचे दिया गया Final Firestore Rules code publish करें।'
+                    : 'Application submit नहीं हो पाया। Internet/Firebase connection check करके फिर प्रयास करें।';
+            }
         },
 
         printSlip() { window.print(); },
@@ -2126,7 +2201,7 @@ createApp({
                 console.error(error);
                 const code = error?.code || '';
                 if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-                    this.loginError = 'Admin Email या Password गलत है।';
+                    this.loginError = 'Admin Auth में login reject हुआ। Password reset करके नया password सेट करें। अगर reset email नहीं आता, तो Firebase Authentication → Users में यही email मौजूद नहीं है।';
                 } else if (code === 'auth/too-many-requests') {
                     this.loginError = 'बहुत बार गलत login हुआ है। कुछ देर बाद फिर कोशिश करें।';
                 } else if (code === 'auth/operation-not-allowed') {
