@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ved Capital Rewa - Full Scale Cloud Portal</title>
+    <title>Ved Capital Rewa - Enterprise Cloud Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Vue 3 -->
@@ -20,365 +20,396 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+<body class="bg-slate-100 text-slate-800 min-h-screen">
 
-    <div id="app" class="flex flex-col min-h-screen justify-between">
+    <div id="app" class="flex h-screen overflow-hidden">
         
-        <!-- Header Navigation Bar -->
-        <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center space-x-3 cursor-pointer" @click="currentView = 'home'">
-                    <div class="bg-indigo-500 p-2 rounded-lg text-white font-bold text-xl">VC</div>
+        <!-- Sidebar Navigation (Professional Layout) -->
+        <aside class="w-64 bg-indigo-950 text-white flex flex-col justify-between hidden md:flex shadow-xl z-20">
+            <div>
+                <!-- Brand Header -->
+                <div class="p-5 flex items-center space-x-3 border-b border-indigo-900">
+                    <div class="bg-indigo-600 p-2.5 rounded-xl text-white font-bold text-xl shadow">VC</div>
                     <div>
-                        <h1 class="font-bold text-lg leading-tight">Ved Capital Rewa</h1>
-                        <p class="text-xs text-indigo-300">Official Cloud Portal & Partner</p>
+                        <h1 class="font-bold text-base leading-tight">Ved Capital Rewa</h1>
+                        <p class="text-xs text-indigo-400">Cloud Enterprise Portal</p>
                     </div>
                 </div>
-                
-                <nav class="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm">
-                    <button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-indigo-700' : 'hover:bg-indigo-800'" class="px-3 py-1.5 rounded transition font-medium">Home / Apply</button>
-                    <button @click="currentView = 'clientLogin'" :class="currentView === 'clientLogin' ? 'bg-indigo-700' : 'hover:bg-indigo-800'" class="px-3 py-1.5 rounded transition font-medium">Client Portal</button>
-                    <button @click="currentView = 'empLogin'" :class="currentView === 'empLogin' ? 'bg-indigo-700' : 'hover:bg-indigo-800'" class="px-3 py-1.5 rounded transition font-medium">Employee</button>
-                    <button @click="currentView = 'adminLogin'" :class="currentView === 'adminLogin' ? 'bg-indigo-700' : 'hover:bg-indigo-800'" class="px-3 py-1.5 rounded transition font-medium">Admin Panel</button>
+
+                <!-- Navigation Links -->
+                <nav class="p-4 space-y-1.5 text-sm">
+                    <button @click="currentView = 'home'" :class="currentView === 'home' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-300 hover:bg-indigo-900 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition font-medium text-left">
+                        <i class="fa-solid fa-house w-5"></i>
+                        <span>Home / New Application</span>
+                    </button>
+                    <button @click="currentView = 'clientLogin'" :class="currentView === 'clientLogin' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-300 hover:bg-indigo-900 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition font-medium text-left">
+                        <i class="fa-solid fa-user-shield w-5"></i>
+                        <span>Client Portal</span>
+                    </button>
+                    <button @click="currentView = 'empLogin'" :class="currentView === 'empLogin' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-300 hover:bg-indigo-900 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition font-medium text-left">
+                        <i class="fa-solid fa-id-badge w-5"></i>
+                        <span>Employee Workspace</span>
+                    </button>
+                    <button @click="currentView = 'adminLogin'" :class="currentView === 'adminLogin' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-300 hover:bg-indigo-900 hover:text-white'" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition font-medium text-left">
+                        <i class="fa-solid fa-gauge-high w-5"></i>
+                        <span>Admin Control Panel</span>
+                    </button>
                 </nav>
             </div>
-        </header>
 
-        <!-- Main Content Area -->
-        <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+            <!-- Sidebar Footer -->
+            <div class="p-4 border-t border-indigo-900 text-xs text-indigo-400 text-center">
+                Firebase Firestore Synced<br>&copy; 2026 Ved Capital Rewa
+            </div>
+        </aside>
 
-            <!-- 1. HOME / JOB & CAMPAIGN APPLICATION FORM -->
-            <section v-if="currentView === 'home'" class="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                <div class="text-center mb-6">
-                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full">Firebase Cloud Live Sync</span>
-                    <h2 class="text-2xl font-bold mt-2 text-slate-900">Ved Capital Job & Campaign Application</h2>
-                    <p class="text-sm text-slate-500 mt-1">Fill out the form below to get your Unique Client Code and start earning.</p>
+        <!-- Main Content Wrapper -->
+        <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+            
+            <!-- Top Header Bar for Mobile & Quick Info -->
+            <header class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-3 py-1 rounded-full border border-indigo-100">Live Production Mode</span>
+                    <h2 class="font-semibold text-slate-800 text-sm hidden sm:block">Welcome to Ved Capital Rewa Management System</h2>
                 </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-medium text-slate-600"><i class="fa-solid fa-circle text-emerald-500 mr-1 text-[10px]"></i>Cloud Connected</span>
+                </div>
+            </header>
 
-                <form @submit.prevent="submitApplication" class="space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Main Dynamic Container -->
+            <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+
+                <!-- 1. HOME / JOB & CAMPAIGN APPLICATION -->
+                <section v-if="currentView === 'home'" class="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                    <div class="text-center mb-8">
+                        <div class="inline-block bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full mb-2">Official Registration Form</div>
+                        <h2 class="text-2xl font-bold text-slate-900">Ved Capital Job & Campaign Application</h2>
+                        <p class="text-sm text-slate-500 mt-1">Fill out the complete form below to generate your Unique Client Code instantly.</p>
+                    </div>
+
+                    <form @submit.prevent="submitApplication" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Full Name *</label>
+                                <input type="text" v-model="form.name" required placeholder="Enter your full name" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Mobile Number *</label>
+                                <input type="tel" v-model="form.phone" required pattern="[0-9]{10}" placeholder="10 digit mobile number" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Select Campaign *</label>
+                                <select v-model="form.campaign" required class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+                                    <option disabled value="">Choose Campaign</option>
+                                    <option v-for="c in activeCampaigns" :key="c.id" :value="c.name">{{ c.name }} (Reward: ₹{{ c.reward }})</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider">Referred By Employee (Optional)</label>
+                                <input type="text" v-model="form.referredBy" placeholder="Employee Name / Code" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-xl transition text-sm shadow-lg shadow-indigo-200">
+                            Submit Application & Generate Code
+                        </button>
+                    </form>
+                </section>
+
+                <!-- 2. INSTANT RECEIPT SLIP -->
+                <section v-if="currentView === 'receipt'" class="max-w-xl mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8">
+                    <div id="printable-receipt">
+                        <div class="text-center border-b border-slate-200 pb-5 mb-5">
+                            <div class="inline-block bg-indigo-900 text-white font-bold p-3 rounded-xl text-xl mb-2 shadow">VC</div>
+                            <h2 class="text-2xl font-bold text-slate-900">Ved Capital Rewa</h2>
+                            <p class="text-xs text-slate-500">Official Registration & Acknowledgement Slip</p>
+                        </div>
+
+                        <div class="space-y-3.5 text-sm" v-if="lastCreatedClient">
+                            <div class="flex justify-between border-b border-slate-100 pb-2.5">
+                                <span class="text-slate-500">Client Code:</span>
+                                <span class="font-bold text-indigo-600 text-base">{{ lastCreatedClient.code }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2.5">
+                                <span class="text-slate-500">Full Name:</span>
+                                <span class="font-medium text-slate-800">{{ lastCreatedClient.name }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2.5">
+                                <span class="text-slate-500">Mobile Number:</span>
+                                <span class="font-medium text-slate-800">{{ lastCreatedClient.phone }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2.5">
+                                <span class="text-slate-500">Selected Campaign:</span>
+                                <span class="font-medium text-slate-800">{{ lastCreatedClient.campaign }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2.5">
+                                <span class="text-slate-500">Referred By:</span>
+                                <span class="font-medium text-slate-800">{{ lastCreatedClient.referredBy }}</span>
+                            </div>
+                            <div class="flex justify-between border-b border-slate-100 pb-2.5">
+                                <span class="text-slate-500">Current Status:</span>
+                                <span class="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-semibold">{{ lastCreatedClient.status }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex flex-col sm:flex-row gap-3">
+                        <button @click="printReceipt" class="flex-1 bg-slate-800 text-white py-3 rounded-xl text-sm font-medium hover:bg-slate-900 transition shadow">
+                            <i class="fa-solid fa-print mr-2"></i> Print Receipt
+                        </button>
+                        <a :href="whatsappShareLink" target="_blank" class="flex-1 bg-green-600 text-white text-center py-3 rounded-xl text-sm font-medium hover:bg-green-700 transition shadow">
+                            <i class="fa-brands fa-whatsapp mr-2"></i> Share WhatsApp
+                        </a>
+                        <button @click="currentView = 'home'" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 transition shadow">
+                            New Application
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 3. CLIENT PORTAL & DASHBOARD -->
+                <section v-if="currentView === 'clientLogin'" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                    <h3 class="text-xl font-bold text-slate-900 mb-1">Client Portal Login</h3>
+                    <p class="text-xs text-slate-500 mb-6">Enter your Client Code to check verification status and upload proof documents.</p>
+                    
+                    <div class="space-y-4">
+                        <input type="text" v-model="clientLoginCode" placeholder="Enter Client Code (e.g., VC-1001)" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm uppercase font-semibold">
+                        <button @click="clientLogin" class="w-full bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 transition shadow">Login Dashboard</button>
+                    </div>
+                </section>
+
+                <section v-if="currentView === 'clientDashboard'" class="max-w-4xl mx-auto space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Full Name *</label>
-                            <input type="text" v-model="form.name" required placeholder="Enter full name" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm">
+                            <span class="text-xs bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full font-bold">{{ loggedClient.code }}</span>
+                            <h2 class="text-2xl font-bold text-slate-900 mt-2">Welcome, {{ loggedClient.name }}</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Phone: {{ loggedClient.phone }} | Campaign: {{ loggedClient.campaign }} | Status: <span class="font-bold text-indigo-600">{{ loggedClient.status }}</span></p>
                         </div>
+                        <button @click="currentView = 'home'; loggedClient = null" class="text-xs bg-red-50 text-red-600 px-4 py-2 rounded-xl border border-red-200 hover:bg-red-100 transition font-medium">Logout Portal</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center"><i class="fa-solid fa-cloud-arrow-up mr-2 text-indigo-600"></i>Upload Proof / Screenshot</h3>
+                            <div class="space-y-3.5">
+                                <input type="text" v-model="proofLink" placeholder="Paste Image URL or Document Link" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm">
+                                <button @click="submitProof" class="w-full bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700 transition">Submit Proof</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center"><i class="fa-solid fa-headset mr-2 text-indigo-600"></i>Report Issue / Support Ticket</h3>
+                            <div class="space-y-3.5">
+                                <textarea v-model="supportIssue" placeholder="Describe issue (KYC, Bank, Payout etc.)" class="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm h-24"></textarea>
+                                <button @click="submitIssue" class="w-full bg-slate-800 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-slate-900 transition">Send Ticket</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. EMPLOYEE PORTAL & DASHBOARD -->
+                <section v-if="currentView === 'empLogin'" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                    <h3 class="text-xl font-bold text-slate-900 mb-1">Employee Workspace Login</h3>
+                    <p class="text-xs text-slate-500 mb-6">Enter your employee PIN (Default: 1234).</p>
+                    
+                    <div class="space-y-4">
+                        <input type="password" v-model="empPinInput" placeholder="Enter Employee PIN" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm font-semibold">
+                        <button @click="employeeLogin" class="w-full bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 transition shadow">Access Workspace</button>
+                    </div>
+                </section>
+
+                <section v-if="currentView === 'empDashboard'" class="max-w-5xl mx-auto space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Mobile Number *</label>
-                            <input type="tel" v-model="form.phone" required pattern="[0-9]{10}" placeholder="10 digit mobile number" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm">
+                            <h2 class="text-2xl font-bold text-slate-900">Employee Workspace</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Manage daily calling reports, extra work claims, and client leads.</p>
+                        </div>
+                        <button @click="currentView = 'home'" class="text-xs bg-red-50 text-red-600 px-4 py-2 rounded-xl border border-red-200 font-medium">Logout</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm">Submit Daily Work Report</h3>
+                            <div class="space-y-3.5">
+                                <input type="number" v-model="workReport.calls" placeholder="Total Calls Made" class="w-full px-4 py-2.5 border rounded-xl text-sm">
+                                <input type="number" v-model="workReport.leads" placeholder="Leads Generated" class="w-full px-4 py-2.5 border rounded-xl text-sm">
+                                <button @click="submitWorkReport" class="w-full bg-indigo-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-indigo-700">Submit Report</button>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm">Submit Extra Work / Incentive Claim</h3>
+                            <div class="space-y-3.5">
+                                <input type="text" v-model="extraClaim.title" placeholder="Claim Description (e.g., Night Shift)" class="w-full px-4 py-2.5 border rounded-xl text-sm">
+                                <input type="number" v-model="extraClaim.amount" placeholder="Amount (₹)" class="w-full px-4 py-2.5 border rounded-xl text-sm">
+                                <button @click="submitExtraClaim" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-700">Send Claim</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="font-bold text-slate-800 mb-4 text-sm">All Client Leads (Cloud Sync)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700">
+                                    <tr>
+                                        <th class="p-3 rounded-l-xl">Code</th>
+                                        <th class="p-3">Name</th>
+                                        <th class="p-3">Phone</th>
+                                        <th class="p-3">Campaign</th>
+                                        <th class="p-3 rounded-r-xl">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-for="client in clients" :key="client.code" class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold text-indigo-600">{{ client.code }}</td>
+                                        <td class="p-3 font-medium">{{ client.name }}</td>
+                                        <td class="p-3">
+                                            <a :href="'tel:' + client.phone" class="text-indigo-600 underline font-medium"><i class="fa-solid fa-phone mr-1"></i>{{ client.phone }}</a>
+                                        </td>
+                                        <td class="p-3">{{ client.campaign }}</td>
+                                        <td class="p-3"><span class="bg-slate-100 px-2.5 py-1 rounded-full font-medium">{{ client.status }}</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. ADMIN CONTROL PANEL -->
+                <section v-if="currentView === 'adminLogin'" class="max-w-md mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+                    <h3 class="text-xl font-bold text-slate-900 mb-1">Admin Panel Login</h3>
+                    <p class="text-xs text-slate-500 mb-6">Enter admin security passcode (Default: admin999).</p>
+                    
+                    <div class="space-y-4">
+                        <input type="password" v-model="adminPassInput" placeholder="Enter Admin Passcode" class="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm font-semibold">
+                        <button @click="adminLogin" class="w-full bg-indigo-600 text-white py-3 rounded-xl text-sm font-medium hover:bg-indigo-700 transition shadow">Access Control Panel</button>
+                    </div>
+                </section>
+
+                <section v-if="currentView === 'adminDashboard'" class="max-w-6xl mx-auto space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Select Campaign *</label>
-                            <select v-model="form.campaign" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-                                <option disabled value="">Choose Campaign</option>
-                                <option v-for="c in activeCampaigns" :key="c.id" :value="c.name">{{ c.name }} (Reward: ₹{{ c.reward }})</option>
-                            </select>
+                            <h2 class="text-2xl font-bold text-slate-900">Admin Control Panel</h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Manage all records, active campaigns, support tickets, and system configurations.</p>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Referred By Employee (Optional)</label>
-                            <input type="text" v-model="form.referredBy" placeholder="Employee Name / Code" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm">
-                        </div>
+                        <button @click="currentView = 'home'" class="text-xs bg-red-50 text-red-600 px-4 py-2 rounded-xl border border-red-200 font-medium">Logout</button>
                     </div>
 
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition text-sm shadow-md">
-                        Submit Application & Generate Code
-                    </button>
-                </form>
-            </section>
-
-            <!-- 2. INSTANT RECEIPT & ACKNOWLEDGEMENT SLIP -->
-            <section v-if="currentView === 'receipt'" class="max-w-xl mx-auto bg-white rounded-xl shadow-md border border-slate-200 p-6 sm:p-8">
-                <div id="printable-receipt">
-                    <div class="text-center border-b pb-4 mb-4">
-                        <div class="inline-block bg-indigo-900 text-white font-bold p-2.5 rounded-lg text-lg mb-1">VC</div>
-                        <h2 class="text-xl font-bold text-slate-900">Ved Capital Rewa</h2>
-                        <p class="text-xs text-slate-500">Official Registration & Acknowledgement Slip</p>
-                    </div>
-
-                    <div class="space-y-3 text-sm" v-if="lastCreatedClient">
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-slate-500">Client Code:</span>
-                            <span class="font-bold text-indigo-600 text-base">{{ lastCreatedClient.code }}</span>
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Total Clients</p>
+                            <h3 class="text-2xl font-bold text-indigo-600 mt-1">{{ clients.length }}</h3>
                         </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-slate-500">Full Name:</span>
-                            <span class="font-medium text-slate-800">{{ lastCreatedClient.name }}</span>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Active Campaigns</p>
+                            <h3 class="text-2xl font-bold text-emerald-600 mt-1">{{ activeCampaigns.length }}</h3>
                         </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-slate-500">Mobile Number:</span>
-                            <span class="font-medium text-slate-800">{{ lastCreatedClient.phone }}</span>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Support Tickets</p>
+                            <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ supportTickets.length }}</h3>
                         </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-slate-500">Selected Campaign:</span>
-                            <span class="font-medium text-slate-800">{{ lastCreatedClient.campaign }}</span>
-                        </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-slate-500">Referred By:</span>
-                            <span class="font-medium text-slate-800">{{ lastCreatedClient.referredBy }}</span>
-                        </div>
-                        <div class="flex justify-between border-b pb-2">
-                            <span class="text-slate-500">Status:</span>
-                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">{{ lastCreatedClient.status }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                    <button @click="printReceipt" class="flex-1 bg-slate-800 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-slate-950 transition">
-                        <i class="fa-solid fa-print mr-2"></i> Print Receipt
-                    </button>
-                    <a :href="whatsappShareLink" target="_blank" class="flex-1 bg-green-600 text-white text-center py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition">
-                        <i class="fa-brands fa-whatsapp mr-2"></i> Share on WhatsApp
-                    </a>
-                    <button @click="currentView = 'home'" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">
-                        Back to Home
-                    </button>
-                </div>
-            </section>
-
-            <!-- 3. CLIENT PORTAL & DASHBOARD -->
-            <section v-if="currentView === 'clientLogin'" class="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-xl font-bold text-slate-900 mb-1">Client Portal Login</h3>
-                <p class="text-xs text-slate-500 mb-4">Enter your Client Code to check status and submit documents.</p>
-                
-                <div class="space-y-3">
-                    <input type="text" v-model="clientLoginCode" placeholder="Enter Client Code (e.g., VC-1001)" class="w-full px-3 py-2 border rounded-lg text-sm uppercase">
-                    <button @click="clientLogin" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Login Dashboard</button>
-                </div>
-            </section>
-
-            <section v-if="currentView === 'clientDashboard'" class="max-w-4xl mx-auto space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded font-medium">{{ loggedClient.code }}</span>
-                        <h2 class="text-2xl font-bold text-slate-900 mt-1">Welcome, {{ loggedClient.name }}</h2>
-                        <p class="text-xs text-slate-500">Phone: {{ loggedClient.phone }} | Campaign: {{ loggedClient.campaign }} | Status: <span class="font-semibold text-indigo-600">{{ loggedClient.status }}</span></p>
-                    </div>
-                    <button @click="currentView = 'home'; loggedClient = null" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded border border-red-200 hover:bg-red-100 transition font-medium">Logout</button>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <!-- Upload Proof Box -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center"><i class="fa-solid fa-cloud-arrow-up mr-2 text-indigo-600"></i>Upload Proof / Screenshot</h3>
-                        <div class="space-y-3">
-                            <input type="text" v-model="proofLink" placeholder="Paste Image URL / Document Link" class="w-full px-3 py-2 border rounded-lg text-sm">
-                            <button @click="submitProof" class="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Submit Proof</button>
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Cloud Database</p>
+                            <h3 class="text-base font-bold text-blue-600 mt-1">Firestore Active</h3>
                         </div>
                     </div>
 
-                    <!-- Support Ticket Box -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                        <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center"><i class="fa-solid fa-headset mr-2 text-indigo-600"></i>Report Issue / Support Ticket</h3>
-                        <div class="space-y-3">
-                            <textarea v-model="supportIssue" placeholder="Describe issue (KYC, Bank, PAN, Payout etc.)" class="w-full px-3 py-2 border rounded-lg text-sm h-20"></textarea>
-                            <button @click="submitIssue" class="w-full bg-slate-800 text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-900 transition">Send Ticket</button>
+                    <!-- Campaign Manager -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="font-bold text-slate-800 mb-4 text-sm">Campaign Manager</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                            <input type="text" v-model="newCampaign.name" placeholder="Campaign Name" class="border px-4 py-2.5 rounded-xl text-sm">
+                            <input type="number" v-model="newCampaign.reward" placeholder="Reward Amount (₹)" class="border px-4 py-2.5 rounded-xl text-sm">
+                            <button @click="addCampaign" class="bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-medium hover:bg-emerald-700 shadow">Add Campaign</button>
+                        </div>
+                        <ul class="divide-y divide-slate-100 text-xs">
+                            <li v-for="c in activeCampaigns" :key="c.id" class="py-3 flex justify-between items-center">
+                                <span class="font-medium text-slate-700 text-sm"><b>{{ c.name }}</b> — Reward: ₹{{ c.reward }}</span>
+                                <button @click="deleteCampaign(c.id)" class="text-red-600 hover:underline font-semibold">Remove</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Support Tickets Viewer -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="font-bold text-slate-800 mb-4 text-sm">Support Tickets & Client Issues</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700">
+                                    <tr>
+                                        <th class="p-3 rounded-l-xl">Ticket ID</th>
+                                        <th class="p-3">Client Code</th>
+                                        <th class="p-3">Issue / Proof</th>
+                                        <th class="p-3 rounded-r-xl">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-for="ticket in supportTickets" :key="ticket.id" class="hover:bg-slate-50">
+                                        <td class="p-3 font-semibold text-slate-600">{{ ticket.id.slice(0,6) }}</td>
+                                        <td class="p-3 text-indigo-600 font-bold">{{ ticket.clientCode || 'N/A' }}</td>
+                                        <td class="p-3">{{ ticket.issue }}</td>
+                                        <td class="p-3">
+                                            <button @click="resolveTicket(ticket.id)" class="text-emerald-600 hover:underline font-bold">Resolve & Delete</button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="supportTickets.length === 0">
+                                        <td colspan="4" class="p-6 text-center text-slate-400">No support tickets found.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-            </section>
 
-            <!-- 4. EMPLOYEE PORTAL & DASHBOARD -->
-            <section v-if="currentView === 'empLogin'" class="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-xl font-bold text-slate-900 mb-1">Employee Portal Login</h3>
-                <p class="text-xs text-slate-500 mb-4">Login with your employee PIN (Default: 1234).</p>
-                
-                <div class="space-y-3">
-                    <input type="password" v-model="empPinInput" placeholder="Enter Employee PIN" class="w-full px-3 py-2 border rounded-lg text-sm">
-                    <button @click="employeeLogin" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Access Workspace</button>
-                </div>
-            </section>
-
-            <section v-if="currentView === 'empDashboard'" class="max-w-5xl mx-auto space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Employee Workspace</h2>
-                        <p class="text-xs text-slate-500">Manage client calling leads, daily work reports, and extra claims.</p>
+                    <!-- Client Management Table -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h3 class="font-bold text-slate-800 mb-4 text-sm">Manage All Clients & Approval Status</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700">
+                                    <tr>
+                                        <th class="p-3 rounded-l-xl">Code</th>
+                                        <th class="p-3">Name</th>
+                                        <th class="p-3">Phone</th>
+                                        <th class="p-3">Campaign</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3 rounded-r-xl">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-for="client in clients" :key="client.code" class="hover:bg-slate-50">
+                                        <td class="p-3 font-bold text-indigo-600">{{ client.code }}</td>
+                                        <td class="p-3 font-medium">{{ client.name }}</td>
+                                        <td class="p-3">{{ client.phone }}</td>
+                                        <td class="p-3">{{ client.campaign }}</td>
+                                        <td class="p-3">
+                                            <select v-model="client.status" @change="updateClientStatus(client)" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs bg-white font-medium">
+                                                <option value="Pending">Pending</option>
+                                                <option value="Approved">Approved</option>
+                                                <option value="Rejected">Rejected</option>
+                                            </select>
+                                        </td>
+                                        <td class="p-3">
+                                            <button @click="deleteClient(client)" class="text-red-600 hover:underline font-bold">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <button @click="currentView = 'home'" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded border border-red-200 font-medium">Logout</button>
-                </div>
+                </section>
 
-                <!-- Daily Work Report Form -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="font-bold text-slate-800 mb-3 text-sm">Submit Daily Work Report</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input type="number" v-model="workReport.calls" placeholder="Total Calls Made" class="border p-2 rounded text-sm">
-                        <input type="number" v-model="workReport.leads" placeholder="Leads Generated" class="border p-2 rounded text-sm">
-                        <button @click="submitWorkReport" class="bg-indigo-600 text-white py-2 rounded text-sm font-medium hover:bg-indigo-700">Submit Report</button>
-                    </div>
-                </div>
+            </main>
 
-                <!-- Extra Work Claim Form -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="font-bold text-slate-800 mb-3 text-sm">Submit Extra Work / Incentive Claim</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <input type="text" v-model="extraClaim.title" placeholder="Claim Description (e.g., Overtime)" class="border p-2 rounded text-sm">
-                        <input type="number" v-model="extraClaim.amount" placeholder="Amount (₹)" class="border p-2 rounded text-sm">
-                        <button @click="submitExtraClaim" class="bg-emerald-600 text-white py-2 rounded text-sm font-medium hover:bg-emerald-700">Send Claim</button>
-                    </div>
-                </div>
-
-                <!-- Submitted Client Leads Table -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="font-bold text-slate-800 mb-4 text-sm">All Client Leads (Cloud Sync)</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-2.5">Code</th>
-                                    <th class="p-2.5">Name</th>
-                                    <th class="p-2.5">Phone</th>
-                                    <th class="p-2.5">Campaign</th>
-                                    <th class="p-2.5">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="client in clients" :key="client.code" class="border-b hover:bg-slate-50">
-                                    <td class="p-2.5 font-medium text-indigo-600">{{ client.code }}</td>
-                                    <td class="p-2.5">{{ client.name }}</td>
-                                    <td class="p-2.5">
-                                        <a :href="'tel:' + client.phone" class="text-indigo-600 underline"><i class="fa-solid fa-phone mr-1"></i>{{ client.phone }}</a>
-                                    </td>
-                                    <td class="p-2.5">{{ client.campaign }}</td>
-                                    <td class="p-2.5"><span class="bg-slate-100 px-2 py-0.5 rounded">{{ client.status }}</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. ADMIN CONTROL PANEL -->
-            <section v-if="currentView === 'adminLogin'" class="max-w-md mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h3 class="text-xl font-bold text-slate-900 mb-1">Admin Panel Access</h3>
-                <p class="text-xs text-slate-500 mb-4">Enter admin passcode (Default: admin999).</p>
-                
-                <div class="space-y-3">
-                    <input type="password" v-model="adminPassInput" placeholder="Enter Admin Passcode" class="w-full px-3 py-2 border rounded-lg text-sm">
-                    <button @click="adminLogin" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Access Control Panel</button>
-                </div>
-            </section>
-
-            <section v-if="currentView === 'adminDashboard'" class="max-w-6xl mx-auto space-y-6">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold text-slate-900">Admin Control Panel</h2>
-                        <p class="text-xs text-slate-500">Manage all system records, campaigns, support tickets, and configurations.</p>
-                    </div>
-                    <button @click="currentView = 'home'" class="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded border border-red-200 font-medium">Logout</button>
-                </div>
-
-                <!-- Stats Overview Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500 font-medium">Total Clients</p>
-                        <h3 class="text-2xl font-bold text-indigo-600 mt-1">{{ clients.length }}</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500 font-medium">Active Campaigns</p>
-                        <h3 class="text-2xl font-bold text-green-600 mt-1">{{ activeCampaigns.length }}</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500 font-medium">Support Tickets</p>
-                        <h3 class="text-2xl font-bold text-amber-600 mt-1">{{ supportTickets.length }}</h3>
-                    </div>
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <p class="text-xs text-slate-500 font-medium">Cloud Database</p>
-                        <h3 class="text-lg font-bold text-blue-600 mt-1">Firestore Active</h3>
-                    </div>
-                </div>
-
-                <!-- Campaign Manager -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="font-bold text-slate-800 mb-4 text-sm">Campaign Manager</h3>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                        <input type="text" v-model="newCampaign.name" placeholder="Campaign Name" class="border p-2 rounded text-sm">
-                        <input type="number" v-model="newCampaign.reward" placeholder="Reward Amount (₹)" class="border p-2 rounded text-sm">
-                        <button @click="addCampaign" class="bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700 font-medium">Add Campaign</button>
-                    </div>
-                    <ul class="divide-y text-xs">
-                        <li v-for="c in activeCampaigns" :key="c.id" class="py-2.5 flex justify-between items-center">
-                            <span><b>{{ c.name }}</b> - Reward: ₹{{ c.reward }}</span>
-                            <button @click="deleteCampaign(c.id)" class="text-red-600 hover:underline font-medium">Remove</button>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Support Tickets Viewer -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="font-bold text-slate-800 mb-4 text-sm">Support Tickets & Client Issues</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-2.5">Ticket ID</th>
-                                    <th class="p-2.5">Client Code</th>
-                                    <th class="p-2.5">Issue / Proof Description</th>
-                                    <th class="p-2.5">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="ticket in supportTickets" :key="ticket.id" class="border-b hover:bg-slate-50">
-                                    <td class="p-2.5 font-medium text-slate-600">{{ ticket.id.slice(0,6) }}</td>
-                                    <td class="p-2.5 text-indigo-600 font-medium">{{ ticket.clientCode || 'N/A' }}</td>
-                                    <td class="p-2.5">{{ ticket.issue }}</td>
-                                    <td class="p-2.5">
-                                        <button @click="resolveTicket(ticket.id)" class="text-green-600 hover:underline font-medium">Resolve & Delete</button>
-                                    </td>
-                                </tr>
-                                <tr v-if="supportTickets.length === 0">
-                                    <td colspan="4" class="p-4 text-center text-slate-400">No pending support tickets found.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Client Management Table -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h3 class="font-bold text-slate-800 mb-4 text-sm">Manage All Clients & Approval Status</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700">
-                                    <th class="p-2.5">Code</th>
-                                    <th class="p-2.5">Name</th>
-                                    <th class="p-2.5">Phone</th>
-                                    <th class="p-2.5">Campaign</th>
-                                    <th class="p-2.5">Status</th>
-                                    <th class="p-2.5">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="client in clients" :key="client.code" class="border-b hover:bg-slate-50">
-                                    <td class="p-2.5 font-medium text-indigo-600">{{ client.code }}</td>
-                                    <td class="p-2.5 font-medium">{{ client.name }}</td>
-                                    <td class="p-2.5">{{ client.phone }}</td>
-                                    <td class="p-2.5">{{ client.campaign }}</td>
-                                    <td class="p-2.5">
-                                        <select v-model="client.status" @change="updateClientStatus(client)" class="border rounded px-2 py-1 text-xs bg-white">
-                                            <option value="Pending">Pending</option>
-                                            <option value="Approved">Approved</option>
-                                            <option value="Rejected">Rejected</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-2.5">
-                                        <button @click="deleteClient(client)" class="text-red-600 hover:underline font-medium">Delete</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-
-        <!-- Footer -->
-        <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-center text-xs text-slate-500">
-            &copy; 2026 Ved Capital Rewa. All rights reserved. Powered by Firebase Firestore.
-        </footer>
+            <!-- Footer -->
+            <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-500">
+                &copy; 2026 Ved Capital Rewa. All rights reserved. Powered by Firebase Firestore.
+            </footer>
+        </div>
     </div>
 
     <!-- Firebase SDK & Complete App Logic -->
@@ -429,7 +460,6 @@
                 const clients = ref([]);
                 const supportTickets = ref([]);
 
-                // Fetching all data from Firestore Cloud Database
                 const fetchData = async () => {
                     try {
                         const clientSnap = await getDocs(collection(db, "clients"));
@@ -443,7 +473,7 @@
                         const ticketSnap = await getDocs(collection(db, "supportTickets"));
                         supportTickets.value = ticketSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     } catch (e) {
-                        console.error("Error fetching from Firebase Firestore: ", e);
+                        console.error("Error fetching from Firebase: ", e);
                     }
                 };
 
@@ -451,14 +481,12 @@
                     fetchData();
                 });
 
-                // WhatsApp Share Link Generator
                 const whatsappShareLink = computed(() => {
                     if (!lastCreatedClient.value) return '#';
                     const text = `Hello *${lastCreatedClient.value.name}*,\nWelcome to *Ved Capital Rewa*!\nYour Client Code is: *${lastCreatedClient.value.code}*.\nCampaign: ${lastCreatedClient.value.campaign}\nStatus: ${lastCreatedClient.value.status}`;
                     return `https://api.whatsapp.com/send?phone=91${lastCreatedClient.value.phone}&text=${encodeURIComponent(text)}`;
                 });
 
-                // Submit Job / Campaign Application
                 const submitApplication = async () => {
                     const newClientCode = 'VC-' + Math.floor(1000 + Math.random() * 9000);
                     const newClient = {
@@ -485,7 +513,6 @@
 
                 const printReceipt = () => window.print();
 
-                // Client Login Dashboard Function
                 const clientLogin = () => {
                     const found = clients.value.find(c => c.code.toLowerCase() === clientLoginCode.value.trim().toLowerCase());
                     if (found) {
@@ -497,9 +524,8 @@
                     }
                 };
 
-                // Submit Proof Screenshot/Link
                 const submitProof = async () => {
-                    if (!proofLink.value) return alert('Please enter proof link or details');
+                    if (!proofLink.value) return alert('Please enter proof details');
                     try {
                         await addDoc(collection(db, "supportTickets"), {
                             clientCode: loggedClient.value.code,
@@ -513,7 +539,6 @@
                     }
                 };
 
-                // Submit Support Ticket
                 const submitIssue = async () => {
                     if (!supportIssue.value) return alert('Please describe your issue');
                     try {
@@ -531,7 +556,6 @@
                     }
                 };
 
-                // Employee Login
                 const employeeLogin = () => {
                     if (empPinInput.value === '1234') {
                         currentView.value = 'empDashboard';
@@ -553,7 +577,6 @@
                     extraClaim.value = { title: '', amount: '' };
                 };
 
-                // Admin Login
                 const adminLogin = () => {
                     if (adminPassInput.value === 'admin999') {
                         currentView.value = 'adminDashboard';
@@ -563,7 +586,6 @@
                     }
                 };
 
-                // Campaign Manager Actions
                 const addCampaign = async () => {
                     if (!newCampaign.value.name || !newCampaign.value.reward) return alert('Fill campaign details');
                     try {
@@ -591,7 +613,7 @@
                 };
 
                 const resolveTicket = async (id) => {
-                    if (confirm('Mark this ticket as resolved and remove?')) {
+                    if (confirm('Mark this ticket as resolved and delete?')) {
                         try {
                             await deleteDoc(doc(db, "supportTickets", id));
                             supportTickets.value = supportTickets.value.filter(t => t.id !== id);
