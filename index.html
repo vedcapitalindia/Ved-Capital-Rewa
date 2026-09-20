@@ -16,6 +16,7 @@
     <!-- Firebase App & Firestore CDN -->
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics-compat.js"></script>
 
     <style>
@@ -420,6 +421,11 @@
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
                         <input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 Digit Mobile Number" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
+                    <div class="flex gap-2">
+                        <input v-model="loginInput.otp" placeholder="6 Digit OTP" type="tel" inputmode="numeric" maxlength="6" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                        <button type="button" @click="sendPhoneOtp('client')" class="px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl">{{ phoneAuth.otpSent ? 'Resend OTP' : 'Send OTP' }}</button>
+                    </div>
+                    <div id="recaptcha-container-client"></div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Dashboard Login</button>
                 </form>
 
@@ -432,13 +438,18 @@
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Secret PIN (4 Digit)</label>
                         <input v-model="loginInput.pin" placeholder="Enter PIN" required type="password" maxlength="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
+                    <div class="flex gap-2">
+                        <input v-model="loginInput.otp" placeholder="6 Digit OTP" type="tel" inputmode="numeric" maxlength="6" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                        <button type="button" @click="sendPhoneOtp('employee')" class="px-4 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold rounded-xl">{{ phoneAuth.otpSent ? 'Resend OTP' : 'Send OTP' }}</button>
+                    </div>
+                    <div id="recaptcha-container-employee"></div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Employee Login</button>
                 </form>
 
                 <form v-if="loginType === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Username</label>
-                        <input v-model="loginInput.username" placeholder="admin" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Email</label>
+                        <input v-model="loginInput.username" placeholder="vedcapitalindia@gmail.com" required type="email" autocomplete="username" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label>
@@ -1472,7 +1483,8 @@ createApp({
         return {
             currentView: 'job_form',
             loginType: 'client',
-            loginInput: { code: '', phone: '', pin: '', username: '', password: '' },
+            loginInput: { code: '', phone: '', pin: '', otp: '', username: '', password: '' },
+            phoneAuth: { confirmationResult: null, otpSent: false, role: '', verifier: null },
             loginError: '',
             currentUser: null,
 
@@ -1523,7 +1535,8 @@ createApp({
                 address: 'Rewa, Madhya Pradesh, India'
             },
 
-            adminSettingsForm: { username: 'admin', password: '' },
+            adminSettingsForm: { username: 'vedcapitalindia@gmail.com', password: '' },
+            adminAuthEmail: 'vedcapitalindia@gmail.com',
             adminPasswordHash: null,
 
             clients: [],
@@ -1592,6 +1605,94 @@ createApp({
         }, 60000);
     },
     methods: {
+        setupAuthStateListener() {
+            if (!firebase.auth || typeof firebase.auth !== 'function') return;
+            firebase.auth().onAuthStateChanged(async user => {
+                if (!user || this.currentUser) return;
+                try {
+                    if (user.email?.toLowerCase() === this.adminAuthEmail) {
+                        this.currentUser = { name: 'Super Admin', role: 'admin', code: 'ADMIN', authUid: user.uid, email: user.email };
+                        this.adminSettingsForm.username = this.adminAuthEmail;
+                        this.loadPrivateDataForRole('admin', 'ADMIN');
+                        this.currentView = 'admin_dash';
+                        return;
+                    }
+                    const clientSnap = await db.collection('clients').where('authUid', '==', user.uid).limit(1).get();
+                    if (!clientSnap.empty) {
+                        const d = clientSnap.docs[0];
+                        this.currentUser = { id: d.id, ...d.data(), role: 'client', authUid: user.uid };
+                        this.loadPrivateDataForRole('client', d.id);
+                        this.currentView = 'client_dash';
+                        return;
+                    }
+                    const empSnap = await db.collection('employees').where('authUid', '==', user.uid).limit(1).get();
+                    if (!empSnap.empty) {
+                        const d = empSnap.docs[0];
+                        this.currentUser = { id: d.id, ...d.data(), role: 'employee', authUid: user.uid };
+                        this.loadPrivateDataForRole('employee', d.id);
+                        this.currentView = 'emp_dash';
+                    }
+                } catch (e) {
+                    console.error('Auth session restore failed:', e);
+                }
+            });
+        },
+
+        async ensurePhoneVerifier(role) {
+            if (!firebase.auth || typeof firebase.auth !== 'function') throw new Error('Firebase Authentication SDK उपलब्ध नहीं है।');
+            const containerId = role === 'employee' ? 'recaptcha-container-employee' : 'recaptcha-container-client';
+            if (this.phoneAuth.verifier && this.phoneAuth.role === role) return this.phoneAuth.verifier;
+            try {
+                if (this.phoneAuth.verifier?.clear) this.phoneAuth.verifier.clear();
+            } catch (_) {}
+            const verifier = new firebase.auth.RecaptchaVerifier(containerId, { size: 'invisible' });
+            this.phoneAuth.verifier = verifier;
+            this.phoneAuth.role = role;
+            await verifier.render();
+            return verifier;
+        },
+
+        async sendPhoneOtp(role) {
+            const phone = this.normalizePhone(this.loginInput.phone);
+            if (!this.isValidPhone(phone)) {
+                this.loginError = 'कृपया valid 10 digit mobile number दर्ज करें।';
+                return;
+            }
+            try {
+                const verifier = await this.ensurePhoneVerifier(role);
+                const confirmation = await firebase.auth().signInWithPhoneNumber('+91' + phone, verifier);
+                this.phoneAuth.confirmationResult = confirmation;
+                this.phoneAuth.otpSent = true;
+                this.phoneAuth.role = role;
+                this.loginError = '';
+                this.showToast('OTP आपके registered mobile पर भेज दिया गया है।', 'success');
+            } catch (error) {
+                console.error(error);
+                try { if (this.phoneAuth.verifier?.clear) this.phoneAuth.verifier.clear(); } catch (_) {}
+                this.phoneAuth.verifier = null;
+                this.phoneAuth.confirmationResult = null;
+                this.phoneAuth.otpSent = false;
+                this.loginError = error?.code === 'auth/operation-not-allowed'
+                    ? 'Firebase Console में Phone Authentication enable करें।'
+                    : 'OTP भेजा नहीं जा सका। कृपया number और Firebase Phone Auth setting check करें।';
+            }
+        },
+
+        async confirmPhoneOtp() {
+            const otp = String(this.loginInput.otp || '').trim();
+            if (!/^\d{6}$/.test(otp) || !this.phoneAuth.confirmationResult) {
+                throw new Error('OTP_REQUIRED');
+            }
+            const credential = await this.phoneAuth.confirmationResult.confirm(otp);
+            return credential.user;
+        },
+
+        resetPhoneAuthState() {
+            try { if (this.phoneAuth.verifier?.clear) this.phoneAuth.verifier.clear(); } catch (_) {}
+            this.phoneAuth = { confirmationResult: null, otpSent: false, role: '', verifier: null };
+            this.loginInput.otp = '';
+        },
+
         syncFirestoreData() {
             // Public data only: never download private clients/employees/support/earnings on the landing page.
             this._publicUnsubs = [];
@@ -1780,9 +1881,11 @@ createApp({
         },
 
         logout() {
+            try { if (firebase.auth && firebase.auth().currentUser) firebase.auth().signOut(); } catch (_) {}
             this.clearPrivateData();
             this.currentUser = null;
-            this.loginInput = { code: '', phone: '', pin: '', username: '', password: '' };
+            this.loginInput = { code: '', phone: '', pin: '', otp: '', username: '', password: '' };
+            this.resetPhoneAuthState();
             this.selfPinInput = '';
             this.adminPinModal = { show: false, empCode: '', empName: '', newPin: '' };
             this.showSupportChatModal = false;
@@ -1861,115 +1964,118 @@ createApp({
         },
 
         async handleClientLogin() {
-            const code = this.loginInput.code.trim().toUpperCase();
-            const phone = this.loginInput.phone.trim();
-            if (!code || !this.isValidPhone(phone)) {
-                this.loginError = 'कृपया valid Client Code और 10 अंकों का Mobile Number दर्ज करें।';
-                return;
-            }
+            const code = String(this.loginInput.code || '').trim().toUpperCase();
+            const phone = this.normalizePhone(this.loginInput.phone);
+            if (!code || !this.isValidPhone(phone)) { this.loginError = 'कृपया Client Code और valid registered mobile number दर्ज करें।'; return; }
+            if (!this.phoneAuth.confirmationResult || this.phoneAuth.role !== 'client') { this.loginError = 'पहले Send OTP करें।'; return; }
             try {
+                const authUser = await this.confirmPhoneOtp();
                 const ref = db.collection('clients').doc(code);
                 const snap = await ref.get();
-                const found = snap.exists ? { id: snap.id, ...snap.data() } : null;
-                if (found && this.normalizePhone(found.phone) === phone) {
-                    this.currentUser = found;
-                    this.loadPrivateDataForRole('client', found.id);
-                    this.currentView = 'client_dash';
-                    this.loginInput.code = '';
-                    this.loginInput.phone = '';
-                    this.showToast('Welcome back, ' + found.name, 'success');
-                } else {
-                    this.loginError = 'अमान्य Client Code या Mobile Number!';
-                }
+                if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
+                const found = { id: snap.id, ...snap.data() };
+                if (this.normalizePhone(found.phone) !== phone) throw new Error('PHONE_MISMATCH');
+                if (found.authUid && found.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
+                if (!found.authUid) await ref.update({ authUid: authUser.uid, authPhone: authUser.phoneNumber || '+91' + phone });
+                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'client', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                this.currentUser = { ...found, authUid: authUser.uid, role: 'client' };
+                this.loadPrivateDataForRole('client', found.id);
+                this.currentView = 'client_dash';
+                this.loginInput.code = ''; this.loginInput.phone = '';
+                this.resetPhoneAuthState();
+                this.showToast('Welcome, ' + found.name, 'success');
             } catch (error) {
                 console.error(error);
-                this.loginError = error?.code === 'permission-denied' ? 'Client login के लिए Firebase Security Rules access आवश्यक है।' : 'Client login अभी उपलब्ध नहीं है।';
+                try { await firebase.auth().signOut(); } catch (_) {}
+                this.resetPhoneAuthState();
+                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Client Code से match नहीं करता.'
+                    : error.message === 'ACCOUNT_BOUND' ? 'यह client account पहले से किसी दूसरे Auth account से linked है.'
+                    : error.message === 'CLIENT_NOT_FOUND' ? 'Client Code नहीं मिला.'
+                    : error.message === 'OTP_REQUIRED' ? 'कृपया valid 6 digit OTP दर्ज करें.'
+                    : 'Client login नहीं हो पाया। OTP और registered mobile check करें।';
             }
         },
 
         async handleEmployeeLogin() {
-            const code = this.loginInput.code.trim().toUpperCase();
-            const pin = this.loginInput.pin.trim();
-            if (!code || !this.isValidPin(pin)) {
-                this.loginError = 'कृपया Employee Code और 4 अंकों का Secret PIN दर्ज करें।';
-                return;
-            }
+            const code = String(this.loginInput.code || '').trim().toUpperCase();
+            const pin = String(this.loginInput.pin || '').trim();
+            const phone = this.normalizePhone(this.loginInput.phone);
+            if (!code || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'कृपया Employee Code, registered mobile और 4 अंकों का PIN दर्ज करें।'; return; }
+            if (!this.phoneAuth.confirmationResult || this.phoneAuth.role !== 'employee') { this.loginError = 'पहले Send OTP करें।'; return; }
             try {
-                const snap = await db.collection('employees').where('code', '==', code).limit(1).get();
-                const found = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
-                const validPin = found && ((found.pin && found.pin === pin) || (found.pinHash && await this.verifyStoredCredential(pin, found.pinHash)));
-                if (found && validPin) {
-                    if (found.pin && !found.pinHash) {
-                        const migratedPinHash = await this.hashCredential(pin);
-                        await db.collection('employees').doc(found.id).update({ pinHash: migratedPinHash, pin: firebase.firestore.FieldValue.delete(), mustChangePin: false });
-                        found.pinHash = migratedPinHash;
-                        delete found.pin;
-                    }
-                    this.currentUser = found;
-                    this.loadPrivateDataForRole('employee', found.id);
-                    this.currentView = 'emp_dash';
-                    this.loginInput.code = '';
-                    this.loginInput.pin = '';
-                    this.showToast('Welcome Employee, ' + found.name, 'success');
-                } else {
-                    this.loginError = 'अमान्य Employee Code या Secret PIN!';
-                }
+                const authUser = await this.confirmPhoneOtp();
+                const snap = await db.collection('employees').doc(code).get();
+                if (!snap.exists) throw new Error('EMP_NOT_FOUND');
+                const found = { id: snap.id, ...snap.data() };
+                if (this.normalizePhone(found.phone) !== phone) throw new Error('PHONE_MISMATCH');
+                let validPin = false;
+                if (found.pinHash) validPin = await this.verifyStoredCredential(pin, found.pinHash);
+                else if (found.pin) validPin = found.pin === pin;
+                if (!validPin) throw new Error('BAD_PIN');
+                if (found.authUid && found.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
+                const update = { authUid: authUser.uid, authPhone: authUser.phoneNumber || '+91' + phone };
+                if (found.pin) update.pin = firebase.firestore.FieldValue.delete();
+                if (found.pin) update.pinHash = await this.hashCredential(pin);
+                if (found.pin) update.mustChangePin = false;
+                if (!found.authUid || found.pin) await db.collection('employees').doc(code).update(update);
+                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'employee', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                this.currentUser = { ...found, ...update, role: 'employee', authUid: authUser.uid };
+                this.loadPrivateDataForRole('employee', found.id);
+                this.currentView = 'emp_dash';
+                this.loginInput.code = ''; this.loginInput.phone = ''; this.loginInput.pin = '';
+                this.resetPhoneAuthState();
+                this.showToast('Welcome Employee, ' + found.name, 'success');
             } catch (error) {
                 console.error(error);
-                this.loginError = error?.code === 'permission-denied' ? 'Employee login के लिए Firebase Security Rules access आवश्यक है।' : 'Employee login अभी उपलब्ध नहीं है।';
+                try { await firebase.auth().signOut(); } catch (_) {}
+                this.resetPhoneAuthState();
+                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Employee Code से match नहीं करता.'
+                    : error.message === 'ACCOUNT_BOUND' ? 'यह employee account पहले से किसी दूसरे Auth account से linked है.'
+                    : error.message === 'EMP_NOT_FOUND' ? 'Employee Code नहीं मिला.'
+                    : error.message === 'BAD_PIN' ? 'Secret PIN गलत है.'
+                    : error.message === 'OTP_REQUIRED' ? 'कृपया valid 6 digit OTP दर्ज करें.'
+                    : 'Employee login नहीं हो पाया। OTP, mobile और PIN check करें।';
             }
         },
 
         async handleAdminLogin() {
-            const username = this.loginInput.username.trim();
-            const password = this.loginInput.password;
-            if (!username || !password) { this.loginError = 'Username और Password दोनों भरें।'; return; }
+            const email = String(this.loginInput.username || '').trim().toLowerCase();
+            const password = String(this.loginInput.password || '');
+            if (!email || !password) { this.loginError = 'Admin Email और Password दोनों भरें।'; return; }
+            if (email !== this.adminAuthEmail) {
+                this.loginError = 'यह Email Admin account के लिए authorized नहीं है।';
+                return;
+            }
             try {
-                // Always read the stored admin record before deciding whether bootstrap is allowed.
-                // This prevents the old bootstrap path from overwriting an already-initialized admin.
-                const adminRef = db.collection('settings').doc('admin');
-                const adminSnap = await adminRef.get();
-                let adminData = adminSnap.exists ? (adminSnap.data() || {}) : null;
-                let valid = false;
-
-                if (adminData && adminData.passwordHash?.salt && adminData.passwordHash?.hash) {
-                    this.adminSettingsForm.username = String(adminData.username || 'admin');
-                    this.adminPasswordHash = adminData.passwordHash;
-                    valid = username === this.adminSettingsForm.username && await this.verifyAdminPassword(password);
-                } else if (!adminData) {
-                    // Bootstrap is permitted only when the admin document truly does not exist.
-                    if (username === 'admin' && password === 'Admin@3307') {
-                        const bootstrapHash = await this.hashCredential(password);
-                        await adminRef.create({
-                            username: 'admin',
-                            passwordHash: bootstrapHash,
-                            initializedAt: new Date().toISOString()
-                        });
-                        this.adminSettingsForm.username = 'admin';
-                        this.adminPasswordHash = bootstrapHash;
-                        valid = true;
-                    }
-                } else {
-                    // Existing record without a valid hash must not fall back to a known password.
-                    this.loginError = 'Admin account initialization अधूरी है। Firebase में settings/admin जाँचें।';
+                if (!firebase.auth || typeof firebase.auth !== 'function') {
+                    throw new Error('Firebase Authentication SDK उपलब्ध नहीं है।');
+                }
+                const credential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const authUser = credential.user;
+                if (!authUser || authUser.email?.toLowerCase() !== this.adminAuthEmail) {
+                    await firebase.auth().signOut();
+                    this.loginError = 'Admin account authorized नहीं है।';
                     return;
                 }
-
-                if (valid) {
-                    this.currentUser = { name: 'Super Admin', role: 'admin', code: 'ADMIN' };
-                    this.loadPrivateDataForRole('admin', 'ADMIN');
-                    this.currentView = 'admin_dash';
-                    this.loginInput.username = '';
-                    this.loginInput.password = '';
-                    this.showToast('Admin Access Granted', 'success');
-                } else {
-                    this.loginError = 'अमान्य Admin Username या Password!';
-                }
+                this.currentUser = { name: 'Super Admin', role: 'admin', code: 'ADMIN', authUid: authUser.uid, email: authUser.email };
+                this.adminSettingsForm.username = this.adminAuthEmail;
+                this.loadPrivateDataForRole('admin', 'ADMIN');
+                this.currentView = 'admin_dash';
+                this.loginInput.username = '';
+                this.loginInput.password = '';
+                this.showToast('Admin Access Granted', 'success');
             } catch (error) {
                 console.error(error);
-                this.loginError = error?.code === 'permission-denied'
-                    ? 'Admin login के लिए Firebase Security Rules में settings/admin access आवश्यक है।'
-                    : 'Admin login अभी उपलब्ध नहीं है।';
+                const code = error?.code || '';
+                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+                    this.loginError = 'Admin Email या Password गलत है।';
+                } else if (code === 'auth/too-many-requests') {
+                    this.loginError = 'बहुत बार गलत login हुआ है। कुछ देर बाद फिर कोशिश करें।';
+                } else if (code === 'permission-denied') {
+                    this.loginError = 'Login हो गया, लेकिन Firestore Security Rules Admin access रोक रही हैं।';
+                } else {
+                    this.loginError = 'Admin login अभी उपलब्ध नहीं है।';
+                }
             }
         },
 
@@ -2727,21 +2833,28 @@ createApp({
         },
 
         async updateAdminCredentials() {
-            const username = String(this.adminSettingsForm.username || '').trim();
+            const email = String(this.adminAuthEmail || '').trim().toLowerCase();
             const password = String(this.adminSettingsForm.password || '');
-            if (!username || password.length < 8) {
-                this.showToast('Username जरूरी है और password कम से कम 8 characters का होना चाहिए।', 'error');
+            if (!email || password.length < 8) {
+                this.showToast('Password कम से कम 8 characters का होना चाहिए।', 'error');
                 return;
             }
             try {
-                const passwordHash = await this.hashCredential(password);
-                await db.collection('settings').doc('admin').set({ username, passwordHash }, { merge: true });
-                this.adminSettingsForm = { username, password: '' };
-                this.adminPasswordHash = passwordHash;
-                this.showToast('Admin credentials updated securely!', 'success');
+                const authUser = firebase.auth().currentUser;
+                if (!authUser || authUser.email?.toLowerCase() !== email) {
+                    this.showToast('पहले Admin login करें।', 'error');
+                    return;
+                }
+                await authUser.updatePassword(password);
+                this.adminSettingsForm = { username: email, password: '' };
+                this.showToast('Admin password Firebase Authentication में सुरक्षित रूप से बदल दिया गया।', 'success');
             } catch (error) {
                 console.error(error);
-                this.showToast('Admin credentials update नहीं हुआ।', 'error');
+                if (error?.code === 'auth/requires-recent-login') {
+                    this.showToast('Security के लिए logout करके फिर login करें, फिर password बदलें।', 'error');
+                } else {
+                    this.showToast('Admin password update नहीं हुआ।', 'error');
+                }
             }
         },
 
