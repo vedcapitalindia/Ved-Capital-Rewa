@@ -14,23 +14,180 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Firebase App & Firestore CDN -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-analytics-compat.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root{
+            --vcr-bg:#07111f;
+            --vcr-surface:#0d1b2e;
+            --vcr-surface-2:#10243b;
+            --vcr-border:rgba(148,163,184,.16);
+            --vcr-primary:#f5b83d;
+            --vcr-primary-2:#ffd166;
+            --vcr-accent:#5b8cff;
+        }
+
+        html { scroll-behavior:smooth; }
+        [v-cloak]{display:none!important;}
+        .vcr-disabled{opacity:.55;pointer-events:none;}
+        input:invalid:focus,select:invalid:focus,textarea:invalid:focus{box-shadow:0 0 0 3px rgba(244,63,94,.10)!important;}
+        body {
+            font-family:'Inter',sans-serif;
+            background:
+                radial-gradient(circle at 10% 0%, rgba(91,140,255,.12), transparent 28%),
+                radial-gradient(circle at 90% 10%, rgba(245,184,61,.10), transparent 24%),
+                linear-gradient(180deg,#06101d 0%,#081423 55%,#06101d 100%);
+            color:#e5edf8;
+        }
+        body:before{
+            content:"";
+            position:fixed;
+            inset:0;
+            pointer-events:none;
+            background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+                             linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+            background-size:36px 36px;
+            mask-image:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 70%);
+        }
+
+        /* Premium surface treatment without changing the app's Vue structure/features */
+        #app > header{
+            background:rgba(5,13,25,.82)!important;
+            border-bottom:1px solid rgba(148,163,184,.14)!important;
+            box-shadow:0 10px 35px rgba(0,0,0,.18);
+        }
+        #app > main{
+            padding-top:1.75rem;
+            padding-bottom:2.5rem;
+        }
+        #app main .bg-slate-800{
+            background:linear-gradient(145deg,rgba(15,32,52,.94),rgba(9,22,37,.96))!important;
+            border-color:var(--vcr-border)!important;
+            box-shadow:0 18px 50px rgba(0,0,0,.20);
+        }
+        #app main .bg-slate-900{
+            background-color:rgba(5,15,28,.78)!important;
+        }
+        #app main input,
+        #app main select,
+        #app main textarea{
+            background-color:rgba(4,13,25,.82)!important;
+            border-color:rgba(148,163,184,.18)!important;
+            transition:border-color .2s,box-shadow .2s,transform .2s;
+        }
+        #app main input:focus,
+        #app main select:focus,
+        #app main textarea:focus{
+            border-color:rgba(245,184,61,.72)!important;
+            box-shadow:0 0 0 3px rgba(245,184,61,.10);
+        }
+        #app button{
+            transition:transform .18s ease,box-shadow .18s ease,background-color .18s ease,border-color .18s ease;
+        }
+        #app button:hover{ transform:translateY(-1px); }
+        #app button:active{ transform:translateY(0); }
+
+        /* Make the public pages feel more like a polished portal */
+        #app main section > .text-center h2{
+            letter-spacing:-.035em;
+        }
+        #app main section > .text-center p{
+            max-width:680px;
+            margin-left:auto;
+            margin-right:auto;
+        }
+
+        /* Tables */
+        #app table thead th{
+            letter-spacing:.04em;
+            white-space:nowrap;
+        }
+        #app table tbody tr{
+            transition:background-color .18s ease;
+        }
+
+        /* Toast */
+        #app > div:first-child{
+            backdrop-filter:blur(14px);
+        }
+
+        /* Better file controls */
+        input[type="file"]{
+            border-radius:.75rem;
+        }
+
+        /* Mobile polish */
+        @media (max-width: 767px){
+            #app > header .h-20{
+                height:72px;
+            }
+            #app > header .max-w-7xl{
+                padding-left:12px;
+                padding-right:12px;
+            }
+            #app > header h1{
+                font-size:1rem;
+            }
+            #app > header p{
+                font-size:9px;
+            }
+            #app > header .w-12{
+                width:42px;
+                height:42px;
+                font-size:1.1rem;
+            }
+            #app > main{
+                padding:1rem .75rem 1.5rem;
+            }
+            #app main .p-8{
+                padding:1.15rem!important;
+            }
+            #app main .p-6{
+                padding:1rem!important;
+            }
+            #app main .grid{
+                gap:.8rem;
+            }
+            #app table{
+                min-width:760px;
+            }
+            #app main .overflow-x-auto{
+                border-radius:.85rem;
+                -webkit-overflow-scrolling:touch;
+            }
+            #app .fixed.top-5.right-5{
+                left:12px;
+                right:12px;
+                top:12px;
+            }
+        }
+
+        /* Accessible focus ring */
+        button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+            outline:2px solid var(--vcr-primary);
+            outline-offset:2px;
+        }
+
         @media print {
-            body * { visibility: hidden; }
-            #printable-slip, #printable-slip *, #printable-id-card, #printable-id-card * { visibility: visible; }
-            #printable-slip, #printable-id-card { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; }
-            .no-print { display: none !important; }
+            body * { visibility:hidden; }
+            #printable-slip, #printable-slip *, #printable-id-card, #printable-id-card * { visibility:visible; }
+            #printable-slip, #printable-id-card {
+                position:absolute;
+                left:0;
+                top:0;
+                width:100%;
+                border:none!important;
+                box-shadow:none!important;
+            }
+            .no-print { display:none!important; }
         }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-amber-500 selection:text-slate-900">
 
-<div id="app" class="flex flex-col min-h-screen">
+<div id="app" v-cloak class="flex flex-col min-h-screen">
 
     <!-- Toast Notification System -->
     <div v-if="toast.show" class="fixed top-5 right-5 z-50 flex items-center p-4 mb-4 rounded-xl shadow-2xl transition-all duration-300 border"
@@ -44,7 +201,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
             
             <div class="flex items-center space-x-3 cursor-pointer" @click="navigateHome">
-                <div class="bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 font-black text-2xl w-12 h-12 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <div class="bg-gradient-to-br from-amber-300 via-amber-500 to-orange-500 text-slate-950 font-black text-2xl w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl shadow-amber-500/20 ring-1 ring-white/10">
                     VCR
                 </div>
                 <div>
@@ -157,7 +314,7 @@
                     <button @click="printSlip" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-bold transition flex items-center">
                         <i class="fa-solid fa-print mr-2"></i> Print / Save PDF
                     </button>
-                    <a v-if="companyInfo.whatsapp" :href="getWhatsAppLink(lastSubmitted)" target="_blank" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition flex items-center shadow-lg shadow-emerald-600/20">
+                    <a v-if="companyInfo.whatsapp" :href="getWhatsAppLink(lastSubmitted)" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-sm font-bold transition flex items-center shadow-lg shadow-emerald-600/20">
                         <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Send Code on WhatsApp
                     </a>
                     <button @click="applicationSuccess = false" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-sm font-bold transition">
@@ -176,7 +333,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">मोबाइल नंबर (10 Digit) *</label>
-                            <input v-model="jobForm.phone" required type="tel" maxlength="10" placeholder="10 अंकों का नंबर" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+                            <input v-model="jobForm.phone" @input="jobForm.phone = normalizePhone(jobForm.phone)" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10 अंकों का नंबर" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">जॉब केटेगरी *</label>
@@ -198,7 +355,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">ID Card Photo (Passport Size) *</label>
-                            <input type="file" accept="image/*" @change="handleJobPhotoUpload" required class="w-full text-xs text-slate-300 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
+                            <input type="file" accept="image/*" @change="handleJobPhotoUpload" required data-max-bytes="700000" class="w-full text-xs text-slate-300 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
                         </div>
                     </div>
 
@@ -261,7 +418,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
-                        <input v-model="loginInput.phone" placeholder="10 Digit Mobile Number" required type="tel" maxlength="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                        <input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 Digit Mobile Number" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Dashboard Login</button>
                 </form>
@@ -285,7 +442,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label>
-                        <input v-model="loginInput.password" placeholder="Admin@3307" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
+                        <input v-model="loginInput.password" placeholder="Enter admin password" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Admin Control Panel</button>
                 </form>
@@ -346,7 +503,7 @@
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div>
                                 <p class="font-bold text-slate-100 text-base">{{ cmp.title }}</p>
-                                <a :href="cmp.url" target="_blank" class="text-xs text-amber-400 underline font-mono break-all inline-flex items-center">
+                                <a :href="cmp.url" target="_blank" rel="noopener noreferrer" class="text-xs text-amber-400 underline font-mono break-all inline-flex items-center">
                                     <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Open Campaign Link: {{ cmp.url }}
                                 </a>
                             </div>
@@ -359,7 +516,7 @@
                         <div class="border-t border-slate-800 pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div class="w-full sm:w-auto flex-grow">
                                 <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Upload Work Screenshot Proof *</label>
-                                <input type="file" accept="image/*" @change="handleClientScreenshotUpload($event, cmp.id)" class="text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30">
+                                <input type="file" accept="image/*" @change="handleClientScreenshotUpload($event, cmp.id)" data-max-bytes="700000" class="text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30">
                             </div>
 
                             <div class="flex items-center space-x-2">
@@ -525,7 +682,7 @@
                                         <a :href="'tel:' + c.phone" class="inline-flex items-center justify-center w-8 h-8 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500 hover:text-white transition" title="Direct Call">
                                             <i class="fa-solid fa-phone text-xs"></i>
                                         </a>
-                                        <a :href="getDirectWhatsAppLink(c.phone, c.name)" target="_blank" class="inline-flex items-center justify-center w-8 h-8 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white transition" title="WhatsApp Chat">
+                                        <a :href="getDirectWhatsAppLink(c.phone, c.name)" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-8 h-8 bg-emerald-600/20 text-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white transition" title="WhatsApp Chat">
                                             <i class="fa-brands fa-whatsapp text-sm"></i>
                                         </a>
                                     </td>
@@ -570,7 +727,7 @@
                 <form @submit.prevent="submitEmpExtraWork" class="space-y-4 max-w-xl bg-slate-900 p-5 rounded-xl border border-slate-700">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1">Work Screenshot *</label>
-                        <input type="file" accept="image/*" @change="handleExtraWorkFile" required class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
+                        <input type="file" accept="image/*" @change="handleExtraWorkFile" required data-max-bytes="700000" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500 file:text-slate-950">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 mb-1">Work Description / Detail *</label>
@@ -738,8 +895,7 @@
                                     <span v-else class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-check-double mr-1"></i> Promoted</span>
                                 </td>
                                 <td class="p-3">
-                                    <!-- Using the deleteItem method inside client table action -->
-                                    <button @click="deleteItem(c.id || c.code)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                                    <button @click="deleteClient(c.code)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -759,7 +915,7 @@
                 <!-- Add New Employee Form -->
                 <form @submit.prevent="addEmployee" class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-900 p-4 rounded-xl border border-slate-700">
                     <input v-model="newEmp.name" placeholder="Name" required class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                    <input v-model="newEmp.phone" placeholder="Phone" required class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                    <input v-model="newEmp.phone" @input="newEmp.phone = normalizePhone(newEmp.phone)" placeholder="Phone" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                     <input v-model="newEmp.position" placeholder="Position" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold p-2.5 rounded-lg text-sm">Add Employee</button>
                 </form>
@@ -776,7 +932,7 @@
                                     <p class="font-bold text-white text-base">{{ emp.name }}</p>
                                     <p class="text-xs text-amber-400 font-mono mt-0.5">Code: {{ emp.code }} | PIN: 
                                         <span class="text-emerald-400 font-bold bg-slate-800 px-2 py-0.5 rounded ml-1">
-                                            {{ emp.showPin ? (emp.pin || '1234') : '••••' }}
+                                            {{ emp.showPin ? (emp.pinHash ? 'PIN secured' : 'Legacy PIN') : '••••' }}
                                         </span>
                                         <button @click="emp.showPin = !emp.showPin" class="text-[11px] text-slate-400 hover:text-amber-300 ml-1.5 underline">
                                             {{ emp.showPin ? 'Hide' : 'Reveal' }}
@@ -805,7 +961,7 @@
                                 <a :href="'tel:' + emp.phone" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition flex items-center">
                                     <i class="fa-solid fa-phone mr-1"></i> Call
                                 </a>
-                                <a :href="getDirectWhatsAppLink(emp.phone, emp.name)" target="_blank" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition flex items-center">
+                                <a :href="getDirectWhatsAppLink(emp.phone, emp.name)" target="_blank" rel="noopener noreferrer" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg hover:bg-emerald-500 hover:text-white transition flex items-center">
                                     <i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp
                                 </a>
                             </div>
@@ -920,7 +1076,7 @@
                     <div v-for="cmp in campaigns" :key="cmp.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex justify-between items-center">
                         <div>
                             <p class="font-bold text-white">{{ cmp.title }}</p>
-                            <a :href="cmp.url" target="_blank" class="text-xs text-amber-400 underline font-mono">{{ cmp.url }}</a>
+                            <a :href="cmp.url" target="_blank" rel="noopener noreferrer" class="text-xs text-amber-400 underline font-mono">{{ cmp.url }}</a>
                         </div>
                         <button @click="deleteCampaign(cmp.id)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -986,7 +1142,8 @@
                 </div>
 
                 <div>
-                    <h3 class="text-lg font-bold text-white mb-3">Change Admin Credentials</h3>
+                    <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-200"><i class="fa-solid fa-shield-halved mr-1"></i> Production security: Firestore Rules/Auth must enforce role-based access. Browser-side checks alone are not a security boundary.</div>
+                        <h3 class="text-lg font-bold text-white mb-3">Change Admin Credentials</h3>
                     <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
@@ -1215,18 +1372,35 @@
 
 <script>
 // Firebase Initialization
+// Firebase JS SDK 12.19.0 — Ved Capital Rewa
+// The portal still uses the Firestore compatibility API (db.collection/doc)
+// so existing application workflows remain unchanged while the SDK/project
+// are moved to the new Firebase project supplied by the owner.
 const firebaseConfig = {
-  apiKey: "AIzaSyACaYyjQjsHSkgX4Gc-mz3GtFL6NdgmDM0",
-  authDomain: "vedcapitalindia-7292e.firebaseapp.com",
-  projectId: "vedcapitalindia-7292e",
-  storageBucket: "vedcapitalindia-7292e.firebasestorage.app",
-  messagingSenderId: "903755627911",
-  appId: "1:903755627911:web:12c2685c3c08f514efa722",
-  measurementId: "G-ZQ757FPC3N"
+  apiKey: "AIzaSyDiJSmQqUVEISbIMOZREJv9HhY2D4EkmLw",
+  authDomain: "ved-capital.firebaseapp.com",
+  projectId: "ved-capital",
+  storageBucket: "ved-capital.firebasestorage.app",
+  messagingSenderId: "308163303663",
+  appId: "1:308163303663:web:14ed6c693664a0c194231a",
+  measurementId: "G-8SZ7LJM8LV"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+
 const db = firebase.firestore();
+
+// Analytics is optional for the portal's core operation. If the current
+// browser blocks analytics, Firestore should continue working normally.
+try {
+  if (typeof firebase.analytics === 'function') {
+    firebase.analytics();
+  }
+} catch (analyticsError) {
+  console.warn('Firebase Analytics unavailable; portal will continue:', analyticsError);
+}
 
 const { createApp } = Vue;
 
@@ -1240,68 +1414,858 @@ createApp({
             currentUser: null,
 
             toast: { show: false, message: '', type: 'success' },
+            sessionTimer: null,
+            lastActivityAt: Date.now(),
 
             jobForm: { name: '', phone: '', jobType: '', address: '', photo: null },
             formError: '',
             applicationSuccess: false,
             lastSubmitted: {},
 
-            // Added properties from your code snippet
-            clients: [], 
-            loading: false,
+            campaignIssueInputs: {},
+            clientCampaignFileMap: {},
 
-            campaignIssueInputs: {}
+            searchQuery: '',
+            employeeFeedbackInput: '',
+            empSubTab: 'clients',
+            showEmpSelfPinModal: false,
+            selfPinInput: '',
+            selectedReviewClient: null,
+
+            extraWorkForm: { screenshot: null, description: '' },
+            payoutForm: { amount: 100, method: 'UPI', details: '' },
+
+            showIdCardModal: false,
+            idCardData: {},
+
+            showSupportChatModal: false,
+            supportMessageInput: '',
+            supportChats: [],
+
+            adminTab: 'clients',
+            adminPinModal: { show: false, empCode: '', empName: '', newPin: '' },
+            selectedEmpWork: null,
+
+            newEmp: { name: '', phone: '', position: 'Telecaller' },
+            newCmp: { title: '', url: '' },
+            newNoticeText: '',
+
+            companyInfo: {
+                aboutText: 'Ved Capital Rewa is a premier financial and corporate service provider in Madhya Pradesh, dedicated to empowering careers, offering telecalling & corporate jobs, and ensuring seamless client onboarding.',
+                whatsapp: '91982703307',
+                address: 'Rewa, Madhya Pradesh, India'
+            },
+
+            adminSettingsForm: { username: 'admin', password: '' },
+            adminPasswordHash: null,
+
+            clients: [],
+            employees: [],
+            campaigns: [
+                { id: 1, title: 'Kotak 811 Zero Balance Account', url: 'https://example.com/kotak' },
+                { id: 2, title: 'IndusInd Bank Saving Account', url: 'https://example.com/indusind' }
+            ],
+            announcements: [
+                { id: 1, text: 'Welcome to Ved Capital Rewa Official Cloud Portal. All services active.', date: '2026-03-30' }
+            ],
+            earningsRequests: [],
+            payoutRequests: [],
+            feedbacks: []
         };
     },
-
-    // 1. Data load hone par (mounted hook)
-    mounted() {
-        const savedData = localStorage.getItem('portalData');
-        if (savedData) {
-            this.clients = JSON.parse(savedData);
-        } else {
-            this.fetchDataFromFirebase(); // Agar local storage mein na ho toh firebase से layein
+    computed: {
+        filteredClients() {
+            if (!this.searchQuery) return this.clients;
+            const q = this.searchQuery.toLowerCase();
+            return this.clients.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.phone.includes(q));
+        },
+        filteredSupportChats() {
+            return this.supportChats;
         }
     },
-
+    created() {
+        // Real-time synchronization with Firebase Firestore
+        this.syncFirestoreData();
+        ['click','keydown','touchstart'].forEach(evt => window.addEventListener(evt, () => { this.lastActivityAt = Date.now(); }, { passive: true }));
+        this.sessionTimer = setInterval(() => {
+            if (this.currentUser && Date.now() - this.lastActivityAt > 30 * 60 * 1000) { this.logout(); this.showToast('Security: session expired after inactivity.', 'error'); }
+        }, 60000);
+    },
     methods: {
-        // 2. Data local storage mein save karne ka function
-        saveDataLocally() {
-            localStorage.setItem('portalData', JSON.stringify(this.clients));
+        syncFirestoreData() {
+            // Public data only: never download private clients/employees/support/earnings on the landing page.
+            this._publicUnsubs = [];
+            this._privateUnsubs = [];
+            const watch = (ref, cb) => { const unsub = ref.onSnapshot(cb, err => console.error('Firestore listener error:', err)); this._publicUnsubs.push(unsub); return unsub; };
+            watch(db.collection('campaigns'), snapshot => {
+                if (!snapshot.empty) this.campaigns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                this.campaigns.forEach(cmp => { if (!this.campaignIssueInputs[cmp.id]) this.campaignIssueInputs[cmp.id] = { issueType: '', note: '' }; });
+            });
+            watch(db.collection('announcements'), snapshot => { if (!snapshot.empty) this.announcements = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+            watch(db.collection('settings').doc('company'), doc => { if (doc.exists) this.companyInfo = doc.data(); });
         },
 
-        // 3. Firebase से data fetch karne ka function
-        async fetchDataFromFirebase() {
-            try {
-                this.loading = true;
-                const snapshot = await db.collection("clients").get();
-                this.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                // Firebase से data aane ke baad local storage ko bhi update karein
-                this.saveDataLocally();
-            } catch (error) {
-                console.error("Error fetching data: ", error);
-            } finally {
-                this.loading = false;
+        clearPrivateData() {
+            (this._privateUnsubs || []).forEach(fn => { try { fn(); } catch (_) {} });
+            this._privateUnsubs = [];
+            this.clients = []; this.employees = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = [];
+        },
+
+        loadPrivateDataForRole(role, userId) {
+            this.clearPrivateData();
+            const watch = (ref, cb) => { const unsub = ref.onSnapshot(cb, err => { console.error('Firestore listener error:', err); this.showToast('डेटा लोड नहीं हो पाया।', 'error'); }); this._privateUnsubs.push(unsub); };
+            if (role === 'client') {
+                watch(db.collection('clients').doc(userId), doc => {
+                    if (doc.exists) { const data = { id: doc.id, ...doc.data() }; if (!data.campaignIssues) data.campaignIssues = {}; this.currentUser = data; }
+                });
+                return;
+            }
+            if (role === 'employee') {
+                watch(db.collection('employees').doc(userId), doc => { if (doc.exists) this.currentUser = { id: doc.id, ...doc.data() }; });
+                watch(db.collection('clients'), snapshot => { this.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('earningsRequests'), snapshot => { this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('supportChats'), snapshot => { this.supportChats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                return;
+            }
+            if (role === 'admin') {
+                watch(db.collection('clients'), snapshot => { this.clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); this.clients.forEach(c => { if (!c.campaignIssues) c.campaignIssues = {}; }); });
+                watch(db.collection('employees'), snapshot => { this.employees = snapshot.docs.map(doc => ({ id: doc.id, showPin: false, ...doc.data() })); });
+                watch(db.collection('supportChats'), snapshot => { this.supportChats = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('earningsRequests'), snapshot => { this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('payoutRequests'), snapshot => { this.payoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('settings').doc('admin'), doc => { if (doc.exists) { const data = doc.data() || {}; this.adminSettingsForm.username = String(data.username || 'admin'); if (data.passwordHash?.hash && data.passwordHash?.salt) this.adminPasswordHash = data.passwordHash; } });
             }
         },
 
-        // 4. Item delete karne ka function
-        async deleteItem(itemId) {
+        showToast(message, type = 'success') {
+            this.toast = { show: true, message, type };
+            setTimeout(() => { this.toast.show = false; }, 3500);
+        },
+
+        normalizePhone(value) {
+            return String(value || '').replace(/\D/g, '').slice(0, 10);
+        },
+
+        isValidPhone(value) {
+            return /^[6-9]\d{9}$/.test(String(value || ''));
+        },
+
+        isValidPin(value) {
+            return /^\d{4}$/.test(String(value || ''));
+        },
+
+        isSafeHttpUrl(value) {
             try {
-                // Firebase Firestore database से delete karein
-                await db.collection("clients").doc(itemId).delete();
-                
-                // Local array से भी hata dein taaki UI turant update ho jaye
-                this.clients = this.clients.filter(item => item.id !== itemId);
-                
-                // LocalStorage ko भी update karein
-                this.saveDataLocally();
-                
-                console.log("Data successfully deleted!");
+                const u = new URL(String(value || '').trim());
+                return u.protocol === 'https:' || u.protocol === 'http:';
+            } catch (_) { return false; }
+        },
+
+        nextEmployeeCode() {
+            const nums = this.employees.map(e => Number(String(e.code || '').match(/(\d+)$/)?.[1] || 0)).filter(Number.isFinite);
+            return `EMP-${String(Math.max(0, ...nums) + 1).padStart(4, '0')}`;
+        },
+
+        async hashCredential(secret, saltHex) {
+            const enc = new TextEncoder();
+            const salt = saltHex ? Uint8Array.from((saltHex.match(/.{1,2}/g) || []).map(h => parseInt(h, 16))) : crypto.getRandomValues(new Uint8Array(16));
+            const key = await crypto.subtle.importKey('raw', enc.encode(String(secret)), 'PBKDF2', false, ['deriveBits']);
+            const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 120000, hash: 'SHA-256' }, key, 256);
+            const hash = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+            const saltOut = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+            return { salt: saltOut, hash };
+        },
+
+        async verifyAdminPassword(secret) {
+            if (!this.adminPasswordHash?.salt || !this.adminPasswordHash?.hash) return false;
+            const result = await this.hashCredential(secret, this.adminPasswordHash.salt);
+            return result.hash === this.adminPasswordHash.hash;
+        },
+        async verifyStoredCredential(secret, stored) {
+            if (!stored?.salt || !stored?.hash) return false;
+            const result = await this.hashCredential(secret, stored.salt);
+            return result.hash === stored.hash;
+        },
+
+        readImageFile(file, maxBytes = 700000) {
+            return new Promise((resolve, reject) => {
+                if (!file) return reject(new Error('No file selected.'));
+                if (!file.type || !file.type.startsWith('image/')) return reject(new Error('Only image files are allowed.'));
+                if (file.size > maxBytes) return reject(new Error('Image size must be 700 KB or less.'));
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Unable to read the selected image.'));
+                reader.readAsDataURL(file);
+            });
+        },
+
+        async safeWrite(action, successMessage) {
+            try {
+                await action();
+                if (successMessage) this.showToast(successMessage, 'success');
+                return true;
             } catch (error) {
-                console.error("Error deleting data: ", error);
+                console.error('VCR write error:', error);
+                this.showToast('डेटा सेव नहीं हो पाया। कृपया फिर प्रयास करें।', 'error');
+                return false;
             }
+        },
+
+        setView(view) {
+            this.currentView = view;
+            this.loginError = '';
+        },
+
+        navigateHome() {
+            if (this.currentUser) {
+                if (this.currentUser.role === 'client') this.currentView = 'client_dash';
+                else if (this.currentUser.role === 'employee') this.currentView = 'emp_dash';
+                else if (this.currentUser.role === 'admin') this.currentView = 'admin_dash';
+            } else {
+                this.currentView = 'job_form';
+            }
+        },
+
+        logout() {
+            this.clearPrivateData();
+            this.currentUser = null;
+            this.loginInput = { code: '', phone: '', pin: '', username: '', password: '' };
+            this.selfPinInput = '';
+            this.adminPinModal = { show: false, empCode: '', empName: '', newPin: '' };
+            this.showSupportChatModal = false;
+            this.currentView = 'login';
+            this.showToast('Successfully logged out', 'success');
+        },
+
+        async handleJobPhotoUpload(e) {
+            try {
+                this.jobForm.photo = await this.readImageFile(e.target.files[0]);
+                this.formError = '';
+            } catch (error) {
+                this.jobForm.photo = null;
+                e.target.value = '';
+                this.formError = error.message;
+            }
+        },
+
+        async submitJobForm() {
+            if (!this.jobForm.name || !this.jobForm.phone || !this.jobForm.jobType || !this.jobForm.address || !this.jobForm.photo) {
+                this.formError = 'कृपया सभी अनिवार्य फील्ड्स भरें और फोटो अपलोड करें।';
+                return;
+            }
+            if (!this.isValidPhone(this.jobForm.phone)) {
+                this.formError = 'कृपया 6-9 से शुरू होने वाला वैध 10 अंकों का मोबाइल नंबर दर्ज करें।';
+                return;
+            }
+            this.formError = '';
+            const existingNumbers = this.clients.map(c => Number(String(c.code || '').replace('CLI-', ''))).filter(Number.isFinite);
+            const codeNum = Math.max(1000, ...existingNumbers) + 1;
+            const clientCode = `CLI-${codeNum}`;
+
+            const newClient = {
+                code: clientCode,
+                name: this.jobForm.name,
+                phone: this.jobForm.phone,
+                jobType: this.jobForm.jobType,
+                address: this.jobForm.address,
+                photo: this.jobForm.photo,
+                status: 'Pending',
+                role: 'client',
+                campaignProofs: [],
+                campaignIssues: {},
+                isPromoted: false,
+                createdAt: new Date().toISOString()
+            };
+
+            await db.collection('clients').doc(clientCode).set(newClient);
+            this.lastSubmitted = newClient;
+            this.applicationSuccess = true;
+            this.jobForm = { name: '', phone: '', jobType: '', address: '', photo: null };
+            this.showToast('Application submitted successfully! Code: ' + clientCode, 'success');
+        },
+
+        printSlip() { window.print(); },
+        printIdCard() { window.print(); },
+
+        getWhatsAppLink(c) {
+            const msg = `Namaste ${c.name}, Your Ved Capital Rewa Client Code is *${c.code}* and Status is Pending Review. Official Portal.`;
+            return `https://wa.me/91${c.phone}?text=` + encodeURIComponent(msg);
+        },
+        getDirectWhatsAppLink(phone, name) {
+            return `https://wa.me/91${phone}?text=` + encodeURIComponent(`Namaste ${name}, contacting from Ved Capital Rewa.`);
+        },
+
+        handleClientLogin() {
+            const code = this.loginInput.code.trim().toUpperCase();
+            const phone = this.loginInput.phone.trim();
+            const ref = db.collection('clients').doc(code);
+            const snap = await ref.get();
+            const found = snap.exists ? { id: snap.id, ...snap.data() } : null;
+            if (found && found.phone === phone) {
+                this.currentUser = found;
+                this.loadPrivateDataForRole('client', found.id);
+                this.currentView = 'client_dash';
+                this.loginInput.code = '';
+                this.loginInput.phone = '';
+                this.showToast('Welcome back, ' + found.name, 'success');
+            } else {
+                this.loginError = 'अमान्य Client Code या Mobile Number!';
+            }
+        },
+
+        async handleEmployeeLogin() {
+            const code = this.loginInput.code.trim().toUpperCase();
+            const pin = this.loginInput.pin.trim();
+            const snap = await db.collection('employees').where('code', '==', code).limit(1).get();
+            const found = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+            const validPin = found && ((found.pin && found.pin === pin) || (found.pinHash && await this.verifyStoredCredential(pin, found.pinHash)));
+            if (found && validPin) {
+                if (found.pin && !found.pinHash) { const migratedPinHash = await this.hashCredential(pin); await db.collection('employees').doc(found.id).update({ pinHash: migratedPinHash, pin: firebase.firestore.FieldValue.delete(), mustChangePin: false }); found.pinHash = migratedPinHash; delete found.pin; }
+                this.currentUser = found;
+                this.loadPrivateDataForRole('employee', found.id);
+                this.currentView = 'emp_dash';
+                this.loginInput.code = '';
+                this.loginInput.pin = '';
+                this.showToast('Welcome Employee, ' + found.name, 'success');
+            } else {
+                this.loginError = 'अमान्य Employee Code या Secret PIN!';
+            }
+        },
+
+        async handleAdminLogin() {
+            const username = this.loginInput.username.trim();
+            const password = this.loginInput.password;
+            if (!username || !password) { this.loginError = 'Username और Password दोनों भरें।'; return; }
+            try {
+                const valid = username === this.adminSettingsForm.username && await this.verifyAdminPassword(password);
+                if (valid) {
+                    this.currentUser = { name: 'Super Admin', role: 'admin', code: 'ADMIN' };
+                    this.loadPrivateDataForRole('admin', 'ADMIN');
+                    this.currentView = 'admin_dash';
+                    this.loginInput.username = '';
+                    this.loginInput.password = '';
+                    this.showToast('Admin Access Granted', 'success');
+                } else {
+                    this.loginError = 'अमान्य Admin Username या Password!';
+                }
+            } catch (error) {
+                console.error(error);
+                this.loginError = 'Admin login अभी उपलब्ध नहीं है।';
+            }
+        },
+
+        getStatusBadgeClass(status) {
+            if (status === 'Approved') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+            if (status === 'Rejected') return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+            return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        },
+
+        copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            this.showToast('Link copied to clipboard!', 'success');
+        },
+
+        async handleClientScreenshotUpload(e, cmpId) {
+            try {
+                this.clientCampaignFileMap[cmpId] = await this.readImageFile(e.target.files[0]);
+                this.showToast('Screenshot loaded, click Submit Proof', 'success');
+            } catch (error) {
+                delete this.clientCampaignFileMap[cmpId];
+                e.target.value = '';
+                this.showToast(error.message, 'error');
+            }
+        },
+
+        async submitClientCampaignProof(cmpId) {
+            const screenshot = this.clientCampaignFileMap[cmpId];
+            if (!screenshot) {
+                this.showToast('कृपया पहले स्क्रीनशॉट अपलोड करें।', 'error');
+                return;
+            }
+            if (!this.currentUser.campaignProofs) this.currentUser.campaignProofs = [];
+            const existingIndex = this.currentUser.campaignProofs.findIndex(p => p.cmpId === cmpId);
+            const proofObj = { cmpId, screenshot, status: 'Submitted - Verification Pending', date: new Date().toLocaleDateString() };
+            if (existingIndex >= 0) {
+                this.currentUser.campaignProofs[existingIndex] = proofObj;
+            } else {
+                this.currentUser.campaignProofs.push(proofObj);
+            }
+
+            await db.collection('clients').doc(this.currentUser.code).update({
+                campaignProofs: this.currentUser.campaignProofs
+            });
+            this.showToast('Campaign proof submitted successfully!', 'success');
+        },
+
+        getClientCampaignStatus(cmpId) {
+            if (!this.currentUser.campaignProofs) return null;
+            const p = this.currentUser.campaignProofs.find(x => x.cmpId === cmpId);
+            return p ? p.status : null;
+        },
+
+        getClientCampaignScreenshot(cmpId) {
+            if (!this.currentUser.campaignProofs) return null;
+            const p = this.currentUser.campaignProofs.find(x => x.cmpId === cmpId);
+            return p ? p.screenshot : null;
+        },
+
+        getProofStatusClass(status) {
+            if (status && status.includes('Approved')) return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+            if (status && status.includes('Rejected')) return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+            return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        },
+
+        async submitCampaignSpecificIssue(cmpId) {
+            const issueData = this.campaignIssueInputs[cmpId];
+            if (!issueData || !issueData.issueType) {
+                this.showToast('कृपया समस्या का प्रकार चुनें।', 'error');
+                return;
+            }
+            if (!this.currentUser.campaignIssues) this.currentUser.campaignIssues = {};
+            const safeNote = String(issueData.note || '').trim().slice(0, 500);
+            this.currentUser.campaignIssues[cmpId] = { issueType: issueData.issueType, note: safeNote, date: new Date().toLocaleDateString() };
+
+            await db.collection('clients').doc(this.currentUser.code).update({
+                campaignIssues: this.currentUser.campaignIssues
+            });
+            this.showToast('Campaign issue reported to admin!', 'success');
+        },
+
+        getCampaignSpecificIssueText(cmpId) {
+            if (this.currentUser.campaignIssues && this.currentUser.campaignIssues[cmpId]) {
+                return this.currentUser.campaignIssues[cmpId].issueType + (this.currentUser.campaignIssues[cmpId].note ? ' - ' + this.currentUser.campaignIssues[cmpId].note : '');
+            }
+            return '';
+        },
+
+        getCampaignTitle(cmpId) {
+            const found = this.campaigns.find(c => c.id == cmpId);
+            return found ? found.title : 'Campaign #' + cmpId;
+        },
+
+        openIdCardModal(user) {
+            this.idCardData = user;
+            this.showIdCardModal = true;
+        },
+
+        openSupportChat() {
+            this.showSupportChatModal = true;
+        },
+
+        async sendSupportMessage() {
+            this.supportMessageInput = String(this.supportMessageInput || '').trim();
+            if (!this.supportMessageInput || this.supportMessageInput.length > 1000) { this.showToast('Message 1 से 1000 characters के बीच रखें।', 'error'); return; }
+            const newMsg = {
+                senderCode: this.currentUser.code,
+                senderName: this.currentUser.name,
+                message: this.supportMessageInput,
+                date: new Date().toLocaleString()
+            };
+            await db.collection('supportChats').add(newMsg);
+            this.supportMessageInput = '';
+            this.showToast('Message sent to support', 'success');
+        },
+
+        async updateSelfPin() {
+            if (!this.isValidPin(this.selfPinInput)) {
+                this.showToast('कृपया 4 अंकों का वैध पिन दर्ज करें।', 'error');
+                return;
+            }
+            const pinHash = await this.hashCredential(this.selfPinInput);
+            this.currentUser.pinHash = pinHash;
+            delete this.currentUser.pin;
+            await db.collection('employees').doc(this.currentUser.id).update({
+                pinHash,
+                pin: firebase.firestore.FieldValue.delete(),
+                mustChangePin: false
+            });
+            this.showEmpSelfPinModal = false;
+            this.selfPinInput = '';
+            this.showToast('PIN updated successfully!', 'success');
+        },
+
+        async submitFeedback() {
+            this.employeeFeedbackInput = String(this.employeeFeedbackInput || '').trim();
+            if (!this.employeeFeedbackInput || this.employeeFeedbackInput.length > 2000) { this.showToast('Report 1 से 2000 characters के बीच रखें।', 'error'); return; }
+            const newFb = {
+                empCode: this.currentUser.code,
+                empName: this.currentUser.name,
+                text: this.employeeFeedbackInput,
+                date: new Date().toLocaleString()
+            };
+            await db.collection('feedbacks').add(newFb);
+            this.employeeFeedbackInput = '';
+            this.showToast('Daily work report submitted!', 'success');
+        },
+
+        async shiftClientJob(client, newJob) {
+            client.jobType = newJob;
+            await db.collection('clients').doc(client.code).update({ jobType: newJob });
+            this.showToast('Client job updated to ' + newJob, 'success');
+        },
+
+        async employeeApproveClient(client, newStatus) {
+            try {
+                const clientRef = db.collection('clients').doc(client.code);
+                const earningRef = db.collection('earningsRequests').doc(`approval_${client.code}`);
+                let credited = false;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(clientRef);
+                    if (!snap.exists) throw new Error('Client not found');
+                    const current = snap.data() || {};
+                    const wasApproved = current.status === 'Approved';
+                    const approvedByEmp = `${this.currentUser.name} (${this.currentUser.code})`;
+                    tx.update(clientRef, { status: newStatus, approvedByEmp });
+                    if (newStatus === 'Approved' && !wasApproved) {
+                        credited = true;
+                        tx.set(earningRef, {
+                            empCode: this.currentUser.code,
+                            empName: this.currentUser.name,
+                            clientCode: client.code,
+                            type: 'LeadApproval',
+                            amount: 3,
+                            status: 'Approved',
+                            date: new Date().toLocaleDateString()
+                        }, { merge: true });
+                    }
+                });
+                client.status = newStatus;
+                client.approvedByEmp = `${this.currentUser.name} (${this.currentUser.code})`;
+                this.showToast('Client status updated' + (credited ? ' & ₹3 credited' : ''), 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Client status update नहीं हो पाया।', 'error');
+            }
+        },
+
+        getClientPendingProofCount(client) {
+            if (!client.campaignProofs) return 0;
+            return client.campaignProofs.filter(p => p.status === 'Submitted - Verification Pending').length;
+        },
+
+        openCampaignReviewModal(client) {
+            this.selectedReviewClient = client;
+        },
+
+        async verifyClientCampaign(client, proof, isApproved) {
+            try {
+                const clientRef = db.collection('clients').doc(client.code);
+                const earningRef = db.collection('earningsRequests').doc(`campaign_${client.code}_${proof.cmpId}`);
+                let credited = false;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(clientRef);
+                    if (!snap.exists) throw new Error('Client not found');
+                    const current = snap.data() || {};
+                    const proofs = Array.isArray(current.campaignProofs) ? current.campaignProofs : [];
+                    const idx = proofs.findIndex(p => String(p.cmpId) === String(proof.cmpId));
+                    if (idx < 0) throw new Error('Proof not found');
+                    const oldStatus = proofs[idx].status;
+                    if (oldStatus === 'Approved (+₹10)' || oldStatus === 'Rejected') return;
+                    proofs[idx] = { ...proofs[idx], status: isApproved ? 'Approved (+₹10)' : 'Rejected' };
+                    tx.update(clientRef, { campaignProofs: proofs });
+                    if (isApproved) {
+                        credited = true;
+                        tx.set(earningRef, {
+                            empCode: this.currentUser.code,
+                            empName: this.currentUser.name,
+                            clientCode: client.code,
+                            type: 'Lead',
+                            amount: 10,
+                            screenshot: proofs[idx].screenshot || '',
+                            status: 'Approved',
+                            date: new Date().toLocaleDateString()
+                        }, { merge: true });
+                    }
+                });
+                proof.status = isApproved ? 'Approved (+₹10)' : 'Rejected';
+                this.showToast(isApproved ? (credited ? 'Campaign approved & ₹10 credited!' : 'Campaign was already processed.') : 'Campaign proof rejected', isApproved ? 'success' : 'error');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Campaign proof process नहीं हो पाया।', 'error');
+            }
+        },
+
+        async handleExtraWorkFile(e) {
+            try {
+                this.extraWorkForm.screenshot = await this.readImageFile(e.target.files[0]);
+            } catch (error) {
+                this.extraWorkForm.screenshot = null;
+                e.target.value = '';
+                this.showToast(error.message, 'error');
+            }
+        },
+
+        async submitEmpExtraWork() {
+            if (!this.extraWorkForm.screenshot || !this.extraWorkForm.description) {
+                this.showToast('कृपया स्क्रीनशॉट और विवरण दोनों भरें।', 'error');
+                return;
+            }
+            await db.collection('earningsRequests').add({
+                empCode: this.currentUser.code,
+                empName: this.currentUser.name,
+                type: 'ExtraWork',
+                description: this.extraWorkForm.description,
+                screenshot: this.extraWorkForm.screenshot,
+                amount: 50,
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            });
+            this.extraWorkForm = { screenshot: null, description: '' };
+            this.showToast('Extra work submitted to admin successfully!', 'success');
+        },
+
+        getEmpEarnings(empCode) {
+            const approvedReqs = this.earningsRequests.filter(r => r.empCode === empCode && r.status === 'Approved');
+            const totalApproved = approvedReqs.reduce((sum, r) => sum + (r.amount || 0), 0);
+            const approvedLeadsCount = approvedReqs.filter(r => r.type === 'Lead' || r.type === 'LeadApproval').length;
+            return { totalApproved, approvedLeadsCount };
+        },
+
+        getEmpAvailableBalance(empCode) {
+            const totalEarned = this.getEmpEarnings(empCode).totalApproved;
+            const withdrawn = this.payoutRequests
+                .filter(p => p.empCode === empCode && (p.status === 'Approved' || p.status === 'Pending'))
+                .reduce((sum, p) => sum + (p.amount || 0), 0);
+            return Math.max(0, totalEarned - withdrawn);
+        },
+
+        async submitPayoutRequest() {
+            const balance = this.getEmpAvailableBalance(this.currentUser.code);
+            const payoutAmount = Number(this.payoutForm.amount);
+            if (!Number.isFinite(payoutAmount) || !Number.isInteger(payoutAmount) || payoutAmount > balance || payoutAmount < 100) {
+                this.showToast('अमान्य राशि! न्यूनतम ₹100 या उपलब्ध बैलेंस से कम होना चाहिए।', 'error');
+                return;
+            }
+            await db.collection('payoutRequests').add({
+                empCode: this.currentUser.code,
+                empName: this.currentUser.name,
+                amount: payoutAmount,
+                method: this.payoutForm.method,
+                details: this.payoutForm.details,
+                status: 'Pending',
+                date: new Date().toLocaleDateString()
+            });
+            this.payoutForm = { amount: 100, method: 'UPI', details: '' };
+            this.showToast('Payout withdrawal request submitted!', 'success');
+        },
+
+        getPayoutHistory(empCode) {
+            return this.payoutRequests.filter(p => p.empCode === empCode);
+        },
+
+        getPayoutStatusClass(status) {
+            if (status === 'Approved') return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+            if (status === 'Rejected') return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+            return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+        },
+
+        getPendingLeadClaimsCount() {
+            return this.earningsRequests.filter(r => r.status === 'Pending').length;
+        },
+
+        getPendingPayoutsCount() {
+            return this.payoutRequests.filter(p => p.status === 'Pending').length;
+        },
+
+        async updateClientStatus(client, newStatus) {
+            client.status = newStatus;
+            await db.collection('clients').doc(client.code).update({ status: newStatus });
+            this.showToast('Client status updated', 'success');
+        },
+
+        async promoteClientToEmployee(client) {
+            client.isPromoted = true;
+            await db.collection('clients').doc(client.code).update({ isPromoted: true });
+
+            const empCode = this.nextEmployeeCode();
+            const newEmpObj = {
+                code: empCode,
+                name: client.name,
+                phone: client.phone,
+                position: client.jobType,
+                photo: client.photo,
+                pinHash: null,
+                mustChangePin: true,
+                role: 'employee',
+                createdAt: new Date().toISOString()
+            };
+            await db.collection('employees').add(newEmpObj);
+            this.showToast('Client promoted to employee successfully! Code: ' + empCode, 'success');
+        },
+
+        async deleteClient(code) {
+            if (confirm('क्या आप इस client को हटाना चाहते हैं?')) {
+                await db.collection('clients').doc(code).delete();
+                this.showToast('Client deleted', 'success');
+            }
+        },
+
+        async addEmployee() {
+            if (!this.newEmp.name || !this.isValidPhone(this.newEmp.phone)) { this.showToast('कृपया नाम और वैध 10 अंकों का मोबाइल नंबर दर्ज करें।', 'error'); return; }
+            const empCode = this.nextEmployeeCode();
+            const empObj = {
+                code: empCode,
+                name: this.newEmp.name,
+                phone: this.newEmp.phone,
+                position: this.newEmp.position,
+                pinHash: null,
+                mustChangePin: true,
+                role: 'employee',
+                createdAt: new Date().toISOString()
+            };
+            await db.collection('employees').add(empObj);
+            this.newEmp = { name: '', phone: '', position: 'Telecaller' };
+            this.showToast('Employee added successfully!', 'success');
+        },
+
+        async deleteEmployee(id) {
+            if (confirm('क्या आप इस employee को हटाना चाहते हैं?')) {
+                await db.collection('employees').doc(id).delete();
+                this.showToast('Employee removed', 'success');
+            }
+        },
+
+        openAdminPinModal(emp) {
+            this.adminPinModal = { show: true, empId: emp.id, empCode: emp.code, empName: emp.name, newPin: '' };
+        },
+
+        async saveAdminEmpPin() {
+            if (!this.isValidPin(this.adminPinModal.newPin)) {
+                this.showToast('कृपया 4 अंकों का वैध पिन दर्ज करें।', 'error');
+                return;
+            }
+            const pinHash = await this.hashCredential(this.adminPinModal.newPin);
+            await db.collection('employees').doc(this.adminPinModal.empId).update({
+                pinHash,
+                pin: firebase.firestore.FieldValue.delete(),
+                mustChangePin: true
+            });
+            this.adminPinModal.show = false;
+            this.showToast('Employee PIN updated successfully!', 'success');
+        },
+
+        viewEmployeeWork(emp) {
+            const reports = this.feedbacks.filter(f => f.empCode === emp.code);
+            this.selectedEmpWork = { emp, reports };
+        },
+
+        async approveLeadClaim(req) {
+            if (req.status !== 'Pending') { this.showToast('यह earning request पहले ही process हो चुकी है।', 'error'); return; }
+            req.status = 'Approved';
+            await db.collection('earningsRequests').doc(req.id).update({ status: 'Approved' });
+            this.showToast('Lead claim approved!', 'success');
+        },
+
+        async approveExtraWorkClaim(req) {
+            if (req.status !== 'Pending') { this.showToast('यह earning request पहले ही process हो चुकी है।', 'error'); return; }
+            req.status = 'Approved';
+            await db.collection('earningsRequests').doc(req.id).update({ status: 'Approved', amount: req.amount || 10 });
+            this.showToast('Extra work approved with ₹' + (req.amount || 10), 'success');
+        },
+
+        async rejectEarningClaim(req) {
+            if (req.status !== 'Pending') { this.showToast('यह earning request पहले ही process हो चुकी है।', 'error'); return; }
+            req.status = 'Rejected';
+            await db.collection('earningsRequests').doc(req.id).update({ status: 'Rejected' });
+            this.showToast('Claim rejected', 'error');
+        },
+
+        async processPayout(payout, status) {
+            try {
+                const ref = db.collection('payoutRequests').doc(payout.id);
+                let changed = false;
+                await db.runTransaction(async tx => {
+                    const snap = await tx.get(ref);
+                    if (!snap.exists) throw new Error('Payout request not found');
+                    const current = snap.data() || {};
+                    if (current.status !== 'Pending') return;
+                    tx.update(ref, { status });
+                    changed = true;
+                });
+                if (changed) {
+                    payout.status = status;
+                    this.showToast('Payout request ' + status, status === 'Approved' ? 'success' : 'error');
+                } else {
+                    this.showToast('यह payout पहले ही process हो चुका है।', 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                this.showToast('Payout process नहीं हो पाया।', 'error');
+            }
+        },
+
+        async addCampaign() {
+            if (!this.newCmp.title || !this.newCmp.url) { this.showToast('Title और URL दोनों जरूरी हैं।', 'error'); return; }
+            if (!this.isSafeHttpUrl(this.newCmp.url)) { this.showToast('केवल valid http/https campaign URL स्वीकार है।', 'error'); return; }
+            await db.collection('campaigns').add({
+                title: this.newCmp.title,
+                url: this.newCmp.url
+            });
+            this.newCmp = { title: '', url: '' };
+            this.showToast('Campaign link added!', 'success');
+        },
+
+        async deleteCampaign(id) {
+            await db.collection('campaigns').doc(id).delete();
+            this.showToast('Campaign deleted', 'success');
+        },
+
+        async sendAnnouncement() {
+            this.newNoticeText = String(this.newNoticeText || '').trim();
+            if (!this.newNoticeText || this.newNoticeText.length > 1000) { this.showToast('Notice 1 से 1000 characters के बीच रखें।', 'error'); return; }
+            await db.collection('announcements').add({
+                text: this.newNoticeText,
+                date: new Date().toLocaleDateString()
+            });
+            this.newNoticeText = '';
+            this.showToast('Notice published to cloud!', 'success');
+        },
+
+        async deleteAnnouncement(id) {
+            await db.collection('announcements').doc(id).delete();
+            this.showToast('Notice deleted', 'success');
+        },
+
+        async updateCompanySettings() {
+            await db.collection('settings').doc('company').set(this.companyInfo);
+            this.showToast('Company info updated successfully!', 'success');
+        },
+
+        async updateAdminCredentials() {
+            const username = String(this.adminSettingsForm.username || '').trim();
+            const password = String(this.adminSettingsForm.password || '');
+            if (!username || password.length < 8) {
+                this.showToast('Username जरूरी है और password कम से कम 8 characters का होना चाहिए।', 'error');
+                return;
+            }
+            try {
+                const passwordHash = await this.hashCredential(password);
+                await db.collection('settings').doc('admin').set({ username, passwordHash }, { merge: true });
+                this.adminSettingsForm = { username, password: '' };
+                this.adminPasswordHash = passwordHash;
+                this.showToast('Admin credentials updated securely!', 'success');
+            } catch (error) {
+                console.error(error);
+                this.showToast('Admin credentials update नहीं हुआ।', 'error');
+            }
+        },
+
+        exportCSV() {
+            const csvCell = value => `"${String(value ?? '').replace(/"/g, '""')}"`;
+            let csvContent = "\ufeffCode,Name,Phone,JobType,Status\n";
+            this.clients.forEach(c => {
+                csvContent += [c.code, c.name, c.phone, c.jobType, c.status].map(csvCell).join(',') + "\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "vcr_clients_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            this.showToast('CSV Export generated successfully!', 'success');
         }
     }
 }).mount('#app');
