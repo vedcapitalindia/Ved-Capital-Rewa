@@ -1597,6 +1597,10 @@ createApp({
         }
     },
     created() {
+        // Restore an existing Firebase Authentication session first.
+        // This is intentionally separate from Firestore sync so Admin login
+        // does not depend on any public Firestore read.
+        this.setupAuthStateListener();
         // Real-time synchronization with Firebase Firestore
         this.syncFirestoreData();
         ['click','keydown','touchstart'].forEach(evt => window.addEventListener(evt, () => { this.lastActivityAt = Date.now(); }, { passive: true }));
@@ -1841,14 +1845,36 @@ createApp({
             return result.hash === stored.hash;
         },
 
-        readImageFile(file, maxBytes = 700000) {
+        readImageFile(file, maxBytes = 250000) {
             return new Promise((resolve, reject) => {
                 if (!file) return reject(new Error('No file selected.'));
                 if (!file.type || !file.type.startsWith('image/')) return reject(new Error('Only image files are allowed.'));
-                if (file.size > maxBytes) return reject(new Error('Image size must be 700 KB or less.'));
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
                 reader.onerror = () => reject(new Error('Unable to read the selected image.'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const maxDimension = 1400;
+                        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, Math.round(img.width * scale));
+                        canvas.height = Math.max(1, Math.round(img.height * scale));
+                        const ctx = canvas.getContext('2d', { alpha: false });
+                        if (!ctx) return reject(new Error('Image processing is not supported in this browser.'));
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        let quality = 0.82;
+                        const makeData = () => canvas.toDataURL('image/jpeg', quality);
+                        let data = makeData();
+                        while (data.length * 0.75 > maxBytes && quality > 0.45) {
+                            quality -= 0.07;
+                            data = makeData();
+                        }
+                        if (data.length * 0.75 > maxBytes) return reject(new Error('Image could not be compressed below 250 KB.'));
+                        resolve(data);
+                    };
+                    img.onerror = () => reject(new Error('Invalid or unreadable image.'));
+                    img.src = reader.result;
+                };
                 reader.readAsDataURL(file);
             });
         },
@@ -2071,10 +2097,16 @@ createApp({
                     this.loginError = 'Admin Email या Password गलत है।';
                 } else if (code === 'auth/too-many-requests') {
                     this.loginError = 'बहुत बार गलत login हुआ है। कुछ देर बाद फिर कोशिश करें।';
+                } else if (code === 'auth/operation-not-allowed') {
+                    this.loginError = 'Firebase में Email/Password Sign-in अभी Enable नहीं है। Authentication → Sign-in method में इसे Enable करें।';
+                } else if (code === 'auth/network-request-failed') {
+                    this.loginError = 'Internet/Firebase connection की समस्या है। Network check करके फिर कोशिश करें।';
+                } else if (code === 'auth/invalid-api-key' || code === 'auth/app-not-authorized') {
+                    this.loginError = 'Firebase configuration/Authorized domain की समस्या है।';
                 } else if (code === 'permission-denied') {
                     this.loginError = 'Login हो गया, लेकिन Firestore Security Rules Admin access रोक रही हैं।';
                 } else {
-                    this.loginError = 'Admin login अभी उपलब्ध नहीं है।';
+                    this.loginError = `Admin login failed: ${code || error?.message || 'unknown error'}`;
                 }
             }
         },
@@ -2179,6 +2211,10 @@ createApp({
         },
 
         async sendSupportMessage() {
+            if (!['client', 'employee'].includes(this.currentUser?.role)) {
+                this.showToast('Support message के लिए valid login जरूरी है।', 'error');
+                return;
+            }
             this.supportMessageInput = String(this.supportMessageInput || '').trim();
             if (!this.supportMessageInput || this.supportMessageInput.length > 1000) { this.showToast('Message 1 से 1000 characters के बीच रखें।', 'error'); return; }
             const newMsg = {
@@ -2195,6 +2231,10 @@ createApp({
         },
 
         async updateSelfPin() {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल logged-in employee अपना PIN बदल सकता है।', 'error');
+                return;
+            }
             if (!this.isValidPin(this.selfPinInput)) {
                 this.showToast('कृपया 4 अंकों का वैध पिन दर्ज करें।', 'error');
                 return;
@@ -2213,6 +2253,10 @@ createApp({
         },
 
         async submitFeedback() {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल employee work report submit कर सकता है।', 'error');
+                return;
+            }
             this.employeeFeedbackInput = String(this.employeeFeedbackInput || '').trim();
             if (!this.employeeFeedbackInput || this.employeeFeedbackInput.length > 2000) { this.showToast('Report 1 से 2000 characters के बीच रखें।', 'error'); return; }
             const newFb = {
@@ -2227,6 +2271,10 @@ createApp({
         },
 
         async shiftClientJob(client, newJob) {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल logged-in employee ही client job बदल सकता है।', 'error');
+                return;
+            }
             client.jobType = newJob;
             await db.collection('clients').doc(client.code).update({ jobType: newJob });
             this.showToast('Client job updated to ' + newJob, 'success');
@@ -2308,6 +2356,10 @@ createApp({
         },
 
         async verifyClientCampaign(client, proof, isApproved) {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल logged-in employee campaign proof verify कर सकता है।', 'error');
+                return;
+            }
             try {
                 const clientRef = db.collection('clients').doc(client.code);
                 const earningRef = db.collection('earningsRequests').doc(`campaign_${client.code}_${proof.cmpId}`);
@@ -2356,6 +2408,10 @@ createApp({
         },
 
         async submitEmpExtraWork() {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल employee extra work submit कर सकता है।', 'error');
+                return;
+            }
             if (!this.extraWorkForm.screenshot || !this.extraWorkForm.description) {
                 this.showToast('कृपया स्क्रीनशॉट और विवरण दोनों भरें।', 'error');
                 return;
@@ -2390,6 +2446,10 @@ createApp({
         },
 
         async submitPayoutRequest() {
+            if (this.currentUser?.role !== 'employee') {
+                this.showToast('केवल employee payout request कर सकता है।', 'error');
+                return;
+            }
             const payoutAmount = Number(this.payoutForm.amount);
             const method = String(this.payoutForm.method || '').trim();
             const details = String(this.payoutForm.details || '').trim();
