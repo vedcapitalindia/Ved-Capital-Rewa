@@ -287,6 +287,10 @@
                         <p class="text-lg font-mono font-black text-amber-400">{{ lastSubmitted.registrationNo }}</p>
                     </div>
                     <div>
+                        <p class="text-xs text-slate-400 font-semibold">Client Code</p>
+                        <p class="text-lg font-mono font-black text-emerald-400">{{ lastSubmitted.code }}</p>
+                    </div>
+                    <div>
                         <p class="text-xs text-slate-400 font-semibold">Status</p>
                         <p class="inline-block px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 mt-1">Pending Review</p>
                     </div>
@@ -450,17 +454,17 @@
 
                 <form v-if="loginType === 'client'" @submit.prevent="handleClientLogin" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registration Number</label>
-                        <input v-model="loginInput.registrationNo" placeholder="e.g. REG-1234567890" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Client Code</label>
+                        <input v-model="loginInput.code" placeholder="e.g. CLI-1234567890-ABC123" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
                         <input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 Digit Mobile Number" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
                     <div class="text-[11px] text-slate-400 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
-                        Approval के बाद इसी Registration Number + Mobile से Client Code access होगा। Rejected application को Client Code नहीं मिलेगा।
+                        Application submit होते ही Registration Number + Mobile से Client Code generate होगा। Approval के बाद Client Code + Mobile से Client Login होगा।
                     </div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Portal Login / Get Client Code</button>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Portal Login</button>
                 </form>
 
                 <form v-if="loginType === 'employee'" @submit.prevent="handleEmployeeLogin" class="space-y-4">
@@ -2034,10 +2038,22 @@ createApp({
             return `EMP-${String(Math.max(0, ...nums) + 1).padStart(4, '0')}`;
         },
 
-        generateClientCode(registrationNo) {
+        generateClientCode(registrationNo, phone) {
             const reg = String(registrationNo || '').trim().toUpperCase();
-            const digits = reg.replace(/\D/g, '');
-            return `CLI-${digits.slice(-8).padStart(8, '0')}`;
+            const regDigits = reg.replace(/\D/g, '').slice(-10).padStart(10, '0');
+            const mobile = this.normalizePhone(phone || '');
+
+            // Client Code is deterministic from BOTH Registration Number + Mobile.
+            // The registration digits are retained so the login can locate the
+            // clientAccess document directly; the checksum changes with mobile.
+            let hash = 2166136261;
+            const seed = `${regDigits}|${mobile}|VCR-CLIENT-2026`;
+            for (let i = 0; i < seed.length; i++) {
+                hash ^= seed.charCodeAt(i);
+                hash = Math.imul(hash, 16777619);
+            }
+            const checksum = (hash >>> 0).toString(36).toUpperCase().padStart(6, '0').slice(-6);
+            return `CLI-${regDigits}-${checksum}`;
         },
 
         generateUniqueNumericCode(prefix, length = 8) {
@@ -2190,10 +2206,13 @@ createApp({
         async submitJobForm() {
             if (this.jobSubmitting) return;
             this.jobSubmitting = true;
+            this.formError = '';
+
             try {
                 const name = String(this.jobForm.name || '').trim();
                 const phone = this.normalizePhone(this.jobForm.phone);
                 const jobType = String(this.jobForm.jobType || '').trim();
+
                 if (!name || !phone || !jobType) {
                     this.formError = 'नाम, मोबाइल नंबर और Job Category जरूरी हैं। बाकी जानकारी optional है।';
                     return;
@@ -2202,17 +2221,20 @@ createApp({
                     this.formError = 'कृपया 6-9 से शुरू होने वाला वैध 10 अंकों का मोबाइल नंबर दर्ज करें।';
                     return;
                 }
-                this.formError = '';
 
-                // Ensure the public application write has an authenticated session
-                // when Firestore Rules require authenticated create access.
-                // If Anonymous Auth is disabled but public create is allowed, continue normally.
-                try {
-                    await this.ensureAnonymousSession();
-                } catch (authError) {
-                    const authCode = authError?.code || '';
-                    if (!['auth/operation-not-allowed', 'auth/network-request-failed'].includes(authCode)) {
-                        throw authError;
+                // Public application: use Anonymous Auth when it is enabled.
+                // If Auth is unavailable, do not block the form here; Firestore
+                // Rules decide whether unauthenticated public create is allowed.
+                let authReady = !!(firebase.auth && typeof firebase.auth === 'function' && firebase.auth().currentUser);
+                if (!authReady) {
+                    try {
+                        await this.ensureAnonymousSession();
+                        authReady = !!firebase.auth().currentUser;
+                    } catch (authError) {
+                        const authCode = authError?.code || '';
+                        if (!['auth/operation-not-allowed', 'auth/network-request-failed'].includes(authCode)) {
+                            throw authError;
+                        }
                     }
                 }
 
@@ -2221,12 +2243,12 @@ createApp({
                 let created = false;
                 let lastError = null;
 
-                // Create client + access record atomically so a failed second write
-                // can never leave a half-created application behind.
                 for (let attempt = 0; attempt < 10 && !created; attempt++) {
                     registrationNo = this.generateUniqueNumericCode('REG', 10);
+                    const generatedClientCode = this.generateClientCode(registrationNo, phone);
+
                     newClient = {
-                        code: null,
+                        code: generatedClientCode,
                         registrationNo,
                         name,
                         phone,
@@ -2244,35 +2266,61 @@ createApp({
                         campaignProofs: [],
                         campaignIssues: {},
                         isPromoted: false,
-                        createdAt: new Date().toISOString()
+
+                        // Server timestamp avoids rules/type mismatch from browser time strings.
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
+
                     try {
-                        // Only the public application record is created here.
-                        // The private login-access record is provisioned automatically
-                        // when an employee/admin approves or rejects the application.
                         await db.collection('clients').doc(registrationNo).create(newClient);
                         created = true;
                     } catch (error) {
                         lastError = error;
+
                         if (error?.code === 'already-exists') continue;
+
+                        // One retry with a fresh anonymous session if Rules require auth.
+                        if (error?.code === 'permission-denied' && !authReady) {
+                            try {
+                                await this.ensureAnonymousSession();
+                                authReady = !!firebase.auth().currentUser;
+                                if (authReady) continue;
+                            } catch (_) {}
+                        }
+
                         throw error;
                     }
                 }
 
-                if (!created) throw lastError || new Error('Could not allocate a unique registration number.');
+                if (!created) {
+                    throw lastError || new Error('Could not allocate a unique registration number.');
+                }
 
+                newClient.createdAt = new Date().toISOString();
                 this.lastSubmitted = newClient;
                 this.applicationSuccess = true;
-                this.jobForm = { name: '', phone: '', jobType: '', address: '', email: '', education: '', experience: '', workMode: '', expectedSalary: '', skills: '' };
-                this.showToast('Application submitted successfully! Registration No: ' + registrationNo, 'success');
+                this.jobForm = {
+                    name: '', phone: '', jobType: '', address: '', email: '',
+                    education: '', experience: '', workMode: '',
+                    expectedSalary: '', skills: ''
+                };
+                this.showToast('Application submitted successfully! Registration No: ' + registrationNo + ' | Client Code: ' + newClient.code, 'success');
+
             } catch (error) {
                 console.error('Job application submit error:', error);
                 const code = error?.code || '';
-                this.formError = code === 'permission-denied'
-                    ? 'Application submit blocked by Firestore Rules. firestore-ready.rules publish करें।'
-                    : code === 'failed-precondition'
-                        ? 'Firebase/Firestore connection अभी तैयार नहीं है। Internet check करके फिर प्रयास करें।'
-                        : 'Application submit नहीं हो पाया। Internet/Firebase connection check करके फिर प्रयास करें।';
+
+                if (code === 'permission-denied') {
+                    this.formError = firebase.auth?.().currentUser
+                        ? 'Application submit blocked by Firestore Rules. clients create permission check करें।'
+                        : 'Application submit के लिए Firebase Anonymous Authentication enable करें या Firestore में public clients create rule publish करें।';
+                } else if (code === 'auth/operation-not-allowed') {
+                    this.formError = 'Firebase Anonymous Authentication अभी enabled नहीं है। Firebase Console में इसे enable करें।';
+                } else if (code === 'failed-precondition') {
+                    this.formError = 'Firebase/Firestore connection अभी तैयार नहीं है। Internet check करके फिर प्रयास करें।';
+                } else {
+                    this.formError = 'Application submit नहीं हो पाया। Internet/Firebase connection check करके फिर प्रयास करें।';
+                }
             } finally {
                 this.jobSubmitting = false;
             }
@@ -2315,45 +2363,54 @@ createApp({
         },
 
         async handleClientLogin() {
-            const registrationNo = String(this.loginInput.registrationNo || '').trim().toUpperCase();
+            const clientCode = String(this.loginInput.code || '').trim().toUpperCase();
             const phone = this.normalizePhone(this.loginInput.phone);
-            if (!registrationNo || !/^REG-\d{10}$/.test(registrationNo) || !this.isValidPhone(phone)) {
-                this.loginError = 'Registration Number और valid registered mobile number दर्ज करें।'; return;
+            const codeMatch = clientCode.match(/^CLI-(\d{10})-([A-Z0-9]{6})$/);
+            if (!codeMatch || !this.isValidPhone(phone)) {
+                this.loginError = 'Valid Client Code और registered mobile number दर्ज करें।'; return;
             }
+            const registrationNo = 'REG-' + codeMatch[1];
             try {
                 const authUser = await this.ensureFreshAnonymousSession();
                 const accessSnap = await db.collection('clientAccess').doc(registrationNo).get();
                 if (!accessSnap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const access = accessSnap.data() || {};
-                if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
+
+                // Verify that the supplied mobile actually produces the same Client Code.
+                const expectedClientCode = this.generateClientCode(registrationNo, phone);
+                if (expectedClientCode !== clientCode || access.phoneHash !== await this.hashLookupValue(phone)) {
+                    throw new Error('PHONE_MISMATCH');
+                }
                 if (access.status !== 'Approved') throw new Error(access.status === 'Rejected' ? 'CLIENT_REJECTED' : 'CLIENT_PENDING');
                 if (!access.clientCode) throw new Error('CLIENT_CODE_NOT_READY');
+                if (access.clientCode !== clientCode) throw new Error('CLIENT_CODE_MISMATCH');
+
                 // Bind the anonymous session to the approved client before reading the private client doc.
                 await db.collection('authProfiles').doc(authUser.uid).set({
-                    uid: authUser.uid, role: 'client', code: access.clientCode, registrationNo,
+                    uid: authUser.uid, role: 'client', code: clientCode, registrationNo,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
                 const snap = await db.collection('clients').doc(registrationNo).get();
                 if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const found = { id: snap.id, ...snap.data() };
-                if (found.code !== access.clientCode) throw new Error('CLIENT_CODE_MISMATCH');
+                if (found.code !== clientCode) throw new Error('CLIENT_CODE_MISMATCH');
                 this.currentUser = { ...found, authUid: authUser.uid, role: 'client' };
                 this.loadPrivateDataForRole('client', found.id);
                 this.currentView = 'client_dash';
-                this.loginInput = { ...this.loginInput, code: found.code, registrationNo: '', phone: '' };
+                this.loginInput = { ...this.loginInput, code: '', registrationNo: '', phone: '' };
                 this.persistUiState();
                 this.showToast('Welcome, ' + found.name + ' | Client Code: ' + found.code, 'success');
             } catch (error) {
                 console.error(error);
-                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Registration Number से match नहीं करता.'
-                    : error.message === 'CLIENT_NOT_FOUND' ? 'Registration Number नहीं मिला.'
-                    : error.message === 'CLIENT_REJECTED' ? 'Application rejected है। Client Code generate नहीं किया गया.'
-                    : error.message === 'CLIENT_PENDING' ? 'Application अभी approval में है। Approval के बाद Client Code मिलेगा.'
-                    : error.message === 'CLIENT_CODE_NOT_READY' ? 'Client Code अभी generate नहीं हुआ.'
+                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Client Code से match नहीं करता.'
+                    : error.message === 'CLIENT_NOT_FOUND' ? 'Client Code / Registration record नहीं मिला.'
+                    : error.message === 'CLIENT_REJECTED' ? 'Application rejected है। Client Portal access उपलब्ध नहीं है.'
+                    : error.message === 'CLIENT_PENDING' ? 'Application अभी approval में है। Approval के बाद Client Login चालू होगा.'
+                    : error.message === 'CLIENT_CODE_NOT_READY' ? 'Client Code access अभी तैयार नहीं हुआ.'
                     : error.message === 'CLIENT_CODE_MISMATCH' ? 'Client record और Client Code match नहीं कर रहे। Admin से संपर्क करें.'
                     : error.code === 'auth/operation-not-allowed' ? 'Firebase Authentication में Anonymous sign-in enable करें.'
-                    : 'Client login नहीं हो पाया। Registration Number और mobile check करें।';
+                    : 'Client login नहीं हो पाया। Client Code और mobile check करें।';
             }
         },
 
@@ -2676,7 +2733,7 @@ createApp({
                 const earningRef = db.collection('earningsRequests').doc(`approval_${client.registrationNo || client.id || client.code}`);
                 const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
-                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id)) : null;
+                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id, client.phone)) : null;
                 let credited = false;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(clientRef);
@@ -2908,7 +2965,7 @@ createApp({
                 const ref = db.collection('clients').doc(this.clientDocId(client));
                 const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
-                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id)) : null;
+                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id, client.phone)) : null;
                 const decisionAt = new Date().toISOString();
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(ref);
