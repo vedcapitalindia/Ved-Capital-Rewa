@@ -260,7 +260,7 @@
             </div>
         </div>
 
-        <!-- 1. PUBLIC JOB APPLICATION FORM WITH ID PHOTO -->
+        <!-- 1. PUBLIC JOB APPLICATION FORM -->
         <section v-if="currentView === 'job_form'" class="max-w-3xl mx-auto">
             <div class="text-center mb-8">
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
@@ -274,10 +274,7 @@
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 to-amber-500"></div>
 
                 <div class="text-center mb-6 border-b border-slate-700/80 pb-6">
-                    <div v-if="lastSubmitted.photo" class="w-20 h-20 rounded-full border-2 border-amber-400 mx-auto mb-3 overflow-hidden shadow-md">
-                        <img :src="lastSubmitted.photo" class="w-full h-full object-cover">
-                    </div>
-                    <div v-else class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 no-print">
+                    <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 no-print">
                         <i class="fa-solid fa-circle-check text-3xl"></i>
                     </div>
                     <h3 class="text-2xl font-bold text-white">Ved Capital Rewa</h3>
@@ -403,7 +400,7 @@
                         <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ formError }}
                     </p>
 
-                    <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center text-base">
+                    <button type="submit" :disabled="jobSubmitting" :class="jobSubmitting ? 'opacity-60 cursor-not-allowed' : ''" class="w-full bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black py-3.5 rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center text-base">
                         <i class="fa-solid fa-paper-plane mr-2"></i> Application Submit Karein
                     </button>
                 </form>
@@ -928,11 +925,11 @@
 
             <!-- TAB 4: TASK / EXTRA INCOME MANAGEMENT -->
             <div v-if="empSubTab === 'tasks'" class="bg-slate-800 border border-slate-700 p-6 rounded-2xl space-y-6">
-                <div><h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-amber-400 mr-2"></i>New Task / Extra Income Create Karein</h3><p class="text-xs text-slate-400 mt-1">Employee client या employee के लिए item बना सकता है। हर item का payout साफ दिखाई देगा।</p></div>
+                <div><h3 class="text-lg font-bold text-white"><i class="fa-solid fa-list-check text-amber-400 mr-2"></i>New Task / Extra Income Create Karein</h3><p class="text-xs text-slate-400 mt-1">Employee केवल Client के लिए item बना सकता है। हर item का payout साफ दिखाई देगा।</p></div>
                 <form @submit.prevent="createWorkItem" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 p-5 rounded-xl border border-slate-700">
-                    <select v-model="newWorkItem.targetRole" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="client">Client</option><option value="employee">Employee</option></select>
+                    <select v-model="newWorkItem.targetRole" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="client">Client</option></select>
                     <select v-model="newWorkItem.type" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="Task">New Task</option><option value="ExtraIncome">Extra Income</option></select>
-                    <input v-model="newWorkItem.targetCode" required placeholder="Target Client Code / Employee Code" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
+                    <input v-model="newWorkItem.targetCode" required placeholder="Target Client Code" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
                     <input v-model="newWorkItem.title" required maxlength="120" placeholder="Title" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
                     <textarea v-model="newWorkItem.description" required maxlength="1000" rows="3" placeholder="Task / Extra income details" class="sm:col-span-2 bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"></textarea>
                     <input v-model.number="newWorkItem.payout" type="number" min="1" max="100000" required placeholder="Payout ₹" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white">
@@ -1654,6 +1651,7 @@ createApp({
             educationOptions: ['8th Pass', '10th Pass', '12th Pass', 'ITI', 'Diploma', 'Graduate', 'Post Graduate', 'Other'],
             experienceOptions: ['Fresher', 'Less than 1 Year', '1-2 Years', '2-5 Years', '5+ Years'],
             formError: '',
+            jobSubmitting: false,
             applicationSuccess: false,
             lastSubmitted: {},
 
@@ -1896,6 +1894,9 @@ createApp({
                     watch(db.collection('earningsRequests').where('empCode', '==', code), snapshot => {
                         this.earningsRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     });
+                    watch(db.collection('payoutRequests').where('empCode', '==', code), snapshot => {
+                        this.payoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
                     // Employees receive only: (1) their own employee-targeted items,
                     // and (2) pending items created by another employee that need confirmation.
                     const mergeWorkItems = () => {
@@ -1912,7 +1913,7 @@ createApp({
                         this._employeeOwnWorkItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                         mergeWorkItems();
                     });
-                    watch(db.collection('workItems').where('status', '==', 'Pending'), snapshot => {
+                    watch(db.collection('workItems').where('targetRole', '==', 'client').where('status', '==', 'Pending'), snapshot => {
                         this._employeePendingWorkItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(x => x.createdByCode !== code);
                         mergeWorkItems();
                     });
@@ -1995,6 +1996,12 @@ createApp({
         nextEmployeeCode() {
             const nums = this.employees.map(e => Number(String(e.code || '').match(/(\d+)$/)?.[1] || 0)).filter(Number.isFinite);
             return `EMP-${String(Math.max(0, ...nums) + 1).padStart(4, '0')}`;
+        },
+
+        generateClientCode(registrationNo) {
+            const reg = String(registrationNo || '').trim().toUpperCase();
+            const digits = reg.replace(/\D/g, '');
+            return `CLI-${digits.slice(-8).padStart(8, '0')}`;
         },
 
         generateUniqueNumericCode(prefix, length = 8) {
@@ -2145,67 +2152,93 @@ createApp({
         },
 
         async submitJobForm() {
+            if (this.jobSubmitting) return;
+            this.jobSubmitting = true;
             try {
-            const name = String(this.jobForm.name || '').trim();
-            const phone = this.normalizePhone(this.jobForm.phone);
-            const jobType = String(this.jobForm.jobType || '').trim();
-            if (!name || !phone || !jobType) {
-                this.formError = 'नाम, मोबाइल नंबर और Job Category जरूरी हैं। बाकी जानकारी optional है।';
-                return;
-            }
-            if (!this.isValidPhone(phone)) {
-                this.formError = 'कृपया 6-9 से शुरू होने वाला वैध 10 अंकों का मोबाइल नंबर दर्ज करें।';
-                return;
-            }
-            this.formError = '';
-            let registrationNo = '';
-            let newClient = null;
-            let created = false;
-            for (let attempt = 0; attempt < 8 && !created; attempt++) {
-                registrationNo = this.generateUniqueNumericCode('REG', 10);
-                newClient = {
-                    code: null,
-                    registrationNo,
-                    name,
-                    phone,
-                    jobType,
-                    address: String(this.jobForm.address || '').trim(),
-                    email: String(this.jobForm.email || '').trim(),
-                    education: String(this.jobForm.education || '').trim(),
-                    experience: String(this.jobForm.experience || '').trim(),
-                    workMode: String(this.jobForm.workMode || '').trim(),
-                    expectedSalary: String(this.jobForm.expectedSalary || '').trim(),
-                    skills: String(this.jobForm.skills || '').trim(),
-                    status: 'Pending',
-                    role: 'client',
-                    source: 'public_job_portal',
-                    campaignProofs: [],
-                    campaignIssues: {},
-                    isPromoted: false,
-                    createdAt: new Date().toISOString()
-                };
-                try {
-                    // create() is used instead of a transaction so public applicants
-                    // never need read permission on the clients collection.
-                    await db.collection('clients').doc(registrationNo).create(newClient);
-                    await db.collection('clientAccess').doc(registrationNo).set({ registrationNo, phoneHash: await this.hashLookupValue(phone), status: 'Pending', clientCode: null, createdAt: new Date().toISOString() });
-                    created = true;
-                } catch (error) {
-                    if (error?.code === 'already-exists' || error?.code === 'failed-precondition') continue;
-                    throw error;
+                const name = String(this.jobForm.name || '').trim();
+                const phone = this.normalizePhone(this.jobForm.phone);
+                const jobType = String(this.jobForm.jobType || '').trim();
+                if (!name || !phone || !jobType) {
+                    this.formError = 'नाम, मोबाइल नंबर और Job Category जरूरी हैं। बाकी जानकारी optional है।';
+                    return;
                 }
-            }
-            if (!created) throw new Error('Could not allocate a unique client code.');
-            this.lastSubmitted = newClient;
-            this.applicationSuccess = true;
-            this.jobForm = { name: '', phone: '', jobType: '', address: '', email: '', education: '', experience: '', workMode: '', expectedSalary: '', skills: '' };
-            this.showToast('Application submitted successfully! Registration No: ' + registrationNo, 'success');
+                if (!this.isValidPhone(phone)) {
+                    this.formError = 'कृपया 6-9 से शुरू होने वाला वैध 10 अंकों का मोबाइल नंबर दर्ज करें।';
+                    return;
+                }
+                this.formError = '';
+
+                // Public applications are allowed to create only through an anonymous
+                // Firebase session. Start that session before the atomic batch.
+                await this.ensureFreshAnonymousSession();
+
+                let registrationNo = '';
+                let newClient = null;
+                let created = false;
+                let lastError = null;
+
+                // Create client + access record atomically so a failed second write
+                // can never leave a half-created application behind.
+                for (let attempt = 0; attempt < 10 && !created; attempt++) {
+                    registrationNo = this.generateUniqueNumericCode('REG', 10);
+                    newClient = {
+                        code: null,
+                        registrationNo,
+                        name,
+                        phone,
+                        jobType,
+                        address: String(this.jobForm.address || '').trim(),
+                        email: String(this.jobForm.email || '').trim(),
+                        education: String(this.jobForm.education || '').trim(),
+                        experience: String(this.jobForm.experience || '').trim(),
+                        workMode: String(this.jobForm.workMode || '').trim(),
+                        expectedSalary: String(this.jobForm.expectedSalary || '').trim(),
+                        skills: String(this.jobForm.skills || '').trim(),
+                        status: 'Pending',
+                        role: 'client',
+                        source: 'public_job_portal',
+                        campaignProofs: [],
+                        campaignIssues: {},
+                        isPromoted: false,
+                        createdAt: new Date().toISOString()
+                    };
+                    try {
+                        const batch = db.batch();
+                        const clientRef = db.collection('clients').doc(registrationNo);
+                        const accessRef = db.collection('clientAccess').doc(registrationNo);
+                        batch.create(clientRef, newClient);
+                        batch.create(accessRef, {
+                            registrationNo,
+                            phoneHash: await this.hashLookupValue(phone),
+                            status: 'Pending',
+                            clientCode: null,
+                            createdAt: new Date().toISOString()
+                        });
+                        await batch.commit();
+                        created = true;
+                    } catch (error) {
+                        lastError = error;
+                        if (error?.code === 'already-exists') continue;
+                        throw error;
+                    }
+                }
+
+                if (!created) throw lastError || new Error('Could not allocate a unique registration number.');
+
+                this.lastSubmitted = newClient;
+                this.applicationSuccess = true;
+                this.jobForm = { name: '', phone: '', jobType: '', address: '', email: '', education: '', experience: '', workMode: '', expectedSalary: '', skills: '' };
+                this.showToast('Application submitted successfully! Registration No: ' + registrationNo, 'success');
             } catch (error) {
                 console.error('Job application submit error:', error);
                 const code = error?.code || '';
                 this.formError = code === 'permission-denied'
-                    ? 'Application submit blocked by Firestore Rules. नीचे दिया गया Final Firestore Rules code publish करें।'
-                    : 'Application submit नहीं हो पाया। Internet/Firebase connection check करके फिर प्रयास करें।';
+                    ? 'Application submit blocked by Firestore Rules. firestore-ready.rules publish करें।'
+                    : code === 'failed-precondition'
+                        ? 'Firebase/Firestore connection अभी तैयार नहीं है। Internet check करके फिर प्रयास करें।'
+                        : 'Application submit नहीं हो पाया। Internet/Firebase connection check करके फिर प्रयास करें।';
+            } finally {
+                this.jobSubmitting = false;
             }
         },
 
@@ -2235,6 +2268,16 @@ createApp({
             return result.user;
         },
 
+        async ensureFreshAnonymousSession() {
+            if (!firebase.auth || typeof firebase.auth !== 'function') throw new Error('AUTH_UNAVAILABLE');
+            const auth = firebase.auth();
+            // Never reuse an old anonymous authProfile when switching between
+            // client/employee logins. A fresh UID prevents role/profile collisions.
+            if (auth.currentUser) await auth.signOut();
+            const result = await auth.signInAnonymously();
+            return result.user;
+        },
+
         async handleClientLogin() {
             const registrationNo = String(this.loginInput.registrationNo || '').trim().toUpperCase();
             const phone = this.normalizePhone(this.loginInput.phone);
@@ -2242,23 +2285,23 @@ createApp({
                 this.loginError = 'Registration Number और valid registered mobile number दर्ज करें।'; return;
             }
             try {
-                await this.ensureAnonymousSession();
+                const authUser = await this.ensureFreshAnonymousSession();
                 const accessSnap = await db.collection('clientAccess').doc(registrationNo).get();
                 if (!accessSnap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const access = accessSnap.data() || {};
                 if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (access.status !== 'Approved') throw new Error(access.status === 'Rejected' ? 'CLIENT_REJECTED' : 'CLIENT_PENDING');
                 if (!access.clientCode) throw new Error('CLIENT_CODE_NOT_READY');
-                const authUser = firebase.auth().currentUser;
-                if (!authUser) throw new Error('AUTH_UNAVAILABLE');
-                if (access.authUid && access.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
-                if (!access.authUid) await db.collection('clientAccess').doc(registrationNo).update({ authUid: authUser.uid });
+                // Bind the anonymous session to the approved client before reading the private client doc.
+                await db.collection('authProfiles').doc(authUser.uid).set({
+                    uid: authUser.uid, role: 'client', code: access.clientCode, registrationNo,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
                 const snap = await db.collection('clients').doc(registrationNo).get();
                 if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const found = { id: snap.id, ...snap.data() };
-                if (found.authUid && found.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
-                if (!found.authUid) await db.collection('clients').doc(found.id).update({ authUid: authUser.uid, authMode: 'anonymous_login' });
-                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'client', code: found.code, registrationNo, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                if (found.code !== access.clientCode) throw new Error('CLIENT_CODE_MISMATCH');
                 this.currentUser = { ...found, authUid: authUser.uid, role: 'client' };
                 this.loadPrivateDataForRole('client', found.id);
                 this.currentView = 'client_dash';
@@ -2272,6 +2315,8 @@ createApp({
                     : error.message === 'CLIENT_REJECTED' ? 'Application rejected है। Client Code generate नहीं किया गया.'
                     : error.message === 'CLIENT_PENDING' ? 'Application अभी approval में है। Approval के बाद Client Code मिलेगा.'
                     : error.message === 'CLIENT_CODE_NOT_READY' ? 'Client Code अभी generate नहीं हुआ.'
+                    : error.message === 'CLIENT_CODE_MISMATCH' ? 'Client record और Client Code match नहीं कर रहे। Admin से संपर्क करें.'
+                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Authentication में Anonymous sign-in enable करें.'
                     : 'Client login नहीं हो पाया। Registration Number और mobile check करें।';
             }
         },
@@ -2282,7 +2327,7 @@ createApp({
             const phone = this.normalizePhone(this.loginInput.phone);
             if (!code || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'Employee Code, registered mobile और 4 अंकों का PIN दर्ज करें।'; return; }
             try {
-                await this.ensureAnonymousSession();
+                const authUser = await this.ensureFreshAnonymousSession();
                 const accessSnap = await db.collection('employeeAccess').doc(code).get();
                 if (!accessSnap.exists) throw new Error('EMP_NOT_FOUND');
                 const access = accessSnap.data() || {};
@@ -2290,19 +2335,19 @@ createApp({
                 let validPin = false;
                 if (access.pinHash) validPin = await this.verifyStoredCredential(pin, access.pinHash);
                 if (!validPin) throw new Error('BAD_PIN');
-                const authUser = firebase.auth().currentUser;
-                if (!authUser) throw new Error('AUTH_UNAVAILABLE');
-                if (access.authUid && access.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
-                if (!access.authUid) await db.collection('employeeAccess').doc(code).update({ authUid: authUser.uid });
+                // Create the role profile before reading the protected employee document.
+                await db.collection('authProfiles').doc(authUser.uid).set({
+                    uid: authUser.uid, role: 'employee', code,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
                 const snap = await db.collection('employees').doc(code).get();
                 if (!snap.exists) throw new Error('EMP_NOT_FOUND');
                 const found = { id: snap.id, ...snap.data() };
-                if (found.authUid && found.authUid !== authUser.uid) throw new Error('ACCOUNT_BOUND');
-                const update = { authUid: authUser.uid, authMode: 'anonymous_login' };
+                const update = {};
                 if (found.pin) { update.pin = firebase.firestore.FieldValue.delete(); update.pinHash = access.pinHash; update.mustChangePin = false; }
-                await db.collection('employees').doc(code).update(update);
-                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'employee', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-                this.currentUser = { ...found, ...update, role: 'employee', authUid: authUser.uid };
+                if (Object.keys(update).length) await db.collection('employees').doc(code).update(update);
+                this.currentUser = { ...found, role: 'employee', authUid: authUser.uid };
                 this.loadPrivateDataForRole('employee', found.id);
                 this.currentView = 'emp_dash';
                 this.loginInput = { ...this.loginInput, code: '', phone: '', pin: '' };
@@ -2314,6 +2359,7 @@ createApp({
                     : error.message === 'EMP_NOT_FOUND' ? 'Employee Code नहीं मिला.'
                     : error.message === 'BAD_PIN' ? 'Secret PIN गलत है.'
                     : error.message === 'ACCOUNT_BOUND' ? 'यह employee account पहले से दूसरे session से linked है.'
+                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Authentication में Anonymous sign-in enable करें.'
                     : 'Employee login नहीं हो पाया। Code, mobile और PIN check करें।';
             }
         },
@@ -2590,7 +2636,7 @@ createApp({
                 const earningRef = db.collection('earningsRequests').doc(`approval_${client.registrationNo || client.id || client.code}`);
                 const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
-                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateUniqueNumericCode('CLI', 8)) : null;
+                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id)) : null;
                 let credited = false;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(clientRef);
@@ -2616,7 +2662,8 @@ createApp({
                             tx.set(earningRef, {
                                 empCode: employeeCode,
                                 empName: this.currentUser.name,
-                                clientCode: client.code,
+                                clientCode: decision.code,
+                                registrationNo: current.registrationNo || accessRef.id,
                                 type: 'LeadApproval',
                                 amount: 3,
                                 status: 'Approved',
@@ -2768,6 +2815,7 @@ createApp({
                 const payoutRef = db.collection('payoutRequests').doc();
                 await db.runTransaction(async tx => {
                     const earningsSnap = await tx.get(db.collection('earningsRequests').where('empCode', '==', empCode).where('status', '==', 'Approved'));
+                    const taskSnap = await tx.get(db.collection('workItems').where('targetRole', '==', 'employee').where('targetCode', '==', empCode).where('status', '==', 'Approved'));
                     const payoutsSnap = await tx.get(db.collection('payoutRequests').where('empCode', '==', empCode).where('status', 'in', ['Approved', 'Pending']));
                     const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0) + taskSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.payout) || 0), 0);
                     const alreadyWithdrawn = payoutsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
@@ -2820,7 +2868,7 @@ createApp({
                 const ref = db.collection('clients').doc(this.clientDocId(client));
                 const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
-                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateUniqueNumericCode('CLI', 8)) : null;
+                const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id)) : null;
                 const decisionAt = new Date().toISOString();
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(ref);
@@ -2995,7 +3043,7 @@ createApp({
                             role: 'employee',
                             createdAt: new Date().toISOString()
                         });
-                        await db.collection('employeeAccess').doc(empCode).set({ code: empCode, phoneHash: empPhoneHash, pinHash: null, updatedAt: new Date().toISOString() });
+                        tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: empPhoneHash, pinHash: null, updatedAt: new Date().toISOString() });
                         created = true;
                     }).catch(error => {
                         if (error.message !== 'EMP_CODE_COLLISION') throw error;
@@ -3136,7 +3184,7 @@ createApp({
                         // Otherwise two admins could approve two pending payouts concurrently
                         // against the same balance.
                         const payoutsSnap = await tx.get(db.collection('payoutRequests').where('empCode', '==', empCode).where('status', 'in', ['Approved', 'Pending']));
-                        const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
+                        const totalEarned = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0) + taskSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.payout) || 0), 0);
                         const reservedOther = payoutsSnap.docs.reduce((sum, d) => {
                             if (d.id === ref.id) return sum;
                             const amount = Number(d.data()?.amount) || 0;
@@ -3187,12 +3235,16 @@ createApp({
             if (!['admin','employee'].includes(this.currentUser?.role)) { this.showToast('केवल Admin/Employee task बना सकते हैं।', 'error'); return; }
             const f = this.newWorkItem;
             const targetRole = ['client','employee'].includes(f.targetRole) ? f.targetRole : 'client';
+            if (this.currentUser.role === 'employee' && targetRole !== 'client') {
+                this.showToast('Employee केवल Client के लिए Task / Extra Income बना सकता है।', 'error');
+                return;
+            }
             const targetCode = String(f.targetCode || '').trim().toUpperCase();
             const type = ['Task','ExtraIncome'].includes(f.type) ? f.type : 'Task';
             const title = String(f.title || '').trim();
             const description = String(f.description || '').trim();
             const payout = Number(f.payout);
-            if (!targetCode || !title || !description || !Number.isInteger(payout) || payout < 1 || payout > 100000) { this.showToast('Target, title, detail और valid payout जरूरी हैं।', 'error'); return; }
+            if (!targetCode || !title || !description || title.length > 120 || description.length > 1000 || !Number.isInteger(payout) || payout < 1 || payout > 100000) { this.showToast('Target, title, detail और valid payout जरूरी हैं।', 'error'); return; }
             const link = String(f.link || '').trim();
             if (link && !this.isSafeHttpUrl(link)) { this.showToast('Link केवल http/https होना चाहिए।', 'error'); return; }
             const media = String(f.media || '').trim();
@@ -3241,10 +3293,20 @@ createApp({
             if (!Number.isInteger(amount) || amount < 100 || amount > this.getClientAvailableBalance(this.currentUser.code)) { this.showToast('Available balance के अंदर valid payout amount डालें।', 'error'); return; }
             if (!['UPI','Bank'].includes(method) || !details || details.length > 200) { this.showToast('Valid payout method/details दें।', 'error'); return; }
             try {
-                await db.collection('clientPayoutRequests').add({ clientCode: this.currentUser.code, clientName: this.currentUser.name, amount, method, details, status: 'PendingEmployee', createdAt: firebase.firestore.FieldValue.serverTimestamp(), date: new Date().toLocaleString() });
+                const clientCode = String(this.currentUser.code || '').trim();
+                const clientName = String(this.currentUser.name || '').trim();
+                const payoutRef = db.collection('clientPayoutRequests').doc();
+                await db.runTransaction(async tx => {
+                    const earningsSnap = await tx.get(db.collection('workItems').where('targetRole','==','client').where('targetCode','==',clientCode).where('status','==','Approved'));
+                    const payoutsSnap = await tx.get(db.collection('clientPayoutRequests').where('clientCode','==',clientCode).where('status','in',['PendingEmployee','EmployeeConfirmed','Approved']));
+                    const total = earningsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.payout) || 0), 0);
+                    const reserved = payoutsSnap.docs.reduce((sum, d) => sum + (Number(d.data()?.amount) || 0), 0);
+                    if (amount > Math.max(0, total - reserved)) throw new Error('INSUFFICIENT');
+                    tx.set(payoutRef, { clientCode, clientName, amount, method, details, status: 'PendingEmployee', createdAt: firebase.firestore.FieldValue.serverTimestamp(), date: new Date().toLocaleString() });
+                });
                 this.clientPayoutForm = { amount: 100, method: 'UPI', details: '' };
                 this.showToast('Payout request employee confirmation के लिए भेजी गई।', 'success');
-            } catch (error) { console.error(error); this.showToast('Client payout request save नहीं हुई।', 'error'); }
+            } catch (error) { console.error(error); this.showToast(error.message === 'INSUFFICIENT' ? 'Available balance पर्याप्त नहीं है।' : 'Client payout request save नहीं हुई।', 'error'); }
         },
 
         async confirmClientPayout(payout) {
@@ -3325,6 +3387,14 @@ createApp({
         },
 
         async updateCompanySettings() {
+            for (const key of ['youtube','telegram','instagram']) {
+                const value = String(this.companyInfo[key] || '').trim();
+                if (value && !this.isSafeHttpUrl(value)) {
+                    this.showToast(`${key} link केवल valid http/https URL होना चाहिए।`, 'error');
+                    return;
+                }
+                this.companyInfo[key] = value;
+            }
             await db.collection('settings').doc('company').set(this.companyInfo);
             this.showToast('Company info updated successfully!', 'success');
         },
