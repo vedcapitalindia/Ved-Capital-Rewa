@@ -267,7 +267,7 @@
                     <i class="fa-solid fa-star mr-1.5"></i> Direct Recruitment Drive 2026 (Cloud Sync)
                 </span>
                 <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Ved Capital Rewa Career Portal</h2>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और Registration Number प्राप्त करें। Approval के बाद ही Client Code जारी होगा।</p>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और Registration Number + Client Code receipt में प्राप्त करें। Approval के बाद Client Login PIN जारी होगा।</p>
             </div>
 
             <div v-if="applicationSuccess" id="printable-slip" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-100">
@@ -461,8 +461,12 @@
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
                         <input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 Digit Mobile Number" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Client PIN (4 Digit)</label>
+                        <input v-model="loginInput.pin" placeholder="पहली बार मिला PIN" required type="password" inputmode="numeric" maxlength="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-mono focus:border-amber-500 focus:outline-none">
+                    </div>
                     <div class="text-[11px] text-slate-400 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
-                        Application submit होते ही Registration Number + Mobile से Client Code generate होगा। Approval के बाद Client Code + Mobile से Client Login होगा।
+                        Approved/created client को Client Code + Registered Mobile + PIN से login मिलेगा। Login के बाद client अपना PIN बदल सकता है।
                     </div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Portal Login</button>
                 </form>
@@ -534,6 +538,9 @@
                         </button>
                         <button @click="openSupportChat" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center">
                             <i class="fa-solid fa-headset mr-1.5"></i> Support Chat
+                        </button>
+                        <button @click="showClientPinModal = true" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
+                            <i class="fa-solid fa-key mr-1.5"></i> Change PIN
                         </button>
                         <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1.5 rounded-full border">
                             {{ currentUser.status || 'Pending Review' }}
@@ -754,6 +761,19 @@
 
             <!-- TAB 1: CLIENTS & APPROVAL AUTHORITY -->
             <div v-if="empSubTab === 'clients'" class="space-y-6">
+                <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/20 space-y-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-emerald-300"><i class="fa-solid fa-user-plus mr-1.5"></i> New Client Create</h3>
+                        <p class="text-[10px] text-slate-400">Employee भी नया client बना सकता है। Client Code और temporary PIN creation के बाद तुरंत मिलेगा।</p>
+                    </div>
+                    <form @submit.prevent="createPortalClient('employee')" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <input v-model="portalClientForm.name" required maxlength="100" placeholder="Client Name" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <input v-model="portalClientForm.phone" @input="portalClientForm.phone = normalizePhone(portalClientForm.phone)" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10 digit mobile" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <input v-model="portalClientForm.jobType" required maxlength="100" placeholder="Job Category" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold p-2.5 rounded-lg text-sm">Create Client</button>
+                    </form>
+                </div>
+
                 <!-- Submit Daily Report -->
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
                     <h3 class="text-sm font-bold text-amber-400 mb-2"><i class="fa-solid fa-comment-dots mr-1.5"></i> Daily Work Report & Call Details Submit Karein</h3>
@@ -847,10 +867,11 @@
                                             <p v-if="c.decisionAt" class="text-[9px] text-slate-500">{{ c.decisionAt }}</p>
                                         </div>
                                     </td>
-                                    <td class="p-4 text-center">
+                                    <td class="p-4 text-center space-y-2">
                                         <button @click="openCampaignReviewModal(c)" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center mx-auto">
                                             <i class="fa-solid fa-image mr-1.5"></i> Review Proofs ({{ getClientPendingProofCount(c) }})
                                         </button>
+                                        <button @click="resetClientPin(c)" class="text-amber-400 hover:text-amber-300 text-[11px] font-bold"><i class="fa-solid fa-key mr-1"></i>Reset Client PIN</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -968,6 +989,20 @@
                 </div>
             </div>
 
+            <div v-if="portalAlerts.length" class="bg-rose-950/30 border border-rose-500/30 rounded-2xl p-4 space-y-2">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-rose-300"><i class="fa-solid fa-bell mr-1.5"></i> Portal Error Alerts ({{ portalAlerts.length }})</h3>
+                    <span class="text-[10px] text-slate-400">Latest 100</span>
+                </div>
+                <div class="max-h-52 overflow-y-auto space-y-2">
+                    <div v-for="a in portalAlerts.slice(0,10)" :key="a.id" class="bg-slate-900 border border-rose-500/20 rounded-xl p-3 text-xs">
+                        <div class="flex justify-between gap-2"><strong class="text-rose-300 font-mono">{{ a.alertNo }}</strong><span class="text-slate-500">{{ a.createdAtText || '' }}</span></div>
+                        <p class="text-slate-300 mt-1">{{ a.message }}</p>
+                        <p class="text-[10px] text-slate-500 mt-1">{{ a.view || 'portal' }} · {{ a.code || 'unknown' }}</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Stats -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
@@ -1020,6 +1055,19 @@
                         </select>
                     </div>
                 </div>
+                <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/20 space-y-3">
+                    <div>
+                        <h3 class="text-sm font-bold text-emerald-300"><i class="fa-solid fa-user-plus mr-1.5"></i> New Client Create</h3>
+                        <p class="text-[10px] text-slate-400">Admin सीधे नया client बना सकता है। Code और temporary PIN बनने के बाद तुरंत दिखेंगे।</p>
+                    </div>
+                    <form @submit.prevent="createPortalClient('admin')" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <input v-model="portalClientForm.name" required maxlength="100" placeholder="Client Name" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <input v-model="portalClientForm.phone" @input="portalClientForm.phone = normalizePhone(portalClientForm.phone)" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10 digit mobile" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <input v-model="portalClientForm.jobType" required maxlength="100" placeholder="Job Category" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold p-2.5 rounded-lg text-sm">Create Client</button>
+                    </form>
+                </div>
+
                 <p class="text-[10px] text-slate-400">Approved/Rejected client का final decision owner और time नीचे दिखेगा। Employee के final decision को दूसरा employee बदल नहीं सकता।</p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
@@ -1085,7 +1133,8 @@
                                     </button>
                                     <span v-else class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-check-double mr-1"></i> Promoted</span>
                                 </td>
-                                <td class="p-3">
+                                <td class="p-3 space-x-2">
+                                    <button @click="resetClientPin(c)" class="text-amber-400 hover:text-amber-300 text-xs font-bold" title="Reset Client PIN"><i class="fa-solid fa-key"></i></button>
                                     <button @click="deleteClient(c)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
                                 </td>
                             </tr>
@@ -1496,6 +1545,21 @@
         </div>
     </div>
 
+    <!-- MODAL: Client Change Own PIN -->
+    <div v-if="showClientPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-2"></i> Update Client PIN</h3>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">New 4-Digit PIN</label>
+                <input v-model="clientPinInput" type="password" maxlength="4" inputmode="numeric" placeholder="Enter new 4 digit PIN" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button @click="showClientPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
+                <button @click="updateClientPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: Employee Change Own PIN -->
     <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
@@ -1662,6 +1726,8 @@ createApp({
             phoneAuth: { confirmationResult: null, otpSent: false, role: '', verifier: null },
             loginError: '',
             currentUser: null,
+            portalAlerts: [],
+            _alertThrottle: {},
 
             toast: { show: false, message: '', type: 'success' },
             sessionTimer: null,
@@ -1688,6 +1754,8 @@ createApp({
             empSubTab: 'clients',
             showEmpSelfPinModal: false,
             selfPinInput: '',
+            showClientPinModal: false,
+            clientPinInput: '',
             selectedReviewClient: null,
 
             extraWorkForm: { screenshot: null, description: '' },
@@ -1709,6 +1777,7 @@ createApp({
             adminTab: 'clients',
             admins: [],
             newAdmin: { name: '', phone: '', pin: '' },
+            portalClientForm: { name: '', phone: '', jobType: '' },
             adminPinModal: { show: false, empCode: '', empName: '', newPin: '' },
             selectedEmpWork: null,
 
@@ -1989,11 +2058,31 @@ createApp({
                 watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('settings').doc('admin'), doc => { if (doc.exists) { const data = doc.data() || {}; this.adminSettingsForm.username = String(data.username || 'admin'); if (data.passwordHash?.hash && data.passwordHash?.salt) this.adminPasswordHash = data.passwordHash; } });
                 watch(db.collection('adminAccess'), snapshot => { this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('portalAlerts').orderBy('createdAt', 'desc').limit(100), snapshot => { this.portalAlerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
             }
+        },
+
+        async reportPortalError(error, view = 'portal') {
+            try {
+                const message = String(error?.message || error || 'Unknown error').slice(0, 500);
+                const code = String(error?.code || 'NO_CODE').slice(0, 80);
+                const key = `${view}|${code}|${message}`;
+                const now = Date.now();
+                if (this._alertThrottle[key] && now - this._alertThrottle[key] < 30000) return;
+                this._alertThrottle[key] = now;
+                const d = new Date(), pad = n => String(n).padStart(2, '0');
+                const alertNo = `ERR-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
+                await db.collection('portalAlerts').add({
+                    alertNo, message, code, view: String(view).slice(0, 80),
+                    userRole: this.currentUser?.role || 'public', userCode: this.currentUser?.code || '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtText: d.toLocaleString()
+                });
+            } catch (_) {}
         },
 
         showToast(message, type = 'success') {
             this.toast = { show: true, message, type };
+            if (type === 'error' && !String(message).includes('Admin alert')) this.reportPortalError(new Error(String(message)), this.currentView || 'portal');
             setTimeout(() => { this.toast.show = false; }, 3500);
         },
 
@@ -2203,6 +2292,105 @@ createApp({
             }
         },
 
+        async resetClientPin(client) {
+            if (!['admin','employee'].includes(this.currentUser?.role)) {
+                this.showToast('केवल Admin/Employee client PIN reset कर सकते हैं।', 'error'); return;
+            }
+            const registrationNo = String(client?.registrationNo || client?.id || '');
+            if (!registrationNo) { this.showToast('Client registration record नहीं मिला।', 'error'); return; }
+            try {
+                const pin = this.generateInitialPin();
+                const pinHash = await this.hashCredential(pin);
+                await db.collection('clientAccess').doc(registrationNo).set({
+                    registrationNo, clientCode: client.code || this.generateClientCode(registrationNo, client.phone),
+                    phoneHash: await this.hashLookupValue(client.phone), pinHash, status: client.status || 'Pending',
+                    temporaryPin: pin, resetBy: this.currentUser.code || this.currentUser.role,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                this.showToast(`Client PIN reset — Code: ${client.code || 'N/A'} | New PIN: ${pin}`, 'success');
+            } catch (error) {
+                console.error(error);
+                this.reportPortalError(error, 'Client PIN Reset');
+                this.showToast('Client PIN reset नहीं हो पाया। Error Admin alert में भेज दिया गया है।', 'error');
+            }
+        },
+
+        async createPortalClient(actorRole) {
+            if (!['admin', 'employee'].includes(actorRole) || this.currentUser?.role !== actorRole) {
+                this.showToast('इस account को client create करने की अनुमति नहीं है।', 'error'); return;
+            }
+            const name = String(this.portalClientForm.name || '').trim();
+            const phone = this.normalizePhone(this.portalClientForm.phone);
+            const jobType = String(this.portalClientForm.jobType || '').trim();
+            if (!name || !this.isValidPhone(phone) || !jobType) {
+                this.showToast('Client name, valid mobile और job category जरूरी है।', 'error'); return;
+            }
+            try {
+                const pin = this.generateInitialPin();
+                const pinHash = await this.hashCredential(pin);
+                const phoneHash = await this.hashLookupValue(phone);
+                let registrationNo = '', clientCode = '', created = false;
+                for (let attempt = 0; attempt < 12 && !created; attempt++) {
+                    registrationNo = this.generateUniqueNumericCode('REG', 10);
+                    clientCode = this.generateClientCode(registrationNo, phone);
+                    const clientRef = db.collection('clients').doc(registrationNo);
+                    const accessRef = db.collection('clientAccess').doc(registrationNo);
+                    try {
+                        await db.runTransaction(async tx => {
+                            const existing = await tx.get(clientRef);
+                            if (existing.exists) throw new Error('CLIENT_CODE_COLLISION');
+                            tx.set(clientRef, {
+                                code: clientCode, registrationNo, name, phone, jobType,
+                                address: '', email: '', education: '', experience: '', workMode: '',
+                                expectedSalary: '', skills: '', status: 'Approved', role: 'client',
+                                source: 'portal_manual_' + actorRole, campaignProofs: [], campaignIssues: {},
+                                isPromoted: false, createdBy: this.currentUser.code || actorRole,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                decisionBy: `${this.currentUser.name} (${this.currentUser.code || actorRole})`,
+                                decisionRole: actorRole, decisionAt: new Date().toISOString(), approvalLocked: true
+                            });
+                            tx.set(accessRef, {
+                                registrationNo, clientCode, phoneHash, pinHash, status: 'Approved',
+                                createdBy: this.currentUser.code || actorRole, temporaryPin: pin,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        });
+                        created = true;
+                    } catch (e) {
+                        if (e.message !== 'CLIENT_CODE_COLLISION') throw e;
+                    }
+                }
+                if (!created) throw new Error('CLIENT_CREATE_FAILED');
+                this.portalClientForm = { name: '', phone: '', jobType: '' };
+                this.showToast(`Client created — Code: ${clientCode} | Temporary PIN: ${pin}`, 'success');
+            } catch (error) {
+                console.error(error);
+                this.reportPortalError(error, 'Create Client');
+                this.showToast('New client create नहीं हो पाया। Error Admin alert में भेज दिया गया है।', 'error');
+            }
+        },
+
+        async updateClientPin() {
+            if (this.currentUser?.role !== 'client') return;
+            const pin = String(this.clientPinInput || '').trim();
+            if (!/^\d{4}$/.test(pin)) { this.showToast('नया PIN ठीक 4 अंकों का होना चाहिए।', 'error'); return; }
+            try {
+                const pinHash = await this.hashCredential(pin);
+                const registrationNo = String(this.currentUser.registrationNo || this.currentUser.id || '');
+                await db.collection('clientAccess').doc(registrationNo).set({
+                    pinHash, temporaryPin: firebase.firestore.FieldValue.delete(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                this.clientPinInput = '';
+                this.showClientPinModal = false;
+                this.showToast('Client PIN updated successfully!', 'success');
+            } catch (error) {
+                console.error(error);
+                this.reportPortalError(error, 'Client PIN Change');
+                this.showToast('PIN change नहीं हो पाया।', 'error');
+            }
+        },
+
         async submitJobForm() {
             if (this.jobSubmitting) return;
             this.jobSubmitting = true;
@@ -2308,6 +2496,7 @@ createApp({
 
             } catch (error) {
                 console.error('Job application submit error:', error);
+                this.reportPortalError(error, 'Job Application Submit');
                 const code = error?.code || '';
 
                 if (code === 'permission-denied') {
@@ -2365,9 +2554,10 @@ createApp({
         async handleClientLogin() {
             const clientCode = String(this.loginInput.code || '').trim().toUpperCase();
             const phone = this.normalizePhone(this.loginInput.phone);
+            const pin = String(this.loginInput.pin || '').trim();
             const codeMatch = clientCode.match(/^CLI-(\d{10})-([A-Z0-9]{6})$/);
-            if (!codeMatch || !this.isValidPhone(phone)) {
-                this.loginError = 'Valid Client Code और registered mobile number दर्ज करें।'; return;
+            if (!codeMatch || !this.isValidPhone(phone) || !/^\d{4}$/.test(pin)) {
+                this.loginError = 'Valid Client Code, registered mobile और 4 digit PIN दर्ज करें।'; return;
             }
             const registrationNo = 'REG-' + codeMatch[1];
             try {
@@ -2375,17 +2565,12 @@ createApp({
                 const accessSnap = await db.collection('clientAccess').doc(registrationNo).get();
                 if (!accessSnap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const access = accessSnap.data() || {};
-
-                // Verify that the supplied mobile actually produces the same Client Code.
                 const expectedClientCode = this.generateClientCode(registrationNo, phone);
-                if (expectedClientCode !== clientCode || access.phoneHash !== await this.hashLookupValue(phone)) {
-                    throw new Error('PHONE_MISMATCH');
-                }
+                if (expectedClientCode !== clientCode || access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (access.status !== 'Approved') throw new Error(access.status === 'Rejected' ? 'CLIENT_REJECTED' : 'CLIENT_PENDING');
-                if (!access.clientCode) throw new Error('CLIENT_CODE_NOT_READY');
-                if (access.clientCode !== clientCode) throw new Error('CLIENT_CODE_MISMATCH');
+                if (!access.clientCode || access.clientCode !== clientCode) throw new Error('CLIENT_CODE_MISMATCH');
+                if (!access.pinHash || !await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_CLIENT_PIN');
 
-                // Bind the anonymous session to the approved client before reading the private client doc.
                 await db.collection('authProfiles').doc(authUser.uid).set({
                     uid: authUser.uid, role: 'client', code: clientCode, registrationNo,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2398,19 +2583,19 @@ createApp({
                 this.currentUser = { ...found, authUid: authUser.uid, role: 'client' };
                 this.loadPrivateDataForRole('client', found.id);
                 this.currentView = 'client_dash';
-                this.loginInput = { ...this.loginInput, code: '', registrationNo: '', phone: '' };
+                this.loginInput = { ...this.loginInput, code: '', registrationNo: '', phone: '', pin: '' };
                 this.persistUiState();
                 this.showToast('Welcome, ' + found.name + ' | Client Code: ' + found.code, 'success');
             } catch (error) {
                 console.error(error);
-                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Client Code से match नहीं करता.'
-                    : error.message === 'CLIENT_NOT_FOUND' ? 'Client Code / Registration record नहीं मिला.'
-                    : error.message === 'CLIENT_REJECTED' ? 'Application rejected है। Client Portal access उपलब्ध नहीं है.'
-                    : error.message === 'CLIENT_PENDING' ? 'Application अभी approval में है। Approval के बाद Client Login चालू होगा.'
-                    : error.message === 'CLIENT_CODE_NOT_READY' ? 'Client Code access अभी तैयार नहीं हुआ.'
-                    : error.message === 'CLIENT_CODE_MISMATCH' ? 'Client record और Client Code match नहीं कर रहे। Admin से संपर्क करें.'
-                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Authentication में Anonymous sign-in enable करें.'
-                    : 'Client login नहीं हो पाया। Client Code और mobile check करें।';
+                this.reportPortalError(error, 'Client Login');
+                this.loginError = error.message === 'PHONE_MISMATCH' ? 'Mobile/Client Code match नहीं करता.'
+                    : error.message === 'CLIENT_PENDING' ? 'Client अभी approval में है.'
+                    : error.message === 'CLIENT_REJECTED' ? 'यह client rejected है.'
+                    : error.message === 'BAD_CLIENT_PIN' ? 'Client PIN गलत है.'
+                    : error.message === 'CLIENT_CODE_MISMATCH' ? 'Client Code और record match नहीं कर रहे.'
+                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Anonymous Authentication Enable करें.'
+                    : 'Client login नहीं हो पाया। Code, mobile और PIN check करें।';
             }
         },
 
@@ -2735,6 +2920,8 @@ createApp({
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
                 const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id, client.phone)) : null;
                 let credited = false;
+                const approvedClientPin = newStatus === 'Approved' ? this.generateInitialPin() : '';
+                const approvedClientPinHash = newStatus === 'Approved' ? await this.hashCredential(approvedClientPin) : null;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(clientRef);
                     if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
@@ -2748,7 +2935,7 @@ createApp({
                     const decision = { status: newStatus, decisionBy, decisionRole: 'employee', decisionAt, approvalLocked: true, decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'employee', decisionAt }) };
                     if (newStatus === 'Approved') decision.code = approvedClientCode;
                     tx.update(clientRef, decision);
-                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? decision.code : null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? decision.code : null, ...(newStatus === 'Approved' ? { pinHash: approvedClientPinHash, temporaryPin: approvedClientPin } : { pinHash: firebase.firestore.FieldValue.delete(), temporaryPin: firebase.firestore.FieldValue.delete() }), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                     if (newStatus === 'Approved') {
                         const earningSnap = await tx.get(earningRef);
                         if (earningSnap.exists) {
@@ -2778,9 +2965,10 @@ createApp({
                 client.decisionRole = 'employee';
                 client.decisionAt = new Date().toISOString();
                 client.approvalLocked = true;
-                this.showToast((newStatus === 'Approved' ? 'Client accepted' : 'Client rejected') + (credited ? ' & ₹3 credited' : ''), 'success');
+                this.showToast((newStatus === 'Approved' ? 'Client accepted' : 'Client rejected') + (credited ? ' & ₹3 credited' : '') + (newStatus === 'Approved' ? ` | Client Code: ${approvedClientCode} | Temporary PIN: ${approvedClientPin}` : ''), 'success');
             } catch (error) {
                 console.error(error);
+                this.reportPortalError(error, 'Employee Client Approval');
                 if (error.message === 'CLIENT_ALREADY_DECIDED') this.showToast(`यह client पहले ही ${client.status || 'final'} हो चुका है — ${client.decisionBy || client.approvedByEmp || 'दूसरे employee'} ने decision दिया है।`, 'error');
                 else if (error.message === 'EARNING_ALREADY_ASSIGNED') this.showToast('यह ₹3 earning पहले किसी दूसरे employee को assign हो चुकी है।', 'error');
                 else this.showToast('Client status update नहीं हो पाया।', 'error');
@@ -2967,6 +3155,8 @@ createApp({
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
                 const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id, client.phone)) : null;
                 const decisionAt = new Date().toISOString();
+                const approvedClientPin = newStatus === 'Approved' ? this.generateInitialPin() : '';
+                const approvedClientPinHash = newStatus === 'Approved' ? await this.hashCredential(approvedClientPin) : null;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(ref);
                     if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
@@ -2983,7 +3173,7 @@ createApp({
                         approvalLocked: true,
                         decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'admin', decisionAt })
                     });
-                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? clientCode : null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? clientCode : null, ...(newStatus === 'Approved' ? { pinHash: approvedClientPinHash, temporaryPin: approvedClientPin } : { pinHash: firebase.firestore.FieldValue.delete(), temporaryPin: firebase.firestore.FieldValue.delete() }), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 });
                 client.status = newStatus;
                 if (newStatus === 'Approved' && !client.code) client.code = approvedClientCode;
@@ -2991,9 +3181,10 @@ createApp({
                 client.decisionRole = 'admin';
                 client.decisionAt = decisionAt;
                 client.approvalLocked = true;
-                this.showToast('Client final status recorded.', 'success');
+                this.showToast('Client final status recorded.' + (newStatus === 'Approved' ? ` | Client Code: ${approvedClientCode} | Temporary PIN: ${approvedClientPin}` : ''), 'success');
             } catch (error) {
                 console.error(error);
+                this.reportPortalError(error, 'Admin Client Status');
                 this.showToast('Client status update नहीं हो पाया या किसी ने पहले decision दे दिया।', 'error');
             }
         },
