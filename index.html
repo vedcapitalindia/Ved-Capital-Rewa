@@ -2204,8 +2204,17 @@ createApp({
                 }
                 this.formError = '';
 
-                // Job application is intentionally independent of Anonymous Auth.
-                // Anonymous Auth is required only later for protected Client/Employee login.
+                // Ensure the public application write has an authenticated session
+                // when Firestore Rules require authenticated create access.
+                // If Anonymous Auth is disabled but public create is allowed, continue normally.
+                try {
+                    await this.ensureAnonymousSession();
+                } catch (authError) {
+                    const authCode = authError?.code || '';
+                    if (!['auth/operation-not-allowed', 'auth/network-request-failed'].includes(authCode)) {
+                        throw authError;
+                    }
+                }
 
                 let registrationNo = '';
                 let newClient = null;
