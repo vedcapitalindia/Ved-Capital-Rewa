@@ -267,7 +267,7 @@
                     <i class="fa-solid fa-star mr-1.5"></i> Direct Recruitment Drive 2026 (Cloud Sync)
                 </span>
                 <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Ved Capital Rewa Career Portal</h2>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और Registration Number + Client Code receipt में प्राप्त करें। Approval के बाद Client Login PIN जारी होगा।</p>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और Registration Number प्राप्त करें। Approval के बाद ही Client Code जारी होगा।</p>
             </div>
 
             <div v-if="applicationSuccess" id="printable-slip" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-100">
@@ -455,7 +455,7 @@
                 <form v-if="loginType === 'client'" @submit.prevent="handleClientLogin" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Client Code</label>
-                        <input v-model="loginInput.code" placeholder="e.g. CLI-1234567890-ABC123" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
+                        <input v-model="loginInput.code" placeholder="e.g. CLI-00001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
@@ -463,10 +463,10 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Client PIN (4 Digit)</label>
-                        <input v-model="loginInput.pin" placeholder="पहली बार मिला PIN" required type="password" inputmode="numeric" maxlength="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-mono focus:border-amber-500 focus:outline-none">
+                        <input v-model="loginInput.pin" placeholder="Enter Client PIN" required type="password" maxlength="4" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
                     <div class="text-[11px] text-slate-400 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
-                        Approved/created client को Client Code + Registered Mobile + PIN से login मिलेगा। Login के बाद client अपना PIN बदल सकता है।
+                        Approval के बाद Admin Client PIN जारी करेगा। Login: Client Code + Registered Mobile + PIN.
                     </div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Portal Login</button>
                 </form>
@@ -474,7 +474,7 @@
                 <form v-if="loginType === 'employee'" @submit.prevent="handleEmployeeLogin" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Employee Code</label>
-                        <input v-model="loginInput.code" placeholder="e.g. EMP-0001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
+                        <input v-model="loginInput.code" placeholder="e.g. EMP-00001" required type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white uppercase font-mono focus:border-amber-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile Number</label>
@@ -488,7 +488,7 @@
                 </form>
 
                 <form v-if="loginType === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-4">
-                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Code</label><input v-model="loginInput.adminCode" placeholder="ADM-123456" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
+                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Code</label><input v-model="loginInput.adminCode" placeholder="ADM-00001" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile</label><input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 digit mobile" required type="tel" inputmode="numeric" maxlength="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin PIN (6 Digit)</label><input v-model="loginInput.adminPin" placeholder="6 digit PIN" required type="password" inputmode="numeric" maxlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Admin Control Panel</button>
@@ -536,11 +536,11 @@
                         <button @click="openIdCardModal(currentUser)" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center shadow-lg shadow-amber-500/10">
                             <span class="not-italic flex items-center"><i class="fa-solid fa-id-card mr-1.5"></i> Digital ID Card</span>
                         </button>
-                        <button @click="openSupportChat" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center">
-                            <i class="fa-solid fa-headset mr-1.5"></i> Support Chat
-                        </button>
                         <button @click="showClientPinModal = true" class="bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 border border-amber-500/30 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center">
                             <i class="fa-solid fa-key mr-1.5"></i> Change PIN
+                        </button>
+                        <button @click="openSupportChat" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition flex items-center">
+                            <i class="fa-solid fa-headset mr-1.5"></i> Support Chat
                         </button>
                         <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1.5 rounded-full border">
                             {{ currentUser.status || 'Pending Review' }}
@@ -761,19 +761,6 @@
 
             <!-- TAB 1: CLIENTS & APPROVAL AUTHORITY -->
             <div v-if="empSubTab === 'clients'" class="space-y-6">
-                <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/20 space-y-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-emerald-300"><i class="fa-solid fa-user-plus mr-1.5"></i> New Client Create</h3>
-                        <p class="text-[10px] text-slate-400">Employee भी नया client बना सकता है। Client Code और temporary PIN creation के बाद तुरंत मिलेगा।</p>
-                    </div>
-                    <form @submit.prevent="createPortalClient('employee')" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <input v-model="portalClientForm.name" required maxlength="100" placeholder="Client Name" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                        <input v-model="portalClientForm.phone" @input="portalClientForm.phone = normalizePhone(portalClientForm.phone)" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10 digit mobile" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                        <input v-model="portalClientForm.jobType" required maxlength="100" placeholder="Job Category" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold p-2.5 rounded-lg text-sm">Create Client</button>
-                    </form>
-                </div>
-
                 <!-- Submit Daily Report -->
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
                     <h3 class="text-sm font-bold text-amber-400 mb-2"><i class="fa-solid fa-comment-dots mr-1.5"></i> Daily Work Report & Call Details Submit Karein</h3>
@@ -787,6 +774,26 @@
                             <button @click="deleteFeedback(fb.id)" class="self-start text-rose-400 hover:text-rose-300" title="Delete your report"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Employee creates a new Client; PIN is issued only by Admin -->
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                        <div>
+                            <h3 class="text-sm font-bold text-amber-400"><i class="fa-solid fa-user-plus mr-1.5"></i> Create New Client</h3>
+                            <p class="text-[10px] text-slate-400">Employee client बनायेगा। Client PIN Admin approve करके जारी करेगा।</p>
+                        </div>
+                    </div>
+                    <form @submit.prevent="createClientByEmployee" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <input v-model="newClientByEmployee.name" placeholder="Client Name" required class="bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                        <input v-model="newClientByEmployee.phone" @input="newClientByEmployee.phone = normalizePhone(newClientByEmployee.phone)" placeholder="10 digit Mobile" required maxlength="10" inputmode="numeric" class="bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                        <select v-model="newClientByEmployee.jobType" required class="bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                            <option value="">Job Type</option>
+                            <option v-for="j in jobCategories" :key="j" :value="j">{{ j }}</option>
+                        </select>
+                        <input v-model="newClientByEmployee.address" placeholder="Address (optional)" class="bg-slate-900 border border-slate-700 p-2.5 rounded-lg text-xs text-white">
+                        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold p-2.5 rounded-lg text-xs">Create & Request PIN</button>
+                    </form>
                 </div>
 
                 <!-- Client Table for Employee with Approval Authority -->
@@ -833,6 +840,7 @@
                                             <div>
                                                 <p class="font-mono font-bold text-amber-400 text-xs">{{ c.code || c.registrationNo }}</p>
                                                 <p class="font-bold text-white text-sm">{{ c.name }}</p>
+                                                <button v-if="c.createdByRole === 'employee' && c.createdByCode === currentUser.code" @click="revealClientPinOnce(clientPinRequests.find(r => r.clientCode === c.code && r.employeeCode === currentUser.code && r.status === 'Ready'))" class="mt-1 text-[10px] text-amber-300 underline">View Admin PIN once</button>
                                             </div>
                                         </div>
                                     </td>
@@ -867,11 +875,10 @@
                                             <p v-if="c.decisionAt" class="text-[9px] text-slate-500">{{ c.decisionAt }}</p>
                                         </div>
                                     </td>
-                                    <td class="p-4 text-center space-y-2">
+                                    <td class="p-4 text-center">
                                         <button @click="openCampaignReviewModal(c)" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center mx-auto">
                                             <i class="fa-solid fa-image mr-1.5"></i> Review Proofs ({{ getClientPendingProofCount(c) }})
                                         </button>
-                                        <button @click="resetClientPin(c)" class="text-amber-400 hover:text-amber-300 text-[11px] font-bold"><i class="fa-solid fa-key mr-1"></i>Reset Client PIN</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -989,20 +996,6 @@
                 </div>
             </div>
 
-            <div v-if="portalAlerts.length" class="bg-rose-950/30 border border-rose-500/30 rounded-2xl p-4 space-y-2">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-bold text-rose-300"><i class="fa-solid fa-bell mr-1.5"></i> Portal Error Alerts ({{ portalAlerts.length }})</h3>
-                    <span class="text-[10px] text-slate-400">Latest 100</span>
-                </div>
-                <div class="max-h-52 overflow-y-auto space-y-2">
-                    <div v-for="a in portalAlerts.slice(0,10)" :key="a.id" class="bg-slate-900 border border-rose-500/20 rounded-xl p-3 text-xs">
-                        <div class="flex justify-between gap-2"><strong class="text-rose-300 font-mono">{{ a.alertNo }}</strong><span class="text-slate-500">{{ a.createdAtText || '' }}</span></div>
-                        <p class="text-slate-300 mt-1">{{ a.message }}</p>
-                        <p class="text-[10px] text-slate-500 mt-1">{{ a.view || 'portal' }} · {{ a.code || 'unknown' }}</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Stats -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl">
@@ -1034,6 +1027,7 @@
                 <button @click="adminTab = 'campaigns'" :class="adminTab === 'campaigns' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Campaign Links</button>
                 <button @click="adminTab = 'notices'" :class="adminTab === 'notices' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Send Notices</button>
                 <button @click="adminTab = 'feedbacks'" :class="adminTab === 'feedbacks' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Daily Reports</button>
+                <button @click="adminTab = 'alerts'" :class="adminTab === 'alerts' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Errors & Client PIN</button>
                 <button @click="adminTab = 'settings'" :class="adminTab === 'settings' ? 'bg-amber-500 text-slate-950 font-extrabold' : 'text-slate-400 hover:text-white'" class="px-4 py-2.5 rounded-xl text-xs whitespace-nowrap transition">Settings</button>
             </div>
 
@@ -1055,19 +1049,6 @@
                         </select>
                     </div>
                 </div>
-                <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/20 space-y-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-emerald-300"><i class="fa-solid fa-user-plus mr-1.5"></i> New Client Create</h3>
-                        <p class="text-[10px] text-slate-400">Admin सीधे नया client बना सकता है। Code और temporary PIN बनने के बाद तुरंत दिखेंगे।</p>
-                    </div>
-                    <form @submit.prevent="createPortalClient('admin')" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                        <input v-model="portalClientForm.name" required maxlength="100" placeholder="Client Name" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                        <input v-model="portalClientForm.phone" @input="portalClientForm.phone = normalizePhone(portalClientForm.phone)" required type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" placeholder="10 digit mobile" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                        <input v-model="portalClientForm.jobType" required maxlength="100" placeholder="Job Category" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
-                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold p-2.5 rounded-lg text-sm">Create Client</button>
-                    </form>
-                </div>
-
                 <p class="text-[10px] text-slate-400">Approved/Rejected client का final decision owner और time नीचे दिखेगा। Employee के final decision को दूसरा employee बदल नहीं सकता।</p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
@@ -1133,9 +1114,14 @@
                                     </button>
                                     <span v-else class="text-xs font-bold text-emerald-400"><i class="fa-solid fa-check-double mr-1"></i> Promoted</span>
                                 </td>
-                                <td class="p-3 space-x-2">
-                                    <button @click="resetClientPin(c)" class="text-amber-400 hover:text-amber-300 text-xs font-bold" title="Reset Client PIN"><i class="fa-solid fa-key"></i></button>
-                                    <button @click="deleteClient(c)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                                <td class="p-3">
+                                    <div class="space-y-1.5">
+                                        <div class="text-[10px] text-slate-400">Client PIN:</div>
+                                        <div v-if="c.pin" class="font-mono font-black text-emerald-400 bg-slate-900 px-2 py-1 rounded-lg inline-block">{{ c.pin }}</div>
+                                        <span v-else class="text-[10px] text-rose-400">Not issued</span>
+                                        <div><button @click="issueClientPin(c)" class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-1 rounded-lg">{{ c.pin ? 'Reset / New PIN' : 'Create PIN' }}</button></div>
+                                        <button @click="deleteClient(c)" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -1389,7 +1375,49 @@
                 </div>
             </div>
 
-            <!-- TAB 8: SETTINGS -->
+            <!-- TAB 8: ERRORS & CLIENT PIN REQUESTS -->
+            <div v-if="adminTab === 'alerts'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div><h3 class="text-lg font-bold text-white">Portal Error Notifications</h3><p class="text-xs text-slate-400">किसने क्या किया, mobile, code और पूरा error detail यहाँ रहेगा। Delete करने पर notification भी delete होगी।</p></div>
+                    <span class="text-xs font-bold text-rose-300 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-full">{{ portalAlerts.length }} Alerts</span>
+                </div>
+                <div v-if="portalAlerts.length === 0" class="text-xs text-slate-500 bg-slate-900 p-4 rounded-xl">कोई error notification नहीं है।</div>
+                <div v-for="a in portalAlerts" :key="a.id" class="bg-slate-900 border border-rose-500/20 p-4 rounded-xl space-y-2">
+                    <div class="flex flex-wrap justify-between gap-2">
+                        <div><p class="font-bold text-rose-300">{{ a.action || 'Portal Error' }}</p><p class="text-xs text-slate-300">{{ a.message }}</p></div>
+                        <button @click="deletePortalAlert(a.id)" class="text-xs text-rose-400 border border-rose-500/20 px-2 py-1 rounded-lg"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-400">
+                        <div><b class="text-slate-300">Name:</b> {{ a.userName || 'Unknown / Visitor' }}</div>
+                        <div><b class="text-slate-300">Code:</b> {{ a.userCode || '—' }}</div>
+                        <div><b class="text-slate-300">Phone:</b> {{ a.phone || '—' }}</div>
+                        <div><b class="text-slate-300">Role:</b> {{ a.role || 'visitor' }}</div>
+                        <div><b class="text-slate-300">Time:</b> {{ a.date || '—' }}</div>
+                        <div><b class="text-slate-300">Firebase Code:</b> {{ a.firebaseCode || '—' }}</div>
+                    </div>
+                    <pre class="whitespace-pre-wrap break-words text-[10px] text-slate-500 bg-slate-950 p-3 rounded-lg">{{ a.details || 'No extra details' }}</pre>
+                </div>
+
+                <div class="border-t border-slate-700 pt-5">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+                        <div><h3 class="text-lg font-bold text-white">Client PIN Requests</h3><p class="text-xs text-slate-400">Employee द्वारा बनाए गए client का PIN केवल Admin जारी करेगा।</p></div>
+                    </div>
+                    <div v-if="clientPinRequests.length === 0" class="text-xs text-slate-500 bg-slate-900 p-4 rounded-xl">कोई pending PIN request नहीं है।</div>
+                    <div v-for="r in clientPinRequests" :key="r.id" class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex flex-wrap justify-between gap-3 items-center">
+                        <div class="text-xs">
+                            <p class="font-bold text-white">{{ r.clientName }} — <span class="text-amber-400 font-mono">{{ r.clientCode }}</span></p>
+                            <p class="text-slate-400">Reg: {{ r.registrationNo }} | Mobile: {{ r.phone }}</p>
+                            <p class="text-slate-500">Requested by {{ r.employeeName }} ({{ r.employeeCode }})</p>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span v-if="r.status === 'Ready'" class="font-mono font-black text-emerald-400 bg-slate-800 px-3 py-2 rounded-lg">PIN: {{ r.oneTimePin }}</span>
+                            <button v-if="r.status !== 'Ready'" @click="approveClientPinRequest(r)" class="bg-amber-500 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs">Generate PIN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 9: SETTINGS -->
             <div v-if="adminTab === 'settings'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
                 <div>
                     <h3 class="text-lg font-bold text-white mb-3">Company Profile Info</h3>
@@ -1547,15 +1575,13 @@
 
     <!-- MODAL: Client Change Own PIN -->
     <div v-if="showClientPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
-            <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-2"></i> Update Client PIN</h3>
-            <div>
-                <label class="block text-xs font-bold text-slate-400 mb-1">New 4-Digit PIN</label>
-                <input v-model="clientPinInput" type="password" maxlength="4" inputmode="numeric" placeholder="Enter new 4 digit PIN" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
-            </div>
-            <div class="flex justify-end space-x-2 pt-2">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-key text-amber-400 mr-2"></i>Change Client PIN</h3>
+            <p class="text-xs text-slate-400">अपना नया 4 digit PIN सेट करें। Admin को updated PIN दिखाई देगा।</p>
+            <input v-model="clientSelfPinInput" type="password" maxlength="4" inputmode="numeric" placeholder="New 4 digit PIN" class="w-full bg-slate-800 border border-slate-700 px-4 py-2.5 rounded-xl text-white font-mono">
+            <div class="flex justify-end gap-2">
                 <button @click="showClientPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
-                <button @click="updateClientPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
+                <button @click="updateClientSelfPin" class="px-4 py-2 bg-amber-500 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
             </div>
         </div>
     </div>
@@ -1564,12 +1590,13 @@
     <div v-if="showEmpSelfPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl">
             <h3 class="text-lg font-bold text-white flex items-center"><i class="fa-solid fa-lock text-amber-400 mr-2"></i> Update Your Security PIN</h3>
+            <p v-if="forceEmpPinChange" class="text-xs font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-3">Admin द्वारा दिया गया temporary PIN है। आगे बढ़ने के लिए पहले नया PIN सेट करना जरूरी है।</p>
             <div>
                 <label class="block text-xs font-bold text-slate-400 mb-1">New 4-Digit PIN</label>
                 <input v-model="selfPinInput" type="password" maxlength="4" placeholder="Enter new 4 digit PIN" class="w-full bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-white font-mono focus:outline-none focus:border-amber-500">
             </div>
             <div class="flex justify-end space-x-2 pt-2">
-                <button @click="showEmpSelfPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
+                <button v-if="!forceEmpPinChange" @click="showEmpSelfPinModal = false" class="px-4 py-2 bg-slate-700 text-xs font-bold rounded-xl text-slate-300">Cancel</button>
                 <button @click="updateSelfPin" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl">Save New PIN</button>
             </div>
         </div>
@@ -1717,7 +1744,7 @@ try {
 
 const { createApp } = Vue;
 
-createApp({
+window.__vcrPortalApp = createApp({
     data() {
         return {
             currentView: 'job_form',
@@ -1726,8 +1753,6 @@ createApp({
             phoneAuth: { confirmationResult: null, otpSent: false, role: '', verifier: null },
             loginError: '',
             currentUser: null,
-            portalAlerts: [],
-            _alertThrottle: {},
 
             toast: { show: false, message: '', type: 'success' },
             sessionTimer: null,
@@ -1753,9 +1778,13 @@ createApp({
             employeeFeedbackInput: '',
             empSubTab: 'clients',
             showEmpSelfPinModal: false,
+            forceEmpPinChange: false,
             selfPinInput: '',
             showClientPinModal: false,
-            clientPinInput: '',
+            clientSelfPinInput: '',
+            portalAlerts: [],
+            clientPinRequests: [],
+            newClientByEmployee: { name: '', phone: '', jobType: '', address: '' },
             selectedReviewClient: null,
 
             extraWorkForm: { screenshot: null, description: '' },
@@ -1777,7 +1806,6 @@ createApp({
             adminTab: 'clients',
             admins: [],
             newAdmin: { name: '', phone: '', pin: '' },
-            portalClientForm: { name: '', phone: '', jobType: '' },
             adminPinModal: { show: false, empCode: '', empName: '', newPin: '' },
             selectedEmpWork: null,
 
@@ -1939,7 +1967,7 @@ createApp({
         clearPrivateData() {
             (this._privateUnsubs || []).forEach(fn => { try { fn(); } catch (_) {} });
             this._privateUnsubs = [];
-            this.clients = []; this.employees = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = []; this.workItems = []; this._employeeOwnWorkItems = []; this._employeePendingWorkItems = []; this.clientPayoutRequests = []; this._employeeOwnChats = []; this._employeeAdminChats = []; this._employeeScopedCode = null; this._clientScopedCode = null;
+            this.clients = []; this.employees = []; this.portalAlerts = []; this.clientPinRequests = []; this.supportChats = []; this.earningsRequests = []; this.payoutRequests = []; this.feedbacks = []; this.workItems = []; this._employeeOwnWorkItems = []; this._employeePendingWorkItems = []; this.clientPayoutRequests = []; this._employeeOwnChats = []; this._employeeAdminChats = []; this._employeeScopedCode = null; this._clientScopedCode = null;
         },
 
         loadPrivateDataForRole(role, userId) {
@@ -2019,6 +2047,9 @@ createApp({
                     watch(db.collection('feedbacks').where('empCode', '==', code), snapshot => {
                         this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     });
+                    watch(db.collection('clientPinRequests').where('employeeCode', '==', code), snapshot => {
+                        this.clientPinRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    });
 
                     // Support messages are scoped to this employee: own messages plus only
                     // admin replies explicitly addressed to this employee.
@@ -2058,32 +2089,46 @@ createApp({
                 watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('settings').doc('admin'), doc => { if (doc.exists) { const data = doc.data() || {}; this.adminSettingsForm.username = String(data.username || 'admin'); if (data.passwordHash?.hash && data.passwordHash?.salt) this.adminPasswordHash = data.passwordHash; } });
                 watch(db.collection('adminAccess'), snapshot => { this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
-                watch(db.collection('portalAlerts').orderBy('createdAt', 'desc').limit(100), snapshot => { this.portalAlerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
+                watch(db.collection('portalAlerts'), snapshot => { this.portalAlerts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a,b) => String(b.date||'').localeCompare(String(a.date||''))); });
+                watch(db.collection('clientPinRequests').where('status', 'in', ['Pending','Ready']), snapshot => { this.clientPinRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
             }
-        },
-
-        async reportPortalError(error, view = 'portal') {
-            try {
-                const message = String(error?.message || error || 'Unknown error').slice(0, 500);
-                const code = String(error?.code || 'NO_CODE').slice(0, 80);
-                const key = `${view}|${code}|${message}`;
-                const now = Date.now();
-                if (this._alertThrottle[key] && now - this._alertThrottle[key] < 30000) return;
-                this._alertThrottle[key] = now;
-                const d = new Date(), pad = n => String(n).padStart(2, '0');
-                const alertNo = `ERR-${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
-                await db.collection('portalAlerts').add({
-                    alertNo, message, code, view: String(view).slice(0, 80),
-                    userRole: this.currentUser?.role || 'public', userCode: this.currentUser?.code || '',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdAtText: d.toLocaleString()
-                });
-            } catch (_) {}
         },
 
         showToast(message, type = 'success') {
             this.toast = { show: true, message, type };
-            if (type === 'error' && !String(message).includes('Admin alert')) this.reportPortalError(new Error(String(message)), this.currentView || 'portal');
+            if (type === 'error') {
+                const text = String(message || 'Portal error');
+                const firebaseCode = (text.match(/(?:code|error code)\s*[:=]?\s*([a-z0-9\-_/]+)/i) || [])[1] || '';
+                this.reportPortalError(text, firebaseCode ? ('Firebase error code: ' + firebaseCode) : '');
+            }
             setTimeout(() => { this.toast.show = false; }, 3500);
+        },
+
+        async reportPortalError(message, details = '', firebaseCode = '') {
+            try {
+                const loginPhone = this.normalizePhone(this.loginInput?.phone || '');
+                const userPhone = this.normalizePhone(this.currentUser?.phone || '');
+                const phone = userPhone || loginPhone || this.normalizePhone(this.jobForm?.phone || '');
+                const code = this.currentUser?.code || this.loginInput?.code || this.loginInput?.adminCode || '';
+                await db.collection('portalAlerts').add({
+                    action: message.slice(0, 300),
+                    message: message.slice(0, 1000),
+                    details: String(details || new Error().stack || '').slice(0, 5000),
+                    userName: this.currentUser?.name || (this.loginType === 'client' ? 'Client / Visitor' : this.loginType === 'employee' ? 'Employee / Visitor' : 'Admin / Visitor'),
+                    userCode: code,
+                    phone,
+                    role: this.currentUser?.role || this.loginType || 'visitor',
+                    firebaseCode: String(firebaseCode || '').slice(0, 200),
+                    date: new Date().toLocaleString('en-IN'),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (e) { console.warn('Portal error report failed:', e); }
+        },
+
+        async deletePortalAlert(id) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin error notification delete कर सकता है।', 'error'); return; }
+            try { await db.collection('portalAlerts').doc(id).delete(); this.showToast('Error notification deleted.', 'success'); }
+            catch (e) { console.error(e); this.showToast('Error notification delete नहीं हुआ।', 'error'); }
         },
 
         clientDocId(clientOrId) {
@@ -2123,32 +2168,47 @@ createApp({
         },
 
         nextEmployeeCode() {
-            const nums = this.employees.map(e => Number(String(e.code || '').match(/(\d+)$/)?.[1] || 0)).filter(Number.isFinite);
-            return `EMP-${String(Math.max(0, ...nums) + 1).padStart(4, '0')}`;
+            const nums = this.employees.map(e => Number(String(e.code || '').match(/(\d{5})$/)?.[1] || 0)).filter(Number.isFinite);
+            return `EMP-${String(Math.max(0, ...nums) + 1).padStart(5, '0')}`;
+        },
+
+        async readNextSerialTx(tx, prefix) {
+            const ref = db.collection('counters').doc(prefix);
+            const snap = await tx.get(ref);
+            let next = (Number(snap.exists ? snap.data().value : 0) || 0) + 1;
+
+            // Recover automatically if the counter is missing/behind an existing
+            // record. New IDs remain strictly PREFIX-00001 ... PREFIX-99999.
+            for (let attempt = 0; attempt < 100000; attempt++, next++) {
+                if (next > 99999) throw new Error('SERIAL_LIMIT_REACHED');
+                const code = `${prefix}-${String(next).padStart(5, '0')}`;
+                let collision = false;
+
+                if (prefix === 'REG') {
+                    collision = (await tx.get(db.collection('clients').doc(code))).exists;
+                } else if (prefix === 'EMP') {
+                    collision = (await tx.get(db.collection('employees').doc(code))).exists;
+                } else if (prefix === 'ADM') {
+                    collision = (await tx.get(db.collection('adminAccess').doc(code))).exists;
+                } else if (prefix === 'CLI') {
+                    const q = await tx.get(db.collection('clients').where('code', '==', code).limit(1));
+                    collision = !q.empty;
+                }
+
+                if (!collision) {
+                    return { ref, value: next, code };
+                }
+            }
+            throw new Error('SERIAL_LIMIT_REACHED');
         },
 
         generateClientCode(registrationNo, phone) {
-            const reg = String(registrationNo || '').trim().toUpperCase();
-            const regDigits = reg.replace(/\D/g, '').slice(-10).padStart(10, '0');
-            const mobile = this.normalizePhone(phone || '');
-
-            // Client Code is deterministic from BOTH Registration Number + Mobile.
-            // The registration digits are retained so the login can locate the
-            // clientAccess document directly; the checksum changes with mobile.
-            let hash = 2166136261;
-            const seed = `${regDigits}|${mobile}|VCR-CLIENT-2026`;
-            for (let i = 0; i < seed.length; i++) {
-                hash ^= seed.charCodeAt(i);
-                hash = Math.imul(hash, 16777619);
-            }
-            const checksum = (hash >>> 0).toString(36).toUpperCase().padStart(6, '0').slice(-6);
-            return `CLI-${regDigits}-${checksum}`;
+            const n = String(registrationNo || '').match(/(\d{5})$/);
+            return `CLI-${String(n ? n[1] : '00001').padStart(5, '0')}`;
         },
 
-        generateUniqueNumericCode(prefix, length = 8) {
-            const now = Date.now().toString().slice(-length);
-            const rand = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-            const raw = (now + rand).slice(-length);
+        generateUniqueNumericCode(prefix, length = 5) {
+            const raw = String(Math.floor(Math.random() * 100000)).padStart(length, '0').slice(-length);
             return `${prefix}-${raw}`;
         },
 
@@ -2292,105 +2352,6 @@ createApp({
             }
         },
 
-        async resetClientPin(client) {
-            if (!['admin','employee'].includes(this.currentUser?.role)) {
-                this.showToast('केवल Admin/Employee client PIN reset कर सकते हैं।', 'error'); return;
-            }
-            const registrationNo = String(client?.registrationNo || client?.id || '');
-            if (!registrationNo) { this.showToast('Client registration record नहीं मिला।', 'error'); return; }
-            try {
-                const pin = this.generateInitialPin();
-                const pinHash = await this.hashCredential(pin);
-                await db.collection('clientAccess').doc(registrationNo).set({
-                    registrationNo, clientCode: client.code || this.generateClientCode(registrationNo, client.phone),
-                    phoneHash: await this.hashLookupValue(client.phone), pinHash, status: client.status || 'Pending',
-                    temporaryPin: pin, resetBy: this.currentUser.code || this.currentUser.role,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                this.showToast(`Client PIN reset — Code: ${client.code || 'N/A'} | New PIN: ${pin}`, 'success');
-            } catch (error) {
-                console.error(error);
-                this.reportPortalError(error, 'Client PIN Reset');
-                this.showToast('Client PIN reset नहीं हो पाया। Error Admin alert में भेज दिया गया है।', 'error');
-            }
-        },
-
-        async createPortalClient(actorRole) {
-            if (!['admin', 'employee'].includes(actorRole) || this.currentUser?.role !== actorRole) {
-                this.showToast('इस account को client create करने की अनुमति नहीं है।', 'error'); return;
-            }
-            const name = String(this.portalClientForm.name || '').trim();
-            const phone = this.normalizePhone(this.portalClientForm.phone);
-            const jobType = String(this.portalClientForm.jobType || '').trim();
-            if (!name || !this.isValidPhone(phone) || !jobType) {
-                this.showToast('Client name, valid mobile और job category जरूरी है।', 'error'); return;
-            }
-            try {
-                const pin = this.generateInitialPin();
-                const pinHash = await this.hashCredential(pin);
-                const phoneHash = await this.hashLookupValue(phone);
-                let registrationNo = '', clientCode = '', created = false;
-                for (let attempt = 0; attempt < 12 && !created; attempt++) {
-                    registrationNo = this.generateUniqueNumericCode('REG', 10);
-                    clientCode = this.generateClientCode(registrationNo, phone);
-                    const clientRef = db.collection('clients').doc(registrationNo);
-                    const accessRef = db.collection('clientAccess').doc(registrationNo);
-                    try {
-                        await db.runTransaction(async tx => {
-                            const existing = await tx.get(clientRef);
-                            if (existing.exists) throw new Error('CLIENT_CODE_COLLISION');
-                            tx.set(clientRef, {
-                                code: clientCode, registrationNo, name, phone, jobType,
-                                address: '', email: '', education: '', experience: '', workMode: '',
-                                expectedSalary: '', skills: '', status: 'Approved', role: 'client',
-                                source: 'portal_manual_' + actorRole, campaignProofs: [], campaignIssues: {},
-                                isPromoted: false, createdBy: this.currentUser.code || actorRole,
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                decisionBy: `${this.currentUser.name} (${this.currentUser.code || actorRole})`,
-                                decisionRole: actorRole, decisionAt: new Date().toISOString(), approvalLocked: true
-                            });
-                            tx.set(accessRef, {
-                                registrationNo, clientCode, phoneHash, pinHash, status: 'Approved',
-                                createdBy: this.currentUser.code || actorRole, temporaryPin: pin,
-                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
-                        });
-                        created = true;
-                    } catch (e) {
-                        if (e.message !== 'CLIENT_CODE_COLLISION') throw e;
-                    }
-                }
-                if (!created) throw new Error('CLIENT_CREATE_FAILED');
-                this.portalClientForm = { name: '', phone: '', jobType: '' };
-                this.showToast(`Client created — Code: ${clientCode} | Temporary PIN: ${pin}`, 'success');
-            } catch (error) {
-                console.error(error);
-                this.reportPortalError(error, 'Create Client');
-                this.showToast('New client create नहीं हो पाया। Error Admin alert में भेज दिया गया है।', 'error');
-            }
-        },
-
-        async updateClientPin() {
-            if (this.currentUser?.role !== 'client') return;
-            const pin = String(this.clientPinInput || '').trim();
-            if (!/^\d{4}$/.test(pin)) { this.showToast('नया PIN ठीक 4 अंकों का होना चाहिए।', 'error'); return; }
-            try {
-                const pinHash = await this.hashCredential(pin);
-                const registrationNo = String(this.currentUser.registrationNo || this.currentUser.id || '');
-                await db.collection('clientAccess').doc(registrationNo).set({
-                    pinHash, temporaryPin: firebase.firestore.FieldValue.delete(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-                this.clientPinInput = '';
-                this.showClientPinModal = false;
-                this.showToast('Client PIN updated successfully!', 'success');
-            } catch (error) {
-                console.error(error);
-                this.reportPortalError(error, 'Client PIN Change');
-                this.showToast('PIN change नहीं हो पाया।', 'error');
-            }
-        },
-
         async submitJobForm() {
             if (this.jobSubmitting) return;
             this.jobSubmitting = true;
@@ -2428,19 +2389,17 @@ createApp({
 
                 let registrationNo = '';
                 let newClient = null;
-                let created = false;
-                let lastError = null;
 
-                for (let attempt = 0; attempt < 10 && !created; attempt++) {
-                    registrationNo = this.generateUniqueNumericCode('REG', 10);
-                    const generatedClientCode = this.generateClientCode(registrationNo, phone);
-
+                // Allocate REG-00001 / CLI-00001 serials atomically with the client record.
+                await db.runTransaction(async tx => {
+                    const regSerial = await this.readNextSerialTx(tx, 'REG');
+                    const cliSerial = await this.readNextSerialTx(tx, 'CLI');
+                    registrationNo = regSerial.code;
+                    const clientCode = cliSerial.code;
                     newClient = {
-                        code: generatedClientCode,
+                        code: clientCode,
                         registrationNo,
-                        name,
-                        phone,
-                        jobType,
+                        name, phone, jobType,
                         address: String(this.jobForm.address || '').trim(),
                         email: String(this.jobForm.email || '').trim(),
                         education: String(this.jobForm.education || '').trim(),
@@ -2448,41 +2407,15 @@ createApp({
                         workMode: String(this.jobForm.workMode || '').trim(),
                         expectedSalary: String(this.jobForm.expectedSalary || '').trim(),
                         skills: String(this.jobForm.skills || '').trim(),
-                        status: 'Pending',
-                        role: 'client',
-                        source: 'public_job_portal',
-                        campaignProofs: [],
-                        campaignIssues: {},
-                        isPromoted: false,
-
-                        // Server timestamp avoids rules/type mismatch from browser time strings.
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        status: 'Pending', role: 'client', source: 'public_job_portal',
+                        campaignProofs: [], campaignIssues: {}, isPromoted: false,
+                        pin: null, pinHash: null, pinStatus: 'Pending Admin PIN',
+                        createdByRole: 'public', createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     };
-
-                    try {
-                        await db.collection('clients').doc(registrationNo).create(newClient);
-                        created = true;
-                    } catch (error) {
-                        lastError = error;
-
-                        if (error?.code === 'already-exists') continue;
-
-                        // One retry with a fresh anonymous session if Rules require auth.
-                        if (error?.code === 'permission-denied' && !authReady) {
-                            try {
-                                await this.ensureAnonymousSession();
-                                authReady = !!firebase.auth().currentUser;
-                                if (authReady) continue;
-                            } catch (_) {}
-                        }
-
-                        throw error;
-                    }
-                }
-
-                if (!created) {
-                    throw lastError || new Error('Could not allocate a unique registration number.');
-                }
+                    tx.create(db.collection('clients').doc(registrationNo), newClient);
+                    tx.set(regSerial.ref, { value: regSerial.value, prefix: 'REG', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    tx.set(cliSerial.ref, { value: cliSerial.value, prefix: 'CLI', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                });
 
                 newClient.createdAt = new Date().toISOString();
                 this.lastSubmitted = newClient;
@@ -2496,7 +2429,6 @@ createApp({
 
             } catch (error) {
                 console.error('Job application submit error:', error);
-                this.reportPortalError(error, 'Job Application Submit');
                 const code = error?.code || '';
 
                 if (code === 'permission-denied') {
@@ -2555,32 +2487,35 @@ createApp({
             const clientCode = String(this.loginInput.code || '').trim().toUpperCase();
             const phone = this.normalizePhone(this.loginInput.phone);
             const pin = String(this.loginInput.pin || '').trim();
-            const codeMatch = clientCode.match(/^CLI-(\d{10})-([A-Z0-9]{6})$/);
-            if (!codeMatch || !this.isValidPhone(phone) || !/^\d{4}$/.test(pin)) {
-                this.loginError = 'Valid Client Code, registered mobile और 4 digit PIN दर्ज करें।'; return;
+            if (!/^CLI-[A-Z0-9-]+$/.test(clientCode) || !this.isValidPhone(phone) || !this.isValidPin(pin)) {
+                this.loginError = 'Client Code, registered mobile और 4 digit PIN दर्ज करें।'; return;
             }
-            const registrationNo = 'REG-' + codeMatch[1];
             try {
-                const authUser = await this.ensureFreshAnonymousSession();
-                const accessSnap = await db.collection('clientAccess').doc(registrationNo).get();
-                if (!accessSnap.exists) throw new Error('CLIENT_NOT_FOUND');
-                const access = accessSnap.data() || {};
-                const expectedClientCode = this.generateClientCode(registrationNo, phone);
-                if (expectedClientCode !== clientCode || access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
+                let authUser = null;
+                try { authUser = await this.ensureFreshAnonymousSession(); } catch (authError) {
+                    if (authError?.code !== 'auth/operation-not-allowed' && authError?.code !== 'auth/network-request-failed') throw authError;
+                }
+                let accessSnap = await db.collection('clientAccess').doc(clientCode).get();
+                let access = accessSnap.exists ? (accessSnap.data() || {}) : null;
+                let registrationNo = access?.registrationNo || '';
+
+                // Legacy compatibility: old access documents were keyed by registration number.
+                if (!access) {
+                    const legacy = await db.collection('clients').where('code', '==', clientCode).limit(1).get();
+                    if (!legacy.empty) { registrationNo = legacy.docs[0].id; access = legacy.docs[0].data() || {}; }
+                }
+                if (!access || !registrationNo) throw new Error('CLIENT_NOT_FOUND');
+                if (access.phoneHash && access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (access.status !== 'Approved') throw new Error(access.status === 'Rejected' ? 'CLIENT_REJECTED' : 'CLIENT_PENDING');
-                if (!access.clientCode || access.clientCode !== clientCode) throw new Error('CLIENT_CODE_MISMATCH');
-                if (!access.pinHash || !await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_CLIENT_PIN');
+                if (!access.pinHash) throw new Error('PIN_NOT_SET');
+                if (!await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_PIN');
 
-                await db.collection('authProfiles').doc(authUser.uid).set({
-                    uid: authUser.uid, role: 'client', code: clientCode, registrationNo,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
+                if (authUser) await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'client', code: clientCode, registrationNo, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 const snap = await db.collection('clients').doc(registrationNo).get();
                 if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
                 const found = { id: snap.id, ...snap.data() };
                 if (found.code !== clientCode) throw new Error('CLIENT_CODE_MISMATCH');
-                this.currentUser = { ...found, authUid: authUser.uid, role: 'client' };
+                this.currentUser = { ...found, authUid: authUser?.uid || null, role: 'client' };
                 this.loadPrivateDataForRole('client', found.id);
                 this.currentView = 'client_dash';
                 this.loginInput = { ...this.loginInput, code: '', registrationNo: '', phone: '', pin: '' };
@@ -2588,14 +2523,16 @@ createApp({
                 this.showToast('Welcome, ' + found.name + ' | Client Code: ' + found.code, 'success');
             } catch (error) {
                 console.error(error);
-                this.reportPortalError(error, 'Client Login');
-                this.loginError = error.message === 'PHONE_MISMATCH' ? 'Mobile/Client Code match नहीं करता.'
-                    : error.message === 'CLIENT_PENDING' ? 'Client अभी approval में है.'
-                    : error.message === 'CLIENT_REJECTED' ? 'यह client rejected है.'
-                    : error.message === 'BAD_CLIENT_PIN' ? 'Client PIN गलत है.'
-                    : error.message === 'CLIENT_CODE_MISMATCH' ? 'Client Code और record match नहीं कर रहे.'
-                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Anonymous Authentication Enable करें.'
-                    : 'Client login नहीं हो पाया। Code, mobile और PIN check करें।';
+                this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Client Code से match नहीं करता.'
+                    : error.message === 'CLIENT_NOT_FOUND' ? 'Client Code नहीं मिला.'
+                    : error.message === 'CLIENT_REJECTED' ? 'Application rejected है.'
+                    : error.message === 'CLIENT_PENDING' ? 'Application अभी approval में है.'
+                    : error.message === 'PIN_NOT_SET' ? 'Client PIN अभी Admin ने जारी नहीं किया है.'
+                    : error.message === 'BAD_PIN' ? 'Client PIN गलत है.'
+                    : error.message === 'CLIENT_CODE_MISMATCH' ? 'Client record और code match नहीं कर रहे.'
+                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Anonymous Authentication enable करें.'
+                    : 'Client login नहीं हो पाया।';
+                this.showToast(this.loginError, 'error');
             }
         },
 
@@ -2603,31 +2540,32 @@ createApp({
             const code = String(this.loginInput.code || '').trim().toUpperCase();
             const pin = String(this.loginInput.pin || '').trim();
             const phone = this.normalizePhone(this.loginInput.phone);
-            if (!code || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'Employee Code, registered mobile और 4 अंकों का PIN दर्ज करें।'; return; }
+            if (!/^EMP-[A-Z0-9-]+$/.test(code) || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'Employee Code EMP-00001, registered mobile और 4 digit PIN दर्ज करें।'; return; }
             try {
-                const authUser = await this.ensureFreshAnonymousSession();
-                const accessSnap = await db.collection('employeeAccess').doc(code).get();
-                if (!accessSnap.exists) throw new Error('EMP_NOT_FOUND');
-                const access = accessSnap.data() || {};
+                let authUser = null;
+                try { authUser = await this.ensureFreshAnonymousSession(); } catch (authError) {
+                    if (authError?.code !== 'auth/operation-not-allowed' && authError?.code !== 'auth/network-request-failed') throw authError;
+                }
+                let accessSnap = await db.collection('employeeAccess').doc(code).get();
+                let access = accessSnap.exists ? (accessSnap.data() || {}) : {};
+                const empSnap = await db.collection('employees').doc(code).get();
+                if (!empSnap.exists) throw new Error('EMP_NOT_FOUND');
+                const employee = empSnap.data() || {};
+                if (!access.phoneHash && employee.phone) { access.phoneHash = await this.hashLookupValue(employee.phone); access.pinHash = access.pinHash || employee.pinHash; }
                 if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (!access.pinHash) throw new Error('PIN_NOT_SET');
-                const validPin = await this.verifyStoredCredential(pin, access.pinHash);
-                if (!validPin) throw new Error('BAD_PIN');
-                // Create the role profile before reading the protected employee document.
-                await db.collection('authProfiles').doc(authUser.uid).set({
-                    uid: authUser.uid, role: 'employee', code,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
-
-                const snap = await db.collection('employees').doc(code).get();
-                if (!snap.exists) throw new Error('EMP_NOT_FOUND');
-                const found = { id: snap.id, ...snap.data() };
-                const update = {};
-                if (found.pin) { update.pin = firebase.firestore.FieldValue.delete(); update.pinHash = access.pinHash; update.mustChangePin = false; }
-                if (Object.keys(update).length) await db.collection('employees').doc(code).update(update);
-                this.currentUser = { ...found, role: 'employee', authUid: authUser.uid };
+                if (!await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_PIN');
+                await db.collection('employeeAccess').doc(code).set({ code, phoneHash: access.phoneHash, pinHash: access.pinHash, status: 'Active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                if (authUser) await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'employee', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                const found = { id: empSnap.id, ...employee, code };
+                this.currentUser = { ...found, role: 'employee', authUid: authUser?.uid || null };
+                this.forceEmpPinChange = found.mustChangePin === true;
                 this.loadPrivateDataForRole('employee', found.id);
                 this.currentView = 'emp_dash';
+                if (this.forceEmpPinChange) {
+                    this.showEmpSelfPinModal = true;
+                    this.showToast('पहली login पर नया Employee PIN सेट करना जरूरी है।', 'success');
+                }
                 this.loginInput = { ...this.loginInput, code: '', phone: '', pin: '' };
                 this.persistUiState();
                 this.showToast('Welcome Employee, ' + found.name, 'success');
@@ -2636,10 +2574,10 @@ createApp({
                 this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Employee Code से match नहीं करता.'
                     : error.message === 'EMP_NOT_FOUND' ? 'Employee Code नहीं मिला.'
                     : error.message === 'BAD_PIN' ? 'Secret PIN गलत है.'
-                    : error.message === 'PIN_NOT_SET' ? 'इस Employee का PIN अभी set नहीं हुआ है। Admin Login → Employees में जाकर Set/Reset PIN करें.'
-                    : error.message === 'ACCOUNT_BOUND' ? 'यह employee account पहले से दूसरे session से linked है.'
-                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Authentication में Anonymous sign-in enable करें.'
-                    : 'Employee login नहीं हो पाया। Code, mobile और PIN check करें।';
+                    : error.message === 'PIN_NOT_SET' ? 'इस Employee का PIN set नहीं है। Admin से PIN बनवाएँ.'
+                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Anonymous Authentication enable करें.'
+                    : 'Employee login नहीं हो पाया।';
+                this.showToast(this.loginError, 'error');
             }
         },
 
@@ -2649,15 +2587,18 @@ createApp({
             const pin = String(this.loginInput.adminPin || '').trim();
             if (!code || !this.isValidPhone(phone) || !this.isValidAdminPin(pin)) { this.loginError = 'Admin Code, registered mobile और 6 अंकों का PIN दर्ज करें।'; return; }
             try {
-                const authUser = await this.ensureFreshAnonymousSession();
+                let authUser = null;
+                try { authUser = await this.ensureFreshAnonymousSession(); } catch (authError) {
+                    if (authError?.code !== 'auth/operation-not-allowed' && authError?.code !== 'auth/network-request-failed') throw authError;
+                }
                 const accessSnap = await db.collection('adminAccess').doc(code).get();
                 if (!accessSnap.exists) throw new Error('ADMIN_NOT_FOUND');
                 const access = accessSnap.data() || {};
                 if (access.status !== 'Active') throw new Error('ADMIN_DISABLED');
                 if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (!await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_ADMIN_PIN');
-                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'admin', code, adminCode: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-                this.currentUser = { id: code, name: access.name, role: 'admin', code, authUid: authUser.uid, phone: access.phone };
+                if (authUser) await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'admin', code, adminCode: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                this.currentUser = { id: code, name: access.name, role: 'admin', code, authUid: authUser?.uid || null, phone: access.phone };
                 this.adminSettingsForm.username = access.name;
                 this.loadPrivateDataForRole('admin', code);
                 this.currentView = 'admin_dash';
@@ -2835,6 +2776,85 @@ createApp({
             this.showToast('Message sent to support', 'success');
         },
 
+        isAdminSession() {
+            return this.currentUser?.role === 'admin' && !!this.currentUser?.code;
+        },
+
+        isEmployeeSession() {
+            return this.currentUser?.role === 'employee' && !!this.currentUser?.code;
+        },
+
+        async issueClientPin(client) {
+            if (this.currentUser?.role !== 'admin') { this.showToast('केवल Admin client PIN जारी कर सकता है।', 'error'); return; }
+            if (!client?.code) { this.showToast('Client Code नहीं मिला।', 'error'); return; }
+            if (client.status !== 'Approved') { this.showToast('केवल Approved client को PIN जारी किया जा सकता है।', 'error'); return; }
+            try {
+                const pin = this.generateInitialPin();
+                const pinHash = await this.hashCredential(pin);
+                const phoneHash = await this.hashLookupValue(client.phone);
+                const reg = client.registrationNo || client.id;
+                await db.runTransaction(async tx => {
+                    const clientRef = db.collection('clients').doc(reg);
+                    tx.update(clientRef, { pin, pinHash, pinStatus: 'Active', pinIssuedBy: this.currentUser.code, pinIssuedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    tx.set(db.collection('clientAccess').doc(client.code), { registrationNo: reg, phoneHash, status: client.status || 'Approved', clientCode: client.code, pinHash, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                });
+                const q = await db.collection('clientPinRequests').where('clientCode', '==', client.code).where('status', '==', 'Pending').limit(10).get();
+                for (const d of q.docs) await d.ref.update({ status: 'Ready', oneTimePin: pin, readyAt: firebase.firestore.FieldValue.serverTimestamp(), adminCode: this.currentUser.code });
+                this.showToast('Client PIN created. Admin can always see: ' + pin, 'success');
+            } catch (e) { console.error(e); this.showToast('Client PIN create नहीं हुआ: ' + (e.message || e.code || 'unknown'), 'error'); }
+        },
+
+        async approveClientPinRequest(req) {
+            const client = this.clients.find(c => c.code === req.clientCode);
+            if (!client) { this.showToast('Client record नहीं मिला।', 'error'); return; }
+            await this.issueClientPin(client);
+        },
+
+        async updateClientSelfPin() {
+            if (this.currentUser?.role !== 'client') { this.showToast('केवल logged-in client अपना PIN बदल सकता है।', 'error'); return; }
+            if (!this.isValidPin(this.clientSelfPinInput)) { this.showToast('नया PIN 4 अंकों का होना चाहिए।', 'error'); return; }
+            try {
+                const pinHash = await this.hashCredential(this.clientSelfPinInput);
+                const ref = db.collection('clients').doc(this.currentUser.registrationNo || this.currentUser.id);
+                const accessRef = db.collection('clientAccess').doc(this.currentUser.code);
+                await ref.update({ pin: this.clientSelfPinInput, pinHash, pinStatus: 'Active', pinChangedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await accessRef.set({ pinHash, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                this.currentUser.pin = this.clientSelfPinInput;
+                this.showClientPinModal = false; this.clientSelfPinInput = '';
+                this.showToast('Client PIN updated successfully.', 'success');
+            } catch (e) { console.error(e); this.showToast('Client PIN update नहीं हुआ।', 'error'); }
+        },
+
+        async createClientByEmployee() {
+            if (this.currentUser?.role !== 'employee') { this.showToast('केवल Employee client बना सकता है।', 'error'); return; }
+            const f = this.newClientByEmployee;
+            if (!f.name || !this.isValidPhone(f.phone) || !f.jobType) { this.showToast('Client name, mobile और job type जरूरी हैं।', 'error'); return; }
+            try {
+                let registrationNo = '', clientCode = '';
+                await db.runTransaction(async tx => {
+                    const regSerial = await this.readNextSerialTx(tx, 'REG');
+                    const cliSerial = await this.readNextSerialTx(tx, 'CLI');
+                    registrationNo = regSerial.code;
+                    clientCode = cliSerial.code;
+                    const client = { code: clientCode, registrationNo, name: String(f.name).trim(), phone: f.phone, jobType: f.jobType, address: String(f.address || '').trim(), status: 'Pending', role: 'client', source: 'employee_created', createdByRole: 'employee', createdByCode: this.currentUser.code, createdByName: this.currentUser.name, campaignProofs: [], campaignIssues: {}, isPromoted: false, pin: null, pinHash: null, pinStatus: 'Requested Admin PIN', createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+                    tx.create(db.collection('clients').doc(registrationNo), client);
+                    tx.create(db.collection('clientPinRequests').doc(clientCode), { clientCode, registrationNo, clientName: client.name, phone: client.phone, employeeCode: this.currentUser.code, employeeName: this.currentUser.name, status: 'Pending', requestedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    tx.set(regSerial.ref, { value: regSerial.value, prefix: 'REG', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    tx.set(cliSerial.ref, { value: cliSerial.value, prefix: 'CLI', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                });
+                this.newClientByEmployee = { name: '', phone: '', jobType: '', address: '' };
+                this.showToast('Client created: ' + clientCode + ' | Registration: ' + registrationNo + '. Admin PIN request sent.', 'success');
+            } catch (e) { console.error(e); this.showToast('Client create नहीं हुआ: ' + (e.message || e.code || 'unknown'), 'error'); }
+        },
+
+        async revealClientPinOnce(req) {
+            if (!req || req.status !== 'Ready' || req.pinClaimed) { this.showToast('PIN पहले ही देखा जा चुका है।', 'error'); return; }
+            const pin = req.oneTimePin;
+            if (!pin) { this.showToast('One-time PIN उपलब्ध नहीं है। Admin से दोबारा generate कराएँ।', 'error'); return; }
+            alert('CLIENT PIN (ONE TIME): ' + pin + '\nइसे सुरक्षित रखें। यह message दोबारा नहीं दिखेगा।');
+            try { await db.collection('clientPinRequests').doc(req.id).update({ pinClaimed: true, oneTimePin: firebase.firestore.FieldValue.delete(), claimedBy: this.currentUser.code, claimedAt: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) { console.error(e); }
+        },
+
         async updateSelfPin() {
             if (this.currentUser?.role !== 'employee') {
                 this.showToast('केवल logged-in employee अपना PIN बदल सकता है।', 'error');
@@ -2854,6 +2874,7 @@ createApp({
             });
             await db.collection('employeeAccess').doc(this.currentUser.code).set({ code: this.currentUser.code, pinHash, updatedAt: new Date().toISOString() }, { merge: true });
             this.showEmpSelfPinModal = false;
+            this.forceEmpPinChange = false;
             this.selfPinInput = '';
             this.showToast('PIN updated successfully!', 'success');
         },
@@ -2888,15 +2909,13 @@ createApp({
 
         async generateApprovedClientCodeTx(tx, currentClient) {
             if (currentClient.code) return currentClient.code;
-            for (let attempt = 0; attempt < 10; attempt++) {
-                const candidate = this.generateUniqueNumericCode('CLI', 8);
-                const codeRef = db.collection('clients').doc('CODE_' + candidate);
-                const codeSnap = await tx.get(codeRef);
-                if (codeSnap.exists) continue;
-                tx.set(codeRef, { type: 'clientCodeReservation', clientCode: candidate, createdAt: new Date().toISOString() });
-                return candidate;
-            }
-            throw new Error('CLIENT_CODE_COLLISION');
+            const serial = await this.readNextSerialTx(tx, 'CLI');
+            tx.set(serial.ref, {
+                value: serial.value,
+                prefix: 'CLI',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            return serial.code;
         },
 
         async employeeApproveClient(client, newStatus) {
@@ -2916,12 +2935,10 @@ createApp({
             try {
                 const clientRef = db.collection('clients').doc(this.clientDocId(client));
                 const earningRef = db.collection('earningsRequests').doc(`approval_${client.registrationNo || client.id || client.code}`);
-                const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
+                const accessRef = db.collection('clientAccess').doc(client.code || this.clientDocId(client));
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
                 const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id, client.phone)) : null;
                 let credited = false;
-                const approvedClientPin = newStatus === 'Approved' ? this.generateInitialPin() : '';
-                const approvedClientPinHash = newStatus === 'Approved' ? await this.hashCredential(approvedClientPin) : null;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(clientRef);
                     if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
@@ -2935,7 +2952,10 @@ createApp({
                     const decision = { status: newStatus, decisionBy, decisionRole: 'employee', decisionAt, approvalLocked: true, decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'employee', decisionAt }) };
                     if (newStatus === 'Approved') decision.code = approvedClientCode;
                     tx.update(clientRef, decision);
-                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? decision.code : null, ...(newStatus === 'Approved' ? { pinHash: approvedClientPinHash, temporaryPin: approvedClientPin } : { pinHash: firebase.firestore.FieldValue.delete(), temporaryPin: firebase.firestore.FieldValue.delete() }), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? decision.code : null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    if (newStatus === 'Approved') {
+                        tx.set(db.collection('clientPinRequests').doc(decision.code), { clientCode: decision.code, registrationNo: current.registrationNo || clientRef.id, clientName: current.name || client.name, phone: current.phone || client.phone, employeeCode, employeeName: this.currentUser.name, status: 'Pending', requestedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    }
                     if (newStatus === 'Approved') {
                         const earningSnap = await tx.get(earningRef);
                         if (earningSnap.exists) {
@@ -2965,10 +2985,9 @@ createApp({
                 client.decisionRole = 'employee';
                 client.decisionAt = new Date().toISOString();
                 client.approvalLocked = true;
-                this.showToast((newStatus === 'Approved' ? 'Client accepted' : 'Client rejected') + (credited ? ' & ₹3 credited' : '') + (newStatus === 'Approved' ? ` | Client Code: ${approvedClientCode} | Temporary PIN: ${approvedClientPin}` : ''), 'success');
+                this.showToast((newStatus === 'Approved' ? 'Client accepted' : 'Client rejected') + (credited ? ' & ₹3 credited' : ''), 'success');
             } catch (error) {
                 console.error(error);
-                this.reportPortalError(error, 'Employee Client Approval');
                 if (error.message === 'CLIENT_ALREADY_DECIDED') this.showToast(`यह client पहले ही ${client.status || 'final'} हो चुका है — ${client.decisionBy || client.approvedByEmp || 'दूसरे employee'} ने decision दिया है।`, 'error');
                 else if (error.message === 'EARNING_ALREADY_ASSIGNED') this.showToast('यह ₹3 earning पहले किसी दूसरे employee को assign हो चुकी है।', 'error');
                 else this.showToast('Client status update नहीं हो पाया।', 'error');
@@ -3138,6 +3157,7 @@ createApp({
         },
 
         async updateClientStatus(client, newStatus) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin client status बदल सकता है।', 'error'); return; }
             const allowedStatuses = ['Pending', 'Approved', 'Rejected'];
             if (!allowedStatuses.includes(newStatus)) {
                 this.showToast('Invalid client status.', 'error');
@@ -3151,12 +3171,10 @@ createApp({
             if (!confirm(`Client ${client.code || client.registrationNo} को ${newStatus} mark करना है? यह employee earning नहीं बनाएगा और decision Admin के नाम से दर्ज होगा।`)) return;
             try {
                 const ref = db.collection('clients').doc(this.clientDocId(client));
-                const accessRef = db.collection('clientAccess').doc(this.clientDocId(client));
+                const accessRef = db.collection('clientAccess').doc(client.code || this.clientDocId(client));
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
                 const approvedClientCode = newStatus === 'Approved' ? (client.code || this.generateClientCode(client.registrationNo || client.id, client.phone)) : null;
                 const decisionAt = new Date().toISOString();
-                const approvedClientPin = newStatus === 'Approved' ? this.generateInitialPin() : '';
-                const approvedClientPinHash = newStatus === 'Approved' ? await this.hashCredential(approvedClientPin) : null;
                 await db.runTransaction(async tx => {
                     const snap = await tx.get(ref);
                     if (!snap.exists) throw new Error('CLIENT_NOT_FOUND');
@@ -3173,7 +3191,7 @@ createApp({
                         approvalLocked: true,
                         decisionHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, decisionBy, decisionRole: 'admin', decisionAt })
                     });
-                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? clientCode : null, ...(newStatus === 'Approved' ? { pinHash: approvedClientPinHash, temporaryPin: approvedClientPin } : { pinHash: firebase.firestore.FieldValue.delete(), temporaryPin: firebase.firestore.FieldValue.delete() }), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    tx.set(accessRef, { registrationNo: current.registrationNo || accessRef.id, phoneHash: clientPhoneHash, status: newStatus, clientCode: newStatus === 'Approved' ? clientCode : null, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
                 });
                 client.status = newStatus;
                 if (newStatus === 'Approved' && !client.code) client.code = approvedClientCode;
@@ -3181,53 +3199,58 @@ createApp({
                 client.decisionRole = 'admin';
                 client.decisionAt = decisionAt;
                 client.approvalLocked = true;
-                this.showToast('Client final status recorded.' + (newStatus === 'Approved' ? ` | Client Code: ${approvedClientCode} | Temporary PIN: ${approvedClientPin}` : ''), 'success');
+                if (newStatus === 'Approved') { await this.issueClientPin(client); }
+                this.showToast('Client final status recorded.', 'success');
             } catch (error) {
                 console.error(error);
-                this.reportPortalError(error, 'Admin Client Status');
                 this.showToast('Client status update नहीं हो पाया या किसी ने पहले decision दे दिया।', 'error');
             }
         },
 
         async promoteClientToEmployee(client) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin employee promotion कर सकता है।', 'error'); return; }
             try {
                 const clientPhoneHash = await this.hashLookupValue(client.phone);
                 const clientRef = db.collection('clients').doc(this.clientDocId(client));
                 let empCode = '';
-                let promoted = false;
-                for (let attempt = 0; attempt < 5 && !promoted; attempt++) {
-                    empCode = this.generateUniqueNumericCode('EMP', 8);
+                let initialPin = '';
+                await db.runTransaction(async tx => {
+                    const clientSnap = await tx.get(clientRef);
+                    if (!clientSnap.exists) throw new Error('Client not found');
+                    const currentClient = clientSnap.data() || {};
+                    if (currentClient.isPromoted) throw new Error('ALREADY_PROMOTED');
+
+                    const empSerial = await this.readNextSerialTx(tx, 'EMP');
+                    empCode = empSerial.code;
                     const empRef = db.collection('employees').doc(empCode);
-                    try {
-                        await db.runTransaction(async tx => {
-                            const clientSnap = await tx.get(clientRef);
-                            if (!clientSnap.exists) throw new Error('Client not found');
-                            const currentClient = clientSnap.data() || {};
-                            if (currentClient.isPromoted) return;
-                            const empSnap = await tx.get(empRef);
-                            if (empSnap.exists) throw new Error('EMP_CODE_COLLISION');
-                            tx.update(clientRef, { isPromoted: true });
-                            const initialPin = this.generateInitialPin();
-                            const promotedPinHash = await this.hashCredential(initialPin);
-                            tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: clientPhoneHash, pinHash: promotedPinHash, updatedAt: new Date().toISOString() });
-                            tx.set(empRef, {
-                                code: empCode,
-                                name: currentClient.name,
-                                phone: currentClient.phone,
-                                position: currentClient.jobType,
-                                photo: currentClient.photo,
-                                pinHash: promotedPinHash,
-                                mustChangePin: true,
-                                role: 'employee',
-                                createdAt: new Date().toISOString()
-                            });
-                            promoted = true;
-                        });
-                    } catch (e) {
-                        if (e.message !== 'EMP_CODE_COLLISION') throw e;
-                    }
-                }
-                if (!promoted) throw new Error('Could not allocate a unique employee code.');
+                    initialPin = this.generateInitialPin();
+                    const promotedPinHash = await this.hashCredential(initialPin);
+
+                    tx.update(clientRef, { isPromoted: true });
+                    tx.set(db.collection('employeeAccess').doc(empCode), {
+                        code: empCode,
+                        phoneHash: clientPhoneHash,
+                        pinHash: promotedPinHash,
+                        status: 'Active',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    tx.set(empRef, {
+                        code: empCode,
+                        name: currentClient.name,
+                        phone: currentClient.phone,
+                        position: currentClient.jobType,
+                        photo: currentClient.photo,
+                        pinHash: promotedPinHash,
+                        mustChangePin: true,
+                        role: 'employee',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    tx.set(empSerial.ref, {
+                        value: empSerial.value,
+                        prefix: 'EMP',
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                });
                 this.showToast('Client promoted. Employee Code: ' + empCode + ' | Temporary PIN: ' + initialPin, 'success');
             } catch (error) {
                 console.error(error);
@@ -3292,6 +3315,7 @@ createApp({
         },
 
         async deleteClient(clientOrId) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin client delete कर सकता है।', 'error'); return; }
             const client = typeof clientOrId === 'object' ? clientOrId : this.clients.find(c => this.clientDocId(c) === clientOrId);
             if (!client) return;
             const docId = this.clientDocId(client);
@@ -3304,7 +3328,11 @@ createApp({
             try {
                 const batch = db.batch();
                 batch.delete(db.collection('clients').doc(docId));
-                batch.delete(db.collection('clientAccess').doc(docId));
+                if (client.code) batch.delete(db.collection('clientAccess').doc(client.code));
+                if (client.code) {
+                    const pinReqSnap = await db.collection('clientPinRequests').where('clientCode', '==', client.code).limit(50).get();
+                    pinReqSnap.docs.forEach(d => batch.delete(d.ref));
+                }
                 await batch.commit();
                 this.showToast('Client profile deleted; login access removed; financial history preserved.', 'success');
             } catch (error) {
@@ -3314,42 +3342,23 @@ createApp({
         },
 
         async addEmployee() {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin employee बना सकता है।', 'error'); return; }
             if (!this.newEmp.name || !this.isValidPhone(this.newEmp.phone)) { this.showToast('कृपया नाम और वैध 10 अंकों का मोबाइल नंबर दर्ज करें।', 'error'); return; }
             try {
-                let empCode = '';
-                let created = false;
                 const empPhoneHash = await this.hashLookupValue(this.newEmp.phone);
                 const initialPin = this.generateInitialPin();
                 const empPinHash = await this.hashCredential(initialPin);
-                for (let attempt = 0; attempt < 5 && !created; attempt++) {
-                    empCode = this.generateUniqueNumericCode('EMP', 8);
-                    const empRef = db.collection('employees').doc(empCode);
-                    await db.runTransaction(async tx => {
-                        const existing = await tx.get(empRef);
-                        if (existing.exists) throw new Error('EMP_CODE_COLLISION');
-                        tx.set(empRef, {
-                            code: empCode,
-                            name: this.newEmp.name,
-                            phone: this.newEmp.phone,
-                            position: this.newEmp.position,
-                            pinHash: empPinHash,
-                            mustChangePin: true,
-                            role: 'employee',
-                            createdAt: new Date().toISOString()
-                        });
-                        tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: empPhoneHash, pinHash: empPinHash, updatedAt: new Date().toISOString() });
-                        created = true;
-                    }).catch(error => {
-                        if (error.message !== 'EMP_CODE_COLLISION') throw error;
-                    });
-                }
-                if (!created) throw new Error('Could not allocate a unique employee code.');
+                let empCode = '';
+                await db.runTransaction(async tx => {
+                    const empSerial = await this.readNextSerialTx(tx, 'EMP');
+                    empCode = empSerial.code;
+                    tx.create(db.collection('employees').doc(empCode), { code: empCode, name: this.newEmp.name, phone: this.newEmp.phone, position: this.newEmp.position, pinHash: empPinHash, mustChangePin: true, role: 'employee', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: empPhoneHash, pinHash: empPinHash, status: 'Active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    tx.set(empSerial.ref, { value: empSerial.value, prefix: 'EMP', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                });
                 this.newEmp = { name: '', phone: '', position: 'Telecaller' };
-                this.showToast('Employee added. Code: ' + empCode + ' | Temporary PIN: ' + initialPin + ' (employee can change it after login)', 'success');
-            } catch (error) {
-                console.error(error);
-                this.showToast('Employee add नहीं हो पाया।', 'error');
-            }
+                this.showToast('Employee added. Code: ' + empCode + ' | Temporary PIN: ' + initialPin, 'success');
+            } catch (error) { console.error(error); this.showToast('Employee add नहीं हो पाया: ' + (error.message || error.code || 'unknown'), 'error'); }
         },
 
         async addAdmin() {
@@ -3359,25 +3368,15 @@ createApp({
                 const phoneHash = await this.hashLookupValue(this.newAdmin.phone);
                 const pinHash = await this.hashCredential(this.newAdmin.pin);
                 let code = '';
-                let created = false;
-                for (let attempt = 0; attempt < 8 && !created; attempt++) {
-                    code = this.generateUniqueNumericCode('ADM', 6);
-                    const ref = db.collection('adminAccess').doc(code);
-                    try {
-                        await db.runTransaction(async tx => {
-                            const existing = await tx.get(ref);
-                            if (existing.exists) throw new Error('ADMIN_CODE_COLLISION');
-                            tx.create(ref, { code, name: String(this.newAdmin.name).trim(), phone: this.newAdmin.phone, phoneHash, pinHash, status: 'Active', createdAt: new Date().toISOString() });
-                        });
-                        created = true;
-                    } catch (error) {
-                        if (error.message !== 'ADMIN_CODE_COLLISION') throw error;
-                    }
-                }
-                if (!created) throw new Error('Could not allocate a unique admin code.');
+                await db.runTransaction(async tx => {
+                    const admSerial = await this.readNextSerialTx(tx, 'ADM');
+                    code = admSerial.code;
+                    tx.create(db.collection('adminAccess').doc(code), { code, name: String(this.newAdmin.name).trim(), phone: this.newAdmin.phone, phoneHash, pinHash, status: 'Active', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    tx.set(admSerial.ref, { value: admSerial.value, prefix: 'ADM', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                });
                 this.newAdmin = { name: '', phone: '', pin: '' };
-                this.showToast('Admin created. Code: ' + code, 'success');
-            } catch (error) { console.error(error); this.showToast('Admin add नहीं हो पाया।', 'error'); }
+                this.showToast('Sub-admin created. Code: ' + code, 'success');
+            } catch (error) { console.error(error); this.showToast('Admin add नहीं हो पाया: ' + (error.message || error.code || 'unknown'), 'error'); }
         },
 
         async deleteAdmin(id) {
@@ -3387,6 +3386,7 @@ createApp({
         },
 
         async deleteEmployee(id) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin employee delete कर सकता है।', 'error'); return; }
             const emp = this.employees.find(e => e.id === id);
             if (!emp) return;
             const code = String(emp.code || '').trim();
@@ -3412,6 +3412,7 @@ createApp({
         },
 
         async saveAdminEmpPin() {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin employee PIN बदल सकता है।', 'error'); return; }
             if (!this.isValidPin(this.adminPinModal.newPin)) {
                 this.showToast('कृपया 4 अंकों का वैध पिन दर्ज करें।', 'error');
                 return;
@@ -3433,6 +3434,7 @@ createApp({
         },
 
         async approveLeadClaim(req) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin earning approve कर सकता है।', 'error'); return; }
             try {
                 const ref = db.collection('earningsRequests').doc(req.id);
                 let changed = false;
@@ -3452,6 +3454,7 @@ createApp({
         },
 
         async approveExtraWorkClaim(req) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin extra work approve कर सकता है।', 'error'); return; }
             const amount = Math.min(500, Math.max(10, Number(req.amount) || 10));
             try {
                 const ref = db.collection('earningsRequests').doc(req.id);
@@ -3472,6 +3475,7 @@ createApp({
         },
 
         async rejectEarningClaim(req) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin earning reject कर सकता है।', 'error'); return; }
             try {
                 const ref = db.collection('earningsRequests').doc(req.id);
                 let changed = false;
@@ -3491,6 +3495,7 @@ createApp({
         },
 
         async processPayout(payout, status) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin payout process कर सकता है।', 'error'); return; }
             if (!['Approved', 'Rejected'].includes(status)) {
                 this.showToast('Invalid payout status.', 'error');
                 return;
@@ -3589,6 +3594,7 @@ createApp({
         },
 
         async confirmWorkItem(item) {
+            if (!this.isEmployeeSession()) { this.showToast('केवल Employee task confirm कर सकता है।', 'error'); return; }
             if (this.currentUser?.role !== 'employee' || item.createdByCode === this.currentUser.code || item.status !== 'Pending') { this.showToast('यह item अभी confirm नहीं किया जा सकता।', 'error'); return; }
             try {
                 const ref = db.collection('workItems').doc(item.id);
@@ -3641,6 +3647,7 @@ createApp({
         },
 
         async confirmClientPayout(payout) {
+            if (!this.isEmployeeSession()) { this.showToast('केवल Employee client payout confirm कर सकता है।', 'error'); return; }
             if (this.currentUser?.role !== 'employee' || payout.status !== 'PendingEmployee') return;
             try {
                 const ref = db.collection('clientPayoutRequests').doc(payout.id);
@@ -3674,6 +3681,7 @@ createApp({
         },
 
         async addCampaign() {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin campaign जोड़ सकता है।', 'error'); return; }
             if (!this.newCmp.title || !this.newCmp.url) { this.showToast('Title और URL दोनों जरूरी हैं।', 'error'); return; }
             if (!this.isSafeHttpUrl(this.newCmp.url)) { this.showToast('केवल valid http/https campaign URL स्वीकार है।', 'error'); return; }
             await db.collection('campaigns').add({
@@ -3685,6 +3693,7 @@ createApp({
         },
 
         async deleteCampaign(id) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin campaign delete कर सकता है।', 'error'); return; }
             if (!confirm('क्या आप यह campaign link delete करना चाहते हैं?')) return;
             try {
                 await db.collection('campaigns').doc(id).delete();
@@ -3696,6 +3705,7 @@ createApp({
         },
 
         async sendAnnouncement() {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin announcement भेज सकता है।', 'error'); return; }
             this.newNoticeText = String(this.newNoticeText || '').trim();
             if (!this.newNoticeText || this.newNoticeText.length > 1000) { this.showToast('Notice 1 से 1000 characters के बीच रखें।', 'error'); return; }
             await db.collection('announcements').add({
@@ -3707,6 +3717,7 @@ createApp({
         },
 
         async deleteAnnouncement(id) {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin announcement delete कर सकता है।', 'error'); return; }
             if (!confirm('क्या आप यह notice delete करना चाहते हैं?')) return;
             try {
                 await db.collection('announcements').doc(id).delete();
@@ -3718,6 +3729,7 @@ createApp({
         },
 
         async updateCompanySettings() {
+            if (!this.isAdminSession()) { this.showToast('केवल Admin company settings बदल सकता है।', 'error'); return; }
             for (const key of ['youtube','telegram','instagram']) {
                 const value = String(this.companyInfo[key] || '').trim();
                 if (value && !this.isSafeHttpUrl(value)) {
@@ -3772,7 +3784,32 @@ createApp({
             this.showToast('CSV Export generated successfully!', 'success');
         }
     }
-}).mount('#app');
+});
+window.__vcrPortalVm = window.__vcrPortalApp.mount('#app');
+
+// Global error safety net...
+(function installGlobalErrorCapture(app) {
+    let lastSignature = '';
+    let lastReportedAt = 0;
+    const report = (message, details, code) => {
+        try {
+            const text = String(message || 'Unexpected portal error').slice(0, 1000);
+            const signature = text + '|' + String(code || '');
+            const now = Date.now();
+            if (signature === lastSignature && now - lastReportedAt < 5000) return;
+            lastSignature = signature; lastReportedAt = now;
+            if (app && typeof app.reportPortalError === 'function') app.reportPortalError(text, String(details || '').slice(0, 5000), String(code || ''));
+        } catch (captureError) { console.warn('Global portal error capture failed:', captureError); }
+    };
+    window.addEventListener('error', event => {
+        const err = event?.error;
+        report(err?.message || event?.message || 'Unexpected JavaScript error', err?.stack || `${event?.filename || ''}:${event?.lineno || ''}:${event?.colno || ''}`, err?.code || '');
+    });
+    window.addEventListener('unhandledrejection', event => {
+        const reason = event?.reason;
+        report(reason?.message || String(reason || 'Unhandled Promise rejection'), reason?.stack || '', reason?.code || '');
+    });
+})(window.__vcrPortalVm);
 </script>
 
 </body>
