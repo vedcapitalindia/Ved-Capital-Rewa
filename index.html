@@ -389,7 +389,7 @@
 
                     <div>
                         <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Skills / Job Details (Optional)</label>
-                        <textarea v-model="jobForm.skills" rows="4" maxlength="800" placeholder="अपनी skills, पसंद का काम, licence, computer knowledge, sales experience आदि लिख सकते हैं। नहीं है तो खाली छोड़ दें।" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"></textarea>
+                        <textarea v-model="jobForm.skills" rows="4" maxlength="500" placeholder="अपनी skills, पसंद का काम, licence, computer knowledge, sales experience आदि लिख सकते हैं। नहीं है तो खाली छोड़ दें।" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500"></textarea>
                     </div>
 
                     <div class="rounded-xl border border-slate-700 bg-slate-900/50 p-4 text-xs text-slate-400">
@@ -480,16 +480,18 @@
                 </form>
 
                 <form v-if="loginType === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Email</label>
-                        <input v-model="loginInput.username" placeholder="vedcapitalindia@gmail.com" required type="email" autocomplete="username" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Password</label>
-                        <input v-model="loginInput.password" placeholder="Enter admin password" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
-                    </div>
+                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Code</label><input v-model="loginInput.adminCode" placeholder="ADM-123456" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
+                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile</label><input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 digit mobile" required type="tel" inputmode="numeric" maxlength="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
+                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin PIN (6 Digit)</label><input v-model="loginInput.adminPin" placeholder="6 digit PIN" required type="password" inputmode="numeric" maxlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Admin Control Panel</button>
-                    <button type="button" @click="sendAdminPasswordReset" class="w-full text-xs text-amber-400 hover:text-amber-300 py-2">Forgot Admin Password? Send reset email</button>
+                    <button type="button" @click="loginType = 'adminMaster'; loginError=''" class="w-full text-xs text-slate-400 hover:text-amber-300 py-2">Master Admin Login</button>
+                </form>
+                <form v-if="loginType === 'adminMaster'" @submit.prevent="handleMasterAdminLogin" class="space-y-4">
+                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Master Admin Email</label><input v-model="loginInput.username" placeholder="vedcapitalindia@gmail.com" required type="email" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
+                    <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Master Admin Password</label><input v-model="loginInput.password" placeholder="Password" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
+                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Master Admin Login</button>
+                    <button type="button" @click="sendAdminPasswordReset" class="w-full text-xs text-amber-400 hover:text-amber-300 py-2">Forgot Master Password? Send reset email</button>
+                    <button type="button" @click="loginType = 'admin'; loginError=''" class="w-full text-xs text-slate-400 hover:text-amber-300 py-2">Back to Admin Code Login</button>
                 </form>
 
                 <p v-if="loginError" class="mt-4 text-rose-400 text-xs text-center font-bold bg-rose-950/40 p-2.5 rounded-lg border border-rose-800/80">
@@ -1366,6 +1368,21 @@
                     </div>
                 </div>
 
+                <div v-if="currentUser && currentUser.code === 'ADMIN'" class="bg-slate-900 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h3 class="text-lg font-bold text-white">Sub-Admins — Firebase Console की जरूरत नहीं</h3>
+                    <p class="text-xs text-slate-400">Master Admin यहां से admin add करेगा. हर admin को Admin Code + mobile + 6-digit PIN मिलेगा.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <input v-model="newAdmin.name" placeholder="Admin name" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <input v-model="newAdmin.phone" @input="newAdmin.phone = normalizePhone(newAdmin.phone)" placeholder="10 digit mobile" maxlength="10" inputmode="numeric" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <input v-model="newAdmin.pin" placeholder="6 digit PIN" maxlength="6" inputmode="numeric" type="password" class="bg-slate-800 border border-slate-700 p-2.5 rounded-lg text-sm text-white">
+                        <button @click="addAdmin" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold p-2.5 rounded-lg text-sm">Add Admin</button>
+                    </div>
+                    <div v-for="a in admins" :key="a.id" class="flex flex-wrap justify-between gap-2 bg-slate-800 p-3 rounded-xl text-xs">
+                        <div><strong class="text-white">{{ a.name }}</strong> <span class="text-amber-400 font-mono">{{ a.code }}</span><div class="text-slate-400">{{ a.phone }}</div></div>
+                        <button @click="deleteAdmin(a.id)" class="text-rose-400 font-bold">Disable</button>
+                    </div>
+                </div>
+
                 <div>
                     <div class="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-200"><i class="fa-solid fa-shield-halved mr-1"></i> Production security: Firestore Rules/Auth must enforce role-based access. Browser-side checks alone are not a security boundary.</div>
                         <h3 class="text-lg font-bold text-white mb-3">Change Admin Credentials</h3>
@@ -1637,7 +1654,7 @@ createApp({
         return {
             currentView: 'job_form',
             loginType: 'client',
-            loginInput: { code: '', registrationNo: '', phone: '', pin: '', otp: '', username: '', password: '' },
+            loginInput: { code: '', registrationNo: '', phone: '', pin: '', adminCode: '', adminPin: '', otp: '', username: '', password: '' },
             phoneAuth: { confirmationResult: null, otpSent: false, role: '', verifier: null },
             loginError: '',
             currentUser: null,
@@ -1686,6 +1703,8 @@ createApp({
             supportChats: [],
 
             adminTab: 'clients',
+            admins: [],
+            newAdmin: { name: '', phone: '', pin: '' },
             adminPinModal: { show: false, empCode: '', empName: '', newPin: '' },
             selectedEmpWork: null,
 
@@ -1800,6 +1819,10 @@ createApp({
                             if (p.role === 'employee' && p.code) {
                                 const empSnap = await db.collection('employees').doc(p.code).get();
                                 if (empSnap.exists) { this.currentUser = { id: empSnap.id, ...empSnap.data(), role: 'employee', authUid: user.uid }; this.loadPrivateDataForRole('employee', empSnap.id); this.currentView = 'emp_dash'; this.persistUiState(); return; }
+                            }
+                            if (p.role === 'admin' && p.code) {
+                                const adminSnap = await db.collection('adminAccess').doc(p.code).get();
+                                if (adminSnap.exists && adminSnap.data().status === 'Active') { this.currentUser = { id: p.code, name: adminSnap.data().name, role: 'admin', code: p.code, authUid: user.uid, phone: adminSnap.data().phone }; this.loadPrivateDataForRole('admin', p.code); this.currentView = 'admin_dash'; this.persistUiState(); return; }
                             }
                         }
                         return;
@@ -1961,6 +1984,7 @@ createApp({
                 watch(db.collection('payoutRequests'), snapshot => { this.payoutRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('feedbacks'), snapshot => { this.feedbacks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
                 watch(db.collection('settings').doc('admin'), doc => { if (doc.exists) { const data = doc.data() || {}; this.adminSettingsForm.username = String(data.username || 'admin'); if (data.passwordHash?.hash && data.passwordHash?.salt) this.adminPasswordHash = data.passwordHash; } });
+                watch(db.collection('adminAccess'), snapshot => { this.admins = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); });
             }
         },
 
@@ -1984,6 +2008,18 @@ createApp({
 
         isValidPin(value) {
             return /^\d{4}$/.test(String(value || ''));
+        },
+
+        isValidAdminPin(value) {
+            return /^\d{6}$/.test(String(value || ''));
+        },
+
+        generateInitialPin() {
+            return String(Math.floor(1000 + Math.random() * 9000));
+        },
+
+        generateInitialAdminPin() {
+            return String(Math.floor(100000 + Math.random() * 900000));
         },
 
         isSafeHttpUrl(value) {
@@ -2120,7 +2156,7 @@ createApp({
             try { if (firebase.auth && firebase.auth().currentUser) firebase.auth().signOut(); } catch (_) {}
             this.clearPrivateData();
             this.currentUser = null;
-            this.loginInput = { code: '', registrationNo: '', phone: '', pin: '', otp: '', username: '', password: '' };
+            this.loginInput = { code: '', registrationNo: '', phone: '', pin: '', adminCode: '', adminPin: '', otp: '', username: '', password: '' };
             this.selfPinInput = '';
             this.adminPinModal = { show: false, empCode: '', empName: '', newPin: '' };
             this.showSupportChatModal = false;
@@ -2168,9 +2204,8 @@ createApp({
                 }
                 this.formError = '';
 
-                // Public applications are allowed to create only through an anonymous
-                // Firebase session. Start that session before the atomic batch.
-                await this.ensureFreshAnonymousSession();
+                // Job application is intentionally independent of Anonymous Auth.
+                // Anonymous Auth is required only later for protected Client/Employee login.
 
                 let registrationNo = '';
                 let newClient = null;
@@ -2203,18 +2238,10 @@ createApp({
                         createdAt: new Date().toISOString()
                     };
                     try {
-                        const batch = db.batch();
-                        const clientRef = db.collection('clients').doc(registrationNo);
-                        const accessRef = db.collection('clientAccess').doc(registrationNo);
-                        batch.create(clientRef, newClient);
-                        batch.create(accessRef, {
-                            registrationNo,
-                            phoneHash: await this.hashLookupValue(phone),
-                            status: 'Pending',
-                            clientCode: null,
-                            createdAt: new Date().toISOString()
-                        });
-                        await batch.commit();
+                        // Only the public application record is created here.
+                        // The private login-access record is provisioned automatically
+                        // when an employee/admin approves or rejects the application.
+                        await db.collection('clients').doc(registrationNo).create(newClient);
                         created = true;
                     } catch (error) {
                         lastError = error;
@@ -2332,8 +2359,8 @@ createApp({
                 if (!accessSnap.exists) throw new Error('EMP_NOT_FOUND');
                 const access = accessSnap.data() || {};
                 if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
-                let validPin = false;
-                if (access.pinHash) validPin = await this.verifyStoredCredential(pin, access.pinHash);
+                if (!access.pinHash) throw new Error('PIN_NOT_SET');
+                const validPin = await this.verifyStoredCredential(pin, access.pinHash);
                 if (!validPin) throw new Error('BAD_PIN');
                 // Create the role profile before reading the protected employee document.
                 await db.collection('authProfiles').doc(authUser.uid).set({
@@ -2358,6 +2385,7 @@ createApp({
                 this.loginError = error.message === 'PHONE_MISMATCH' ? 'यह mobile number इस Employee Code से match नहीं करता.'
                     : error.message === 'EMP_NOT_FOUND' ? 'Employee Code नहीं मिला.'
                     : error.message === 'BAD_PIN' ? 'Secret PIN गलत है.'
+                    : error.message === 'PIN_NOT_SET' ? 'इस Employee का PIN अभी set नहीं हुआ है। Admin Login → Employees में जाकर Set/Reset PIN करें.'
                     : error.message === 'ACCOUNT_BOUND' ? 'यह employee account पहले से दूसरे session से linked है.'
                     : error.code === 'auth/operation-not-allowed' ? 'Firebase Authentication में Anonymous sign-in enable करें.'
                     : 'Employee login नहीं हो पाया। Code, mobile और PIN check करें।';
@@ -2365,51 +2393,54 @@ createApp({
         },
 
         async handleAdminLogin() {
+            const code = String(this.loginInput.adminCode || '').trim().toUpperCase();
+            const phone = this.normalizePhone(this.loginInput.phone);
+            const pin = String(this.loginInput.adminPin || '').trim();
+            if (!code || !this.isValidPhone(phone) || !this.isValidAdminPin(pin)) { this.loginError = 'Admin Code, registered mobile और 6 अंकों का PIN दर्ज करें।'; return; }
+            try {
+                const authUser = await this.ensureFreshAnonymousSession();
+                const accessSnap = await db.collection('adminAccess').doc(code).get();
+                if (!accessSnap.exists) throw new Error('ADMIN_NOT_FOUND');
+                const access = accessSnap.data() || {};
+                if (access.status !== 'Active') throw new Error('ADMIN_DISABLED');
+                if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
+                if (!await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_ADMIN_PIN');
+                await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'admin', code, adminCode: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                this.currentUser = { id: code, name: access.name, role: 'admin', code, authUid: authUser.uid, phone: access.phone };
+                this.adminSettingsForm.username = access.name;
+                this.loadPrivateDataForRole('admin', code);
+                this.currentView = 'admin_dash';
+                this.persistUiState();
+                this.loginInput.adminCode = ''; this.loginInput.phone = ''; this.loginInput.adminPin = '';
+                this.showToast('Admin Access Granted — ' + access.name, 'success');
+            } catch (error) {
+                console.error(error);
+                this.loginError = error.message === 'ADMIN_NOT_FOUND' ? 'Admin Code नहीं मिला.'
+                    : error.message === 'ADMIN_DISABLED' ? 'यह Admin account disabled है.'
+                    : error.message === 'PHONE_MISMATCH' ? 'Mobile number match नहीं करता.'
+                    : error.message === 'BAD_ADMIN_PIN' ? 'Admin PIN गलत है.'
+                    : error.code === 'auth/operation-not-allowed' ? 'Anonymous Authentication Enable करें.'
+                    : 'Admin login नहीं हो पाया। Code, mobile और PIN check करें।';
+            }
+        },
+
+        async handleMasterAdminLogin() {
             const email = String(this.loginInput.username || '').trim().toLowerCase();
             const password = String(this.loginInput.password || '');
-            if (!email || !password) { this.loginError = 'Admin Email और Password दोनों भरें।'; return; }
-            if (email !== this.adminAuthEmail) {
-                this.loginError = 'यह Email Admin account के लिए authorized नहीं है।';
-                return;
-            }
+            if (!email || !password) { this.loginError = 'Master Admin Email और Password दोनों भरें।'; return; }
+            if (email !== this.adminAuthEmail) { this.loginError = 'यह Master Admin Email authorized नहीं है।'; return; }
             try {
-                if (!window.firebase || typeof firebase.auth !== 'function') {
-                    throw new Error('Firebase Authentication SDK unavailable');
-                }
-                const auth = firebase.auth();
-                if (!auth) throw new Error('Firebase Authentication initialize नहीं हुआ।');
-                const credential = await auth.signInWithEmailAndPassword(email, password);
+                const credential = await firebase.auth().signInWithEmailAndPassword(email, password);
                 const authUser = credential.user;
-                if (!authUser || authUser.email?.toLowerCase() !== this.adminAuthEmail) {
-                    await firebase.auth().signOut();
-                    this.loginError = 'Admin account authorized नहीं है।';
-                    return;
-                }
                 this.currentUser = { name: 'Super Admin', role: 'admin', code: 'ADMIN', authUid: authUser.uid, email: authUser.email };
                 this.adminSettingsForm.username = this.adminAuthEmail;
                 this.loadPrivateDataForRole('admin', 'ADMIN');
                 this.currentView = 'admin_dash';
                 this.persistUiState();
                 this.loginInput.password = '';
-                this.showToast('Admin Access Granted', 'success');
+                this.showToast('Master Admin Access Granted', 'success');
             } catch (error) {
-                console.error(error);
-                const code = error?.code || '';
-                if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-                    this.loginError = 'Admin Auth में login reject हुआ। Password reset करके नया password सेट करें। अगर reset email नहीं आता, तो Firebase Authentication → Users में यही email मौजूद नहीं है।';
-                } else if (code === 'auth/too-many-requests') {
-                    this.loginError = 'बहुत बार गलत login हुआ है। कुछ देर बाद फिर कोशिश करें।';
-                } else if (code === 'auth/operation-not-allowed') {
-                    this.loginError = 'Firebase में Email/Password Sign-in अभी Enable नहीं है। Authentication → Sign-in method में इसे Enable करें।';
-                } else if (code === 'auth/network-request-failed') {
-                    this.loginError = 'Internet/Firebase connection की समस्या है। Network check करके फिर कोशिश करें।';
-                } else if (code === 'auth/invalid-api-key' || code === 'auth/app-not-authorized') {
-                    this.loginError = 'Firebase configuration/Authorized domain की समस्या है।';
-                } else if (code === 'permission-denied') {
-                    this.loginError = 'Login हो गया, लेकिन Firestore Security Rules Admin access रोक रही हैं।';
-                } else {
-                    this.loginError = `Admin login failed: ${code || error?.message || 'unknown error'}`;
-                }
+                this.loginError = error?.message || 'Master Admin login failed.';
             }
         },
 
@@ -2919,14 +2950,16 @@ createApp({
                             const empSnap = await tx.get(empRef);
                             if (empSnap.exists) throw new Error('EMP_CODE_COLLISION');
                             tx.update(clientRef, { isPromoted: true });
-                            tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: clientPhoneHash, pinHash: null, updatedAt: new Date().toISOString() });
+                            const initialPin = this.generateInitialPin();
+                            const promotedPinHash = await this.hashCredential(initialPin);
+                            tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: clientPhoneHash, pinHash: promotedPinHash, updatedAt: new Date().toISOString() });
                             tx.set(empRef, {
                                 code: empCode,
                                 name: currentClient.name,
                                 phone: currentClient.phone,
                                 position: currentClient.jobType,
                                 photo: currentClient.photo,
-                                pinHash: null,
+                                pinHash: promotedPinHash,
                                 mustChangePin: true,
                                 role: 'employee',
                                 createdAt: new Date().toISOString()
@@ -2938,7 +2971,7 @@ createApp({
                     }
                 }
                 if (!promoted) throw new Error('Could not allocate a unique employee code.');
-                this.showToast('Client promoted to employee successfully! Code: ' + empCode, 'success');
+                this.showToast('Client promoted. Employee Code: ' + empCode + ' | Temporary PIN: ' + initialPin, 'success');
             } catch (error) {
                 console.error(error);
                 this.showToast('Client promotion नहीं हो पाया। कृपया फिर कोशिश करें।', 'error');
@@ -3012,8 +3045,11 @@ createApp({
                 : 'क्या आप इस client को हटाना चाहते हैं?';
             if (!confirm(warning)) return;
             try {
-                await db.collection('clients').doc(docId).delete();
-                this.showToast('Client profile deleted; financial history preserved.', 'success');
+                const batch = db.batch();
+                batch.delete(db.collection('clients').doc(docId));
+                batch.delete(db.collection('clientAccess').doc(docId));
+                await batch.commit();
+                this.showToast('Client profile deleted; login access removed; financial history preserved.', 'success');
             } catch (error) {
                 console.error(error);
                 this.showToast('Client delete नहीं हो पाया।', 'error');
@@ -3026,7 +3062,8 @@ createApp({
                 let empCode = '';
                 let created = false;
                 const empPhoneHash = await this.hashLookupValue(this.newEmp.phone);
-                const empPinHash = null;
+                const initialPin = this.generateInitialPin();
+                const empPinHash = await this.hashCredential(initialPin);
                 for (let attempt = 0; attempt < 5 && !created; attempt++) {
                     empCode = this.generateUniqueNumericCode('EMP', 8);
                     const empRef = db.collection('employees').doc(empCode);
@@ -3038,12 +3075,12 @@ createApp({
                             name: this.newEmp.name,
                             phone: this.newEmp.phone,
                             position: this.newEmp.position,
-                            pinHash: null,
+                            pinHash: empPinHash,
                             mustChangePin: true,
                             role: 'employee',
                             createdAt: new Date().toISOString()
                         });
-                        tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: empPhoneHash, pinHash: null, updatedAt: new Date().toISOString() });
+                        tx.set(db.collection('employeeAccess').doc(empCode), { code: empCode, phoneHash: empPhoneHash, pinHash: empPinHash, updatedAt: new Date().toISOString() });
                         created = true;
                     }).catch(error => {
                         if (error.message !== 'EMP_CODE_COLLISION') throw error;
@@ -3051,11 +3088,45 @@ createApp({
                 }
                 if (!created) throw new Error('Could not allocate a unique employee code.');
                 this.newEmp = { name: '', phone: '', position: 'Telecaller' };
-                this.showToast('Employee added successfully! Code: ' + empCode, 'success');
+                this.showToast('Employee added. Code: ' + empCode + ' | Temporary PIN: ' + initialPin + ' (employee can change it after login)', 'success');
             } catch (error) {
                 console.error(error);
                 this.showToast('Employee add नहीं हो पाया।', 'error');
             }
+        },
+
+        async addAdmin() {
+            if (this.currentUser?.code !== 'ADMIN') { this.showToast('केवल Master Admin नया Admin बना सकता है।', 'error'); return; }
+            if (!this.newAdmin.name || !this.isValidPhone(this.newAdmin.phone) || !this.isValidAdminPin(this.newAdmin.pin)) { this.showToast('Admin name, valid mobile और 6 digit PIN जरूरी है।', 'error'); return; }
+            try {
+                const phoneHash = await this.hashLookupValue(this.newAdmin.phone);
+                const pinHash = await this.hashCredential(this.newAdmin.pin);
+                let code = '';
+                let created = false;
+                for (let attempt = 0; attempt < 8 && !created; attempt++) {
+                    code = this.generateUniqueNumericCode('ADM', 6);
+                    const ref = db.collection('adminAccess').doc(code);
+                    try {
+                        await db.runTransaction(async tx => {
+                            const existing = await tx.get(ref);
+                            if (existing.exists) throw new Error('ADMIN_CODE_COLLISION');
+                            tx.create(ref, { code, name: String(this.newAdmin.name).trim(), phone: this.newAdmin.phone, phoneHash, pinHash, status: 'Active', createdAt: new Date().toISOString() });
+                        });
+                        created = true;
+                    } catch (error) {
+                        if (error.message !== 'ADMIN_CODE_COLLISION') throw error;
+                    }
+                }
+                if (!created) throw new Error('Could not allocate a unique admin code.');
+                this.newAdmin = { name: '', phone: '', pin: '' };
+                this.showToast('Admin created. Code: ' + code, 'success');
+            } catch (error) { console.error(error); this.showToast('Admin add नहीं हो पाया।', 'error'); }
+        },
+
+        async deleteAdmin(id) {
+            if (!confirm('इस sub-admin को disable करना है?')) return;
+            try { await db.collection('adminAccess').doc(id).update({ status: 'Disabled', updatedAt: new Date().toISOString() }); this.showToast('Admin disabled.', 'success'); }
+            catch (error) { console.error(error); this.showToast('Admin disable नहीं हो पाया।', 'error'); }
         },
 
         async deleteEmployee(id) {
@@ -3068,8 +3139,11 @@ createApp({
                 : 'क्या आप इस employee को हटाना चाहते हैं?';
             if (!confirm(warning)) return;
             try {
-                await db.collection('employees').doc(id).delete();
-                this.showToast('Employee profile removed; financial/audit history preserved.', 'success');
+                const batch = db.batch();
+                batch.delete(db.collection('employees').doc(id));
+                if (code) batch.delete(db.collection('employeeAccess').doc(code));
+                await batch.commit();
+                this.showToast('Employee profile removed; login access removed; financial/audit history preserved.', 'success');
             } catch (error) {
                 console.error(error);
                 this.showToast('Employee remove नहीं हो पाया।', 'error');
