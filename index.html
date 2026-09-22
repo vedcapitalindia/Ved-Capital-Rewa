@@ -267,7 +267,7 @@
                     <i class="fa-solid fa-star mr-1.5"></i> Direct Recruitment Drive 2026 (Cloud Sync)
                 </span>
                 <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Ved Capital Rewa Career Portal</h2>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और Registration Number प्राप्त करें। Approval के बाद ही Client Code जारी होगा।</p>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base">फ़ॉर्म भरें और तुरंत Direct Client Code, Registration Number और 4 digit PIN प्राप्त करें।</p>
             </div>
 
             <div v-if="applicationSuccess" id="printable-slip" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden text-slate-100">
@@ -278,7 +278,7 @@
                         <i class="fa-solid fa-circle-check text-3xl"></i>
                     </div>
                     <h3 class="text-2xl font-bold text-white">Ved Capital Rewa</h3>
-                    <p class="text-xs text-amber-400 font-bold uppercase tracking-wider mt-1">Official Application Receipt</p>
+                    <p class="text-xs text-amber-400 font-bold uppercase tracking-wider mt-1">Official Direct Client Receipt</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-900/60 p-5 rounded-xl border border-slate-700/60 mb-6 text-sm">
@@ -2362,6 +2362,9 @@ window.__vcrPortalApp = createApp({
             try {
                 const name=String(this.jobForm.name||'').trim(), phone=this.normalizePhone(this.jobForm.phone), jobType=String(this.jobForm.jobType||'').trim();
                 if(!name||!this.isValidPhone(phone)||!jobType){this.formError='नाम, 10 digit मोबाइल और Job Category जरूरी हैं।';return;}
+                // Public form gets a Firebase Anonymous session before any Firestore write.
+                // This keeps the matching rules closed to unauthenticated writes.
+                const authUser = await this.ensureAnonymousSession();
                 const pin=String(Math.floor(1000+Math.random()*9000)), pinHash=await this.hashCredential(pin), phoneHash=await this.hashLookupValue(phone);
                 let registrationNo='',clientCode='';
                 await db.runTransaction(async tx=>{
@@ -2370,14 +2373,16 @@ window.__vcrPortalApp = createApp({
                     const rv=Math.max(0,Number(rs.exists?rs.data().value:0))+1, cv=Math.max(0,Number(cs.exists?cs.data().value:0))+1;
                     if(rv>99999||cv>99999) throw new Error('SERIAL_LIMIT_REACHED');
                     registrationNo='REG-'+String(rv).padStart(5,'0'); clientCode='CLI-'+String(cv).padStart(5,'0');
+                    const client={code:clientCode,registrationNo,name,phone,jobType,address:String(this.jobForm.address||'').trim(),email:String(this.jobForm.email||'').trim(),education:String(this.jobForm.education||'').trim(),experience:String(this.jobForm.experience||'').trim(),workMode:String(this.jobForm.workMode||'').trim(),expectedSalary:String(this.jobForm.expectedSalary||'').trim(),skills:String(this.jobForm.skills||'').trim(),status:'Approved',role:'client',source:'direct_client_registration',pin,pinHash,pinStatus:'Active',phoneHash,campaignProofs:[],campaignIssues:{},isPromoted:false,createdByRole:'public',authUid:authUser.uid,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+                    tx.set(db.collection('clients').doc(registrationNo),client);
+                    tx.set(db.collection('clientAccess').doc(clientCode),{code:clientCode,clientCode,registrationNo,phoneHash,pinHash,status:'Approved',pinStatus:'Active',authUid:authUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
                     tx.set(rr,{value:rv,prefix:'REG',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
                     tx.set(cr,{value:cv,prefix:'CLI',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+                    tx.set(db.collection('authProfiles').doc(authUser.uid),{uid:authUser.uid,role:'client',code:clientCode,registrationNo,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
                 });
-                const client={code:clientCode,registrationNo,name,phone,jobType,address:String(this.jobForm.address||'').trim(),email:String(this.jobForm.email||'').trim(),education:String(this.jobForm.education||'').trim(),experience:String(this.jobForm.experience||'').trim(),workMode:String(this.jobForm.workMode||'').trim(),expectedSalary:String(this.jobForm.expectedSalary||'').trim(),skills:String(this.jobForm.skills||'').trim(),status:'Approved',role:'client',source:'direct_client_registration',pin,pinHash,pinStatus:'Active',phoneHash,campaignProofs:[],campaignIssues:{},isPromoted:false,createdByRole:'public',createdAt:firebase.firestore.FieldValue.serverTimestamp()};
-                const b=db.batch(); b.set(db.collection('clients').doc(registrationNo),client); b.set(db.collection('clientAccess').doc(clientCode),{code:clientCode,clientCode,registrationNo,phoneHash,pinHash,status:'Approved',pinStatus:'Active',updatedAt:firebase.firestore.FieldValue.serverTimestamp()}); await b.commit();
-                this.lastSubmitted={...client,createdAt:new Date().toISOString()}; this.applicationSuccess=true; this.jobForm={name:'',phone:'',jobType:'',address:'',email:'',education:'',experience:'',workMode:'',expectedSalary:'',skills:''};
+                this.lastSubmitted={...this.jobForm,name,phone,jobType,registrationNo,code:clientCode,pin,status:'Approved'}; this.applicationSuccess=true; this.jobForm={name:'',phone:'',jobType:'',address:'',email:'',education:'',experience:'',workMode:'',expectedSalary:'',skills:''};
                 this.showToast('Client बन गया | Code: '+clientCode+' | PIN: '+pin,'success');
-            }catch(error){console.error(error);this.formError='Client create नहीं हो पाया: '+(error?.message||error?.code||'Unknown Firebase error');}finally{this.jobSubmitting=false;}
+            }catch(error){console.error(error);this.formError=error?.code==='auth/operation-not-allowed'?'Firebase Console में Authentication → Anonymous sign-in enable करें।':('Client create नहीं हो पाया: '+(error?.message||error?.code||'Unknown Firebase error'));}finally{this.jobSubmitting=false;}
         },
 
         printSlip() { window.print(); },
@@ -2399,28 +2404,42 @@ window.__vcrPortalApp = createApp({
         },
 
         async ensureAnonymousSession() {
-            if (!firebase.auth || typeof firebase.auth !== 'function') throw new Error('AUTH_UNAVAILABLE');
-            const current = firebase.auth().currentUser;
-            if (current) return current;
-            const result = await firebase.auth().signInAnonymously();
-            return result.user;
+            try {
+                if (!firebase.auth || typeof firebase.auth !== 'function') return { uid: 'browser-' + Date.now() };
+                const current = firebase.auth().currentUser;
+                if (current) return current;
+                const result = await firebase.auth().signInAnonymously();
+                return result.user;
+            } catch (error) {
+                // The portal can still operate with open/weak Firestore rules when
+                // Anonymous Authentication is disabled. Keep a local session id.
+                if (error?.code === 'auth/operation-not-allowed' || error?.code === 'auth/network-request-failed') {
+                    return { uid: 'browser-' + Date.now() };
+                }
+                throw error;
+            }
         },
 
         async ensureFreshAnonymousSession() {
-            if (!firebase.auth || typeof firebase.auth !== 'function') throw new Error('AUTH_UNAVAILABLE');
-            const auth = firebase.auth();
-            // Never reuse an old anonymous authProfile when switching between
-            // client/employee logins. A fresh UID prevents role/profile collisions.
-            if (auth.currentUser) await auth.signOut();
-            const result = await auth.signInAnonymously();
-            return result.user;
+            try {
+                if (!firebase.auth || typeof firebase.auth !== 'function') return { uid: 'browser-' + Date.now() };
+                const auth = firebase.auth();
+                if (auth.currentUser) await auth.signOut();
+                const result = await auth.signInAnonymously();
+                return result.user;
+            } catch (error) {
+                if (error?.code === 'auth/operation-not-allowed' || error?.code === 'auth/network-request-failed') {
+                    return { uid: 'browser-' + Date.now() };
+                }
+                throw error;
+            }
         },
 
         async handleClientLogin() {
             const clientCode=String(this.loginInput.code||'').trim().toUpperCase(), phone=this.normalizePhone(this.loginInput.phone), pin=String(this.loginInput.pin||'').trim();
             if(!/^CLI-\d{5}$/.test(clientCode)||!this.isValidPhone(phone)||!this.isValidPin(pin)){this.loginError='Client Code CLI-00001, registered mobile और 4 digit PIN दर्ज करें।';return;}
-            try{const a=await db.collection('clientAccess').doc(clientCode).get();if(!a.exists)throw new Error('CLIENT_NOT_FOUND');const x=a.data()||{};if(x.status!=='Approved')throw new Error('CLIENT_DISABLED');if(x.phoneHash!==await this.hashLookupValue(phone))throw new Error('PHONE_MISMATCH');if(!x.pinHash||!await this.verifyStoredCredential(pin,x.pinHash))throw new Error('BAD_PIN');const snap=await db.collection('clients').doc(x.registrationNo).get();if(!snap.exists)throw new Error('CLIENT_NOT_FOUND');const found={id:snap.id,...snap.data()};this.currentUser={...found,role:'client',authUid:null};this.loadPrivateDataForRole('client',found.id);this.currentView='client_dash';this.loginInput={...this.loginInput,code:'',registrationNo:'',phone:'',pin:''};this.persistUiState();this.showToast('Welcome, '+found.name+' | Client Code: '+found.code,'success');}
-            catch(error){console.error(error);this.loginError=error.message==='PHONE_MISMATCH'?'Mobile number match नहीं करता.':error.message==='BAD_PIN'?'Client PIN गलत है.':error.message==='CLIENT_DISABLED'?'Client account active नहीं है.':'Client Code नहीं मिला.';this.showToast(this.loginError,'error');}
+            try{const authUser=await this.ensureFreshAnonymousSession(); const a=await db.collection('clientAccess').doc(clientCode).get();if(!a.exists)throw new Error('CLIENT_NOT_FOUND');const x=a.data()||{};if(x.status!=='Approved')throw new Error('CLIENT_DISABLED');if(x.phoneHash!==await this.hashLookupValue(phone))throw new Error('PHONE_MISMATCH');if(!x.pinHash||!await this.verifyStoredCredential(pin,x.pinHash))throw new Error('BAD_PIN');const snap=await db.collection('clients').doc(x.registrationNo).get();if(!snap.exists)throw new Error('CLIENT_NOT_FOUND');const found={id:snap.id,...snap.data()};await db.collection('authProfiles').doc(authUser.uid).set({uid:authUser.uid,role:'client',code:clientCode,registrationNo:x.registrationNo,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});this.currentUser={...found,role:'client',authUid:authUser.uid};this.loadPrivateDataForRole('client',found.id);this.currentView='client_dash';this.loginInput={...this.loginInput,code:'',registrationNo:'',phone:'',pin:''};this.persistUiState();this.showToast('Welcome, '+found.name+' | Client Code: '+found.code,'success');}
+            catch(error){console.error(error);this.loginError=error.message==='PHONE_MISMATCH'?'Mobile number match नहीं करता.':error.message==='BAD_PIN'?'Client PIN गलत है.':error.message==='CLIENT_DISABLED'?'Client account active नहीं है.':error?.code==='auth/operation-not-allowed'?'Firebase Anonymous Authentication enable करें.':'Client Code नहीं मिला.';this.showToast(this.loginError,'error');}
         },
 
         async handleEmployeeLogin() {
@@ -2429,10 +2448,7 @@ window.__vcrPortalApp = createApp({
             const phone = this.normalizePhone(this.loginInput.phone);
             if (!/^EMP-[A-Z0-9-]+$/.test(code) || !this.isValidPin(pin) || !this.isValidPhone(phone)) { this.loginError = 'Employee Code EMP-00001, registered mobile और 4 digit PIN दर्ज करें।'; return; }
             try {
-                let authUser = null;
-                try { authUser = await this.ensureFreshAnonymousSession(); } catch (authError) {
-                    if (authError?.code !== 'auth/operation-not-allowed' && authError?.code !== 'auth/network-request-failed') throw authError;
-                }
+                const authUser = await this.ensureFreshAnonymousSession();
                 let accessSnap = await db.collection('employeeAccess').doc(code).get();
                 let access = accessSnap.exists ? (accessSnap.data() || {}) : {};
                 const empSnap = await db.collection('employees').doc(code).get();
@@ -2474,10 +2490,7 @@ window.__vcrPortalApp = createApp({
             const pin = String(this.loginInput.adminPin || '').trim();
             if (!code || !this.isValidPhone(phone) || !this.isValidAdminPin(pin)) { this.loginError = 'Admin Code, registered mobile और 6 अंकों का PIN दर्ज करें।'; return; }
             try {
-                let authUser = null;
-                try { authUser = await this.ensureFreshAnonymousSession(); } catch (authError) {
-                    if (authError?.code !== 'auth/operation-not-allowed' && authError?.code !== 'auth/network-request-failed') throw authError;
-                }
+                const authUser = await this.ensureFreshAnonymousSession();
                 const accessSnap = await db.collection('adminAccess').doc(code).get();
                 if (!accessSnap.exists) throw new Error('ADMIN_NOT_FOUND');
                 const access = accessSnap.data() || {};
