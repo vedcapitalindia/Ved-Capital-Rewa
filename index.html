@@ -472,7 +472,7 @@
                     <div class="text-[11px] text-slate-400 bg-slate-900/70 border border-slate-700 rounded-xl p-3">
                         Approval के बाद Admin Client PIN जारी करेगा। Login: Client Code + Registered Mobile + PIN.
                     </div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Client Portal Login</button>
+                    <button type="submit" :disabled="loginSubmitting" :class="loginSubmitting ? 'opacity-60 cursor-not-allowed' : ''" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">{{ loginSubmitting ? 'Checking…' : 'Client Portal Login' }}</button>
                 </form>
 
                 <form v-if="loginType === 'employee'" @submit.prevent="handleEmployeeLogin" class="space-y-4">
@@ -488,20 +488,20 @@
                         <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Secret PIN (4 Digit)</label>
                         <input v-model="loginInput.pin" placeholder="Enter PIN" required type="password" maxlength="4" inputmode="numeric" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none">
                     </div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Employee Login</button>
+                    <button type="submit" :disabled="loginSubmitting" :class="loginSubmitting ? 'opacity-60 cursor-not-allowed' : ''" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">{{ loginSubmitting ? 'Checking…' : 'Employee Login' }}</button>
                 </form>
 
                 <form v-if="loginType === 'admin'" @submit.prevent="handleAdminLogin" class="space-y-4">
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin Code</label><input v-model="loginInput.adminCode" placeholder="ADM-00001" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Registered Mobile</label><input v-model="loginInput.phone" @input="loginInput.phone = normalizePhone(loginInput.phone)" placeholder="10 digit mobile" required type="tel" inputmode="numeric" maxlength="10" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Admin PIN (6 Digit)</label><input v-model="loginInput.adminPin" placeholder="6 digit PIN" required type="password" inputmode="numeric" maxlength="6" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Admin Control Panel</button>
+                    <button type="submit" :disabled="loginSubmitting" :class="loginSubmitting ? 'opacity-60 cursor-not-allowed' : ''" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">{{ loginSubmitting ? 'Checking…' : 'Admin Control Panel' }}</button>
                     <button type="button" @click="loginType = 'adminMaster'; loginError=''" class="w-full text-xs text-slate-400 hover:text-amber-300 py-2">Master Admin Login</button>
                 </form>
                 <form v-if="loginType === 'adminMaster'" @submit.prevent="handleMasterAdminLogin" class="space-y-4">
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Master Admin Email</label><input v-model="loginInput.username" placeholder="vedcapitalindia@gmail.com" required type="email" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
                     <div><label class="block text-xs font-bold text-slate-300 uppercase mb-1">Master Admin Password</label><input v-model="loginInput.password" placeholder="Password" required type="password" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-amber-500 focus:outline-none"></div>
-                    <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">Master Admin Login</button>
+                    <button type="submit" :disabled="loginSubmitting" :class="loginSubmitting ? 'opacity-60 cursor-not-allowed' : ''" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">{{ loginSubmitting ? 'Checking…' : 'Master Admin Login' }}</button>
                     <button type="button" @click="sendAdminPasswordReset" class="w-full text-xs text-amber-400 hover:text-amber-300 py-2">Forgot Master Password? Send reset email</button>
                     <button type="button" @click="loginType = 'admin'; loginError=''" class="w-full text-xs text-slate-400 hover:text-amber-300 py-2">Back to Admin Code Login</button>
                 </form>
@@ -549,6 +549,27 @@
                         <span :class="getStatusBadgeClass(currentUser.status)" class="text-xs font-bold px-3 py-1.5 rounded-full border">
                             {{ currentUser.status || 'Pending Review' }}
                         </span>
+                    </div>
+                </div>
+
+                <!-- CLIENT CAMPAIGN COMPLETION NOTICE -->
+                <div class="bg-indigo-950/50 border border-indigo-500/40 p-4 sm:p-5 rounded-2xl shadow-lg">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-sm sm:text-base font-extrabold text-white">Campaign Completion & Future Work</h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-5">
+                                Successful <strong class="text-emerald-400">100% Campaign</strong> पूरा होने के बाद आपको
+                                <strong class="text-amber-400">Employee Category</strong> में shift किया जा सकता है।
+                                अगर आप Employee Category में shift नहीं भी होते हैं, तो आपकी
+                                <strong class="text-amber-400">Client-base earning</strong> जारी रह सकती है।
+                            </p>
+                            <p v-if="campaigns.length > 0" class="text-[11px] text-indigo-300 font-semibold pt-1">
+                                Current campaign progress: {{ getClientCampaignCompletionPercent() }}%
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -1296,6 +1317,35 @@
             <!-- TASKS & EXTRA INCOME MANAGEMENT -->
             <div v-if="adminTab === 'work_management'" class="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-6">
                 <h3 class="text-lg font-bold text-white">Tasks & Extra Income — Admin Control</h3>
+
+                <!-- 100% CAMPAIGN ELIGIBILITY -->
+                <div class="bg-indigo-950/40 border border-indigo-500/30 p-5 rounded-xl space-y-4">
+                    <div>
+                        <h4 class="font-bold text-white flex items-center">
+                            <i class="fa-solid fa-trophy text-amber-400 mr-2"></i>
+                            100% Campaign Complete — Extra Work Eligibility
+                        </h4>
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            केवल वे Clients जिनके सभी currently published campaigns के proofs Admin/Employee द्वारा Approved हैं,
+                            यहाँ eligible दिखेंगे। अधूरे/rejected campaigns वाले Clients को इस list से extra work नहीं दिया जाएगा।
+                        </p>
+                    </div>
+
+                    <div v-if="get100PercentCampaignClients().length === 0" class="text-xs text-slate-400 bg-slate-900/70 p-3 rounded-lg border border-slate-700">
+                        अभी कोई Client 100% campaign complete नहीं है।
+                    </div>
+
+                    <div v-for="client in get100PercentCampaignClients()" :key="client.code" class="bg-slate-900 border border-slate-700 p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <p class="font-bold text-white">{{ client.name }}</p>
+                            <p class="text-[11px] text-amber-400 font-mono">{{ client.code }} · {{ getClientCampaignCompletionPercentFor(client) }}% Complete</p>
+                        </div>
+                        <button @click="prepareExtraWorkForClient(client)" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs">
+                            <i class="fa-solid fa-plus mr-1"></i> Give Extra Work
+                        </button>
+                    </div>
+                </div>
+
                 <form @submit.prevent="createWorkItem" class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900 p-5 rounded-xl border border-slate-700">
                     <select v-model="newWorkItem.targetRole" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="client">Client</option><option value="employee">Employee</option></select>
                     <select v-model="newWorkItem.type" class="bg-slate-800 border border-slate-700 p-2.5 rounded-xl text-xs text-white"><option value="Task">New Task</option><option value="ExtraIncome">Extra Income</option></select>
@@ -1735,6 +1785,15 @@ if (!firebase.apps.length) {
 }
 
 const db = firebase.firestore();
+// Mobile browsers/network providers can occasionally fail Firestore's preferred
+// transport. Long-polling fallback makes login/data loading more reliable.
+try {
+  if (typeof db.settings === 'function') {
+    db.settings({ experimentalAutoDetectLongPolling: true });
+  }
+} catch (firestoreSettingsError) {
+  console.warn('Firestore transport fallback unavailable:', firestoreSettingsError);
+}
 
 // Analytics is optional for the portal's core operation. If the current
 // browser blocks analytics, Firestore should continue working normally.
@@ -1756,6 +1815,7 @@ window.__vcrPortalApp = createApp({
             loginInput: { code: '', registrationNo: '', phone: '', pin: '', adminCode: '', adminPin: '', otp: '', username: '', password: '' },
             phoneAuth: { confirmationResult: null, otpSent: false, role: '', verifier: null },
             loginError: '',
+            loginSubmitting: false,
             currentUser: null,
 
             toast: { show: false, message: '', type: 'success' },
@@ -2308,6 +2368,9 @@ window.__vcrPortalApp = createApp({
         setView(view) {
             this.currentView = view;
             this.loginError = '';
+            if (view === 'login' && !this.currentUser) {
+                this.loginType = this.loginType || 'client';
+            }
             this.persistUiState();
         },
 
@@ -2422,27 +2485,62 @@ window.__vcrPortalApp = createApp({
 
         async ensureFreshAnonymousSession() {
             try {
-                if (!firebase.auth || typeof firebase.auth !== 'function') return { uid: 'browser-' + Date.now() };
+                if (!firebase.auth || typeof firebase.auth !== 'function') {
+                    return { uid: 'browser-' + Date.now(), isAnonymous: true, localFallback: true };
+                }
                 const auth = firebase.auth();
-                if (auth.currentUser) await auth.signOut();
+
+                // Reuse an existing anonymous session when possible. This avoids
+                // an auth-state race on slower phones.
+                if (auth.currentUser?.isAnonymous) return auth.currentUser;
+
+                // A master-admin email session must not be reused for PIN-based
+                // client/employee/admin logins.
+                if (auth.currentUser && !auth.currentUser.isAnonymous) {
+                    await auth.signOut();
+                }
+
                 const result = await auth.signInAnonymously();
                 return result.user;
             } catch (error) {
-                if (error?.code === 'auth/operation-not-allowed' || error?.code === 'auth/network-request-failed') {
-                    return { uid: 'browser-' + Date.now() };
+                if (error?.code === 'auth/operation-not-allowed') {
+                    const e = new Error('ANONYMOUS_AUTH_DISABLED');
+                    e.code = error.code;
+                    throw e;
+                }
+                if (error?.code === 'auth/network-request-failed' ||
+                    error?.code === 'auth/too-many-requests') {
+                    const e = new Error('AUTH_NETWORK_ERROR');
+                    e.code = error.code;
+                    throw e;
                 }
                 throw error;
             }
         },
 
         async handleClientLogin() {
+            this.loginSubmitting = true;
             const clientCode=String(this.loginInput.code||'').trim().toUpperCase(), phone=this.normalizePhone(this.loginInput.phone), pin=String(this.loginInput.pin||'').trim();
             if(!/^CLI-\d{5}$/.test(clientCode)||!this.isValidPhone(phone)||!this.isValidPin(pin)){this.loginError='Client Code CLI-00001, registered mobile और 4 digit PIN दर्ज करें।';return;}
-            try{const authUser=await this.ensureFreshAnonymousSession(); const a=await db.collection('clientAccess').doc(clientCode).get();if(!a.exists)throw new Error('CLIENT_NOT_FOUND');const x=a.data()||{};if(x.status!=='Approved')throw new Error('CLIENT_DISABLED');if(x.phoneHash!==await this.hashLookupValue(phone))throw new Error('PHONE_MISMATCH');if(!x.pinHash||!await this.verifyStoredCredential(pin,x.pinHash))throw new Error('BAD_PIN');const snap=await db.collection('clients').doc(x.registrationNo).get();if(!snap.exists)throw new Error('CLIENT_NOT_FOUND');const found={id:snap.id,...snap.data()};await db.collection('authProfiles').doc(authUser.uid).set({uid:authUser.uid,role:'client',code:clientCode,registrationNo:x.registrationNo,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});this.currentUser={...found,role:'client',authUid:authUser.uid};this.loadPrivateDataForRole('client',found.id);this.currentView='client_dash';this.loginInput={...this.loginInput,code:'',registrationNo:'',phone:'',pin:''};this.persistUiState();this.showToast('Welcome, '+found.name+' | Client Code: '+found.code,'success');}
-            catch(error){console.error(error);this.loginError=error.message==='PHONE_MISMATCH'?'Mobile number match नहीं करता.':error.message==='BAD_PIN'?'Client PIN गलत है.':error.message==='CLIENT_DISABLED'?'Client account active नहीं है.':error?.code==='auth/operation-not-allowed'?'Firebase Anonymous Authentication enable करें.':'Client Code नहीं मिला.';this.showToast(this.loginError,'error');}
+            try{const authUser=await this.ensureFreshAnonymousSession(); const a=await db.collection('clientAccess').doc(clientCode).get();if(!a.exists)throw new Error('CLIENT_NOT_FOUND');const x=a.data()||{};if(x.status!=='Approved')throw new Error('CLIENT_DISABLED');if(x.phoneHash!==await this.hashLookupValue(phone))throw new Error('PHONE_MISMATCH');if(!x.pinHash||!await this.verifyStoredCredential(pin,x.pinHash))throw new Error('BAD_PIN');const snap=await db.collection('clients').doc(x.registrationNo).get();if(!snap.exists)throw new Error('CLIENT_NOT_FOUND');const found={id:snap.id,...snap.data()};try {
+                    await db.collection('authProfiles').doc(authUser.uid).set(
+                        {uid:authUser.uid,role:'client',code:clientCode,registrationNo:x.registrationNo,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},
+                        {merge:true}
+                    );
+                } catch (profileError) {
+                    console.warn('Optional client auth profile write failed:', profileError);
+                }
+                this.currentUser={...found,role:'client',authUid:authUser.uid};this.loadPrivateDataForRole('client',found.id);this.currentView='client_dash';this.loginInput={...this.loginInput,code:'',registrationNo:'',phone:'',pin:''};this.persistUiState();this.showToast('Welcome, '+found.name+' | Client Code: '+found.code,'success');}
+            catch(error){console.error(error);this.loginError=error.message==='PHONE_MISMATCH'?'Mobile number match नहीं करता.':error.message==='BAD_PIN'?'Client PIN गलत है.':error.message==='CLIENT_DISABLED'?'Client account active नहीं है.':error?.message==='ANONYMOUS_AUTH_DISABLED'?'Firebase Console में Authentication → Sign-in method → Anonymous enable करें.':
+                error?.message==='AUTH_NETWORK_ERROR'?'Firebase Authentication network error. Internet बदलकर फिर कोशिश करें.':
+                error?.code==='permission-denied'?'Firebase Firestore permission denied. Firestore Rules में login collections की read permission check करें.':
+                error?.code==='failed-precondition'?'Firebase/Firestore configuration incomplete है. Firebase project और Firestore database check करें.':
+                'Client login नहीं हो पाया। Code, mobile और PIN check करें.';this.showToast(this.loginError,'error');}
+            finally { this.loginSubmitting = false; }
         },
 
         async handleEmployeeLogin() {
+            this.loginSubmitting = true;
             const code = String(this.loginInput.code || '').trim().toUpperCase();
             const pin = String(this.loginInput.pin || '').trim();
             const phone = this.normalizePhone(this.loginInput.phone);
@@ -2458,8 +2556,24 @@ window.__vcrPortalApp = createApp({
                 if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (!access.pinHash) throw new Error('PIN_NOT_SET');
                 if (!await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_PIN');
-                await db.collection('employeeAccess').doc(code).set({ code, phoneHash: access.phoneHash, pinHash: access.pinHash, status: 'Active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-                if (authUser) await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'employee', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                try {
+                    await db.collection('employeeAccess').doc(code).set(
+                        { code, phoneHash: access.phoneHash, pinHash: access.pinHash, status: 'Active', updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                        { merge: true }
+                    );
+                } catch (accessWriteError) {
+                    console.warn('Optional employee access repair failed:', accessWriteError);
+                }
+                if (authUser && authUser.uid) {
+                    try {
+                        await db.collection('authProfiles').doc(authUser.uid).set(
+                            { uid: authUser.uid, role: 'employee', code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                            { merge: true }
+                        );
+                    } catch (profileError) {
+                        console.warn('Optional employee auth profile write failed:', profileError);
+                    }
+                }
                 const found = { id: empSnap.id, ...employee, code };
                 this.currentUser = { ...found, role: 'employee', authUid: authUser?.uid || null };
                 this.forceEmpPinChange = found.mustChangePin === true;
@@ -2478,13 +2592,17 @@ window.__vcrPortalApp = createApp({
                     : error.message === 'EMP_NOT_FOUND' ? 'Employee Code नहीं मिला.'
                     : error.message === 'BAD_PIN' ? 'Secret PIN गलत है.'
                     : error.message === 'PIN_NOT_SET' ? 'इस Employee का PIN set नहीं है। Admin से PIN बनवाएँ.'
-                    : error.code === 'auth/operation-not-allowed' ? 'Firebase Anonymous Authentication enable करें.'
+                    : error.message === 'ANONYMOUS_AUTH_DISABLED' ? 'Firebase Console में Authentication → Sign-in method → Anonymous enable करें.'
+                    : error.message === 'AUTH_NETWORK_ERROR' ? 'Firebase Authentication network error. Internet बदलकर फिर कोशिश करें.'
+                    : error.code === 'permission-denied' ? 'Firebase Firestore permission denied. Employee collections की read permission check करें.'
                     : 'Employee login नहीं हो पाया।';
                 this.showToast(this.loginError, 'error');
             }
+            finally { this.loginSubmitting = false; }
         },
 
         async handleAdminLogin() {
+            this.loginSubmitting = true;
             const code = String(this.loginInput.adminCode || '').trim().toUpperCase();
             const phone = this.normalizePhone(this.loginInput.phone);
             const pin = String(this.loginInput.adminPin || '').trim();
@@ -2497,7 +2615,16 @@ window.__vcrPortalApp = createApp({
                 if (access.status !== 'Active') throw new Error('ADMIN_DISABLED');
                 if (access.phoneHash !== await this.hashLookupValue(phone)) throw new Error('PHONE_MISMATCH');
                 if (!await this.verifyStoredCredential(pin, access.pinHash)) throw new Error('BAD_ADMIN_PIN');
-                if (authUser) await db.collection('authProfiles').doc(authUser.uid).set({ uid: authUser.uid, role: 'admin', code, adminCode: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                if (authUser && authUser.uid) {
+                    try {
+                        await db.collection('authProfiles').doc(authUser.uid).set(
+                            { uid: authUser.uid, role: 'admin', code, adminCode: code, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+                            { merge: true }
+                        );
+                    } catch (profileError) {
+                        console.warn('Optional admin auth profile write failed:', profileError);
+                    }
+                }
                 this.currentUser = { id: code, name: access.name, role: 'admin', code, authUid: authUser?.uid || null, phone: access.phone };
                 this.adminSettingsForm.username = access.name;
                 this.loadPrivateDataForRole('admin', code);
@@ -2514,9 +2641,11 @@ window.__vcrPortalApp = createApp({
                     : error.code === 'auth/operation-not-allowed' ? 'Anonymous Authentication Enable करें.'
                     : 'Admin login नहीं हो पाया। Code, mobile और PIN check करें।';
             }
+            finally { this.loginSubmitting = false; }
         },
 
         async handleMasterAdminLogin() {
+            this.loginSubmitting = true;
             const email = String(this.loginInput.username || '').trim().toLowerCase();
             const password = String(this.loginInput.password || '');
             if (!email || !password) { this.loginError = 'Master Admin Email और Password दोनों भरें।'; return; }
@@ -2532,8 +2661,20 @@ window.__vcrPortalApp = createApp({
                 this.loginInput.password = '';
                 this.showToast('Master Admin Access Granted', 'success');
             } catch (error) {
-                this.loginError = error?.message || 'Master Admin login failed.';
+                const code = error?.code || '';
+                this.loginError =
+                    code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential'
+                        ? 'Master Admin Email या Password गलत है.'
+                        : code === 'auth/too-many-requests'
+                        ? 'बहुत बार login प्रयास हुआ है. थोड़ी देर बाद फिर कोशिश करें.'
+                        : code === 'auth/network-request-failed'
+                        ? 'Firebase Authentication network error. Internet बदलकर फिर कोशिश करें.'
+                        : code === 'auth/operation-not-allowed'
+                        ? 'Firebase Console में Email/Password Authentication enable करें.'
+                        : error?.message || 'Master Admin login failed.';
+                this.showToast(this.loginError, 'error');
             }
+            finally { this.loginSubmitting = false; }
         },
 
         async sendAdminPasswordReset() {
@@ -3437,6 +3578,34 @@ window.__vcrPortalApp = createApp({
             if (!file) return;
             try { this.newWorkItem.media = await this.readImageFile(file, 250000); this.showToast('Task image ready.', 'success'); }
             catch (error) { this.newWorkItem.media = ''; this.showToast('Image upload/processing नहीं हुआ।', 'error'); }
+        },
+
+        getClientCampaignCompletionPercentFor(client) {
+            const total = Array.isArray(this.campaigns) ? this.campaigns.length : 0;
+            if (!total) return 0;
+            const approved = Array.isArray(client?.campaignProofs)
+                ? client.campaignProofs.filter(p => p && p.status === 'Approved (+₹10)').length
+                : 0;
+            return Math.min(100, Math.round((approved / total) * 100));
+        },
+
+        getClientCampaignCompletionPercent() {
+            return this.getClientCampaignCompletionPercentFor(this.currentUser);
+        },
+
+        get100PercentCampaignClients() {
+            if (!Array.isArray(this.clients) || !Array.isArray(this.campaigns) || this.campaigns.length === 0) return [];
+            return this.clients.filter(client => this.getClientCampaignCompletionPercentFor(client) === 100);
+        },
+
+        prepareExtraWorkForClient(client) {
+            this.newWorkItem = {
+                ...this.newWorkItem,
+                targetRole: 'client',
+                targetCode: String(client.code || client.registrationNo || '').toUpperCase(),
+                type: 'ExtraIncome'
+            };
+            this.showToast(`${client.name || 'Client'} selected. Extra Work details भरकर Publish करें।`, 'success');
         },
 
         async createWorkItem() {
