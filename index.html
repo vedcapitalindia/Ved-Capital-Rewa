@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>VED CAPITAL REWA — Multi-Function Portal</title>
+
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<meta name="description" content="VED CAPITAL REWA professional management portal prototype for learning, partners, employees, reports, tasks and internal capital records.">
+
+<title>VED CAPITAL REWA | Capital, Learning & Partner Management Portal</title>
 <style>
 :root{
   --bg:#f4f7fb;--card:#fff;--ink:#172033;--muted:#687386;--brand:#0b6bcb;
@@ -55,9 +60,15 @@ repeating-conic-gradient(#111 0 12deg,#fff 12deg 24deg);display:grid;place-items
 .mobile-only{display:none}
 @media(max-width:900px){.side{position:fixed;left:-260px;z-index:40;transition:.2s}.side.open{left:0}.mobile-only{display:block}.main{padding:14px}.g4{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:1fr 1fr}.action-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.g2,.g3,.g4,.form-grid{grid-template-columns:1fr}.top .top-actions .pill{display:none}.hero h1{font-size:22px}.main{padding:10px}.card{padding:13px}}
+
+.direct-pay{background:linear-gradient(135deg,#0b6bcb,#14b87a);color:#fff;border-radius:16px;padding:18px}
+.direct-pay .upi{font-size:16px;font-weight:800;word-break:break-all}
+.pay-qr{width:230px;max-width:100%;border:8px solid #fff;border-radius:14px;background:#fff;display:block}
+.pay-note{font-size:12px;opacity:.82;margin-top:8px}
+.pay-status{padding:10px 12px;border-radius:10px;background:#f6f8fb;border:1px solid var(--line);font-size:12px}
 </style>
 </head>
-<body>
+<body data-demo="true" autocomplete="off">
 
 <div id="login" class="login-screen">
   <div class="login-card">
@@ -289,7 +300,63 @@ function renderWallet(){
  <tr><td>08/10/26</td><td>Daily Market Report Task</td><td>${money(200)}</td><td><span class=tag pending>Pending</span></td></tr><tr><td>03/10/26</td><td>Candlestick Notes</td><td>${money(150)}</td><td><span class=tag ok>Credited</span></td></tr><tr><td>01/10/26</td><td>Promotion Bonus</td><td>${money(500)}</td><td><span class=tag ok>Credited</span></td></tr>
  </tbody></table></div></div>`;
 }
-function openPayment(type){openModal(type,`<div class=card><h3>${type}</h3><p>Admin configured payment destination:</p><b>UPI ID: vedcapitalrewa@upi</b><div class=row style="margin-top:14px"><div class=qr><span>VED CAPITAL<br>UPI / QR</span></div><div style=flex:1><label>Amount</label><input id=payAmount type=number placeholder="Enter amount"><label style="display:block;margin-top:10px">UTR / Transaction ID</label><input id=utr placeholder="Enter UTR"></div></div><button class=btn style="margin-top:14px" onclick="toast('${type} request submitted');closeModal()">Submit Request</button></div>`)}
+function openPayment(type, presetAmount=''){
+ const safeType=String(type).replace(/'/g,"\\'");
+ openModal(type,`
+ <div class="direct-pay">
+   <div class="kicker" style="color:#fff">DIRECT UPI PAYMENT</div>
+   <h2 style="margin:6px 0">Pay Directly</h2>
+   <p style="margin:0 0 12px">Payment will open in an available UPI app on your phone.</p>
+   <div class="upi">7489483307@ptsbi</div>
+   <div class="pay-note">Paytm / PhonePe / Google Pay / BHIM or another supported UPI app.</div>
+ </div>
+ <div class="card" style="margin-top:12px">
+   <div class="form-grid">
+     <div class="field"><label>Amount (₹)</label><input id="payAmount" type="number" min="1" step="1" value="${presetAmount}" placeholder="Enter amount"></div>
+     <div class="field"><label>Purpose</label><input id="payPurpose" value="${safeType}" readonly></div>
+   </div>
+   <div class="row" style="margin-top:14px;align-items:flex-start">
+     <div style="flex:0 0 240px;text-align:center">
+       <img class="pay-qr" src="assets/personal-upi-qr.jpg" alt="Personal UPI QR Code">
+       <div class="pay-note" style="color:#687386">QR is an alternate payment method.</div>
+     </div>
+     <div style="flex:1;min-width:220px">
+       <button class="btn green" style="width:100%;font-size:16px" onclick="startDirectUPIPayment('${safeType}')">💳 Pay Now — Open UPI App</button>
+       <button class="btn secondary" style="width:100%;margin-top:8px" onclick="copyUPI()">Copy UPI ID</button>
+       <div id="upiLaunchStatus" class="pay-status" style="margin-top:10px">Enter the amount and tap Pay Now.</div>
+     </div>
+   </div>
+   <div style="margin-top:16px">
+     <label>UTR / Transaction ID (after payment)</label>
+     <input id="utr" placeholder="Enter UTR / transaction ID">
+     <button class="btn" style="margin-top:10px" onclick="submitPaymentProof('${safeType}')">Submit Payment Details</button>
+   </div>
+   <div class="notice" style="margin-top:12px">
+     Direct UPI opening is automatic. Payment verification itself is not automatically guaranteed by a normal personal UPI ID; the UTR is used for verification unless a compliant payment gateway/merchant API is connected later.
+   </div>
+ </div>`);
+}
+function startDirectUPIPayment(type){
+ const amount=Number(document.getElementById('payAmount')?.value||0);
+ const purpose=encodeURIComponent(type);
+ if(!amount || amount<=0){toast('Please enter a valid amount');return;}
+ const upi='upi://pay?pa=7489483307%40ptsbi&pn=Pushpendra%20Kumar%20Dahiya&am='+encodeURIComponent(amount.toFixed(2))+'&cu=INR&tn='+purpose;
+ const status=document.getElementById('upiLaunchStatus');
+ if(status) status.textContent='Opening your UPI app…';
+ window.location.href=upi;
+ setTimeout(()=>{ if(status) status.textContent='If the UPI app did not open, use the QR code or Copy UPI ID option.'; },1500);
+}
+function copyUPI(){
+ navigator.clipboard?.writeText('7489483307@ptsbi').then(()=>toast('UPI ID copied')).catch(()=>toast('UPI ID: 7489483307@ptsbi'));
+}
+function submitPaymentProof(type){
+ const amount=Number(document.getElementById('payAmount')?.value||0);
+ const utr=(document.getElementById('utr')?.value||'').trim();
+ if(!amount || amount<=0){toast('Enter payment amount');return;}
+ if(!utr){toast('Enter UTR / Transaction ID');return;}
+ toast(type+' payment details submitted for verification');
+ closeModal();
+}
 
 function renderExam(){
  document.getElementById('exam').innerHTML=`
@@ -365,7 +432,7 @@ function renderPayments(){
  <tr><td>08/10/26</td><td>Demo Student</td><td>Add Money</td><td>${money(1000)}</td><td>UTR123456</td><td><span class=tag pending>Pending</span></td><td><button class=btn small onclick="toast('Payment verified')">Verify</button></td></tr>
  <tr><td>08/10/26</td><td>Demo Partner</td><td>Withdrawal</td><td>${money(1200)}</td><td>demo@upi</td><td><span class=tag pending>Pending</span></td><td><button class=btn small onclick="toast('Withdrawal approved')">Approve</button></td></tr>
  </tbody></table></div></div>
- <div class=section-title><h2>Admin Payment Settings</h2></div><div class=card><div class=form-grid>${field('UPI ID','upi_admin','vedcapitalrewa@upi')}${field('Account Name','acct','VED CAPITAL REWA')}${field('QR Code Image URL','qrurl','')}${field('Payment Instructions','payins','Pay only to the admin-approved UPI/QR')}</div><button class=btn style="margin-top:12px" onclick="toast('Payment settings saved')">Save Payment Settings</button></div>`;
+ <div class=section-title><h2>Admin Payment Settings</h2></div><div class=card><div class=form-grid>${field('UPI ID','upi_admin','7489483307@ptsbi')}${field('Account Name','acct','Pushpendra Kumar Dahiya')}${field('QR Code Image','qrurl','assets/personal-upi-qr.jpg')}${field('Payment Instructions','payins','Pay only to the admin-approved UPI/QR')}</div><button class=btn style="margin-top:12px" onclick="toast('Payment settings saved')">Save Payment Settings</button></div>`;
 }
 
 function renderAdmin(){
@@ -389,5 +456,13 @@ function renderAdmin(){
 
 function renderAll(){renderHome();renderProfile();renderClasses();renderTasks();renderWallet();renderExam();renderReports();renderStudents();renderPartners();renderEmployees();renderPayments();renderAdmin();}
 </script>
+
+<div id="securityBanner" style="position:fixed;left:0;right:0;bottom:0;z-index:9999;
+background:#10233f;color:#fff;padding:9px 14px;font:12px/1.4 Inter,Arial,sans-serif;
+display:flex;justify-content:center;gap:8px;flex-wrap:wrap;border-top:1px solid #2f4565">
+  <strong>DEMO / FRONT-END MODE</strong>
+  <span>• No broker API • No exchange API • No live trading connection • No real-money processing</span>
+</div>
+
 </body>
 </html>
