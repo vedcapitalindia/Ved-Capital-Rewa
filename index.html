@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<meta name="referrer" content="no-referrer">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex,nofollow">
-<meta name="description" content="VED CAPITAL REWA professional management portal prototype for learning, partners, employees, reports, tasks and internal capital records.">
+<meta name="description" content="VED CAPITAL REWA learning and management portal. Demo data only until Firebase and compliant backend services are configured.">
 
 <title>VED CAPITAL REWA | Capital, Learning & Partner Management Portal</title>
 <style>
@@ -77,19 +77,15 @@ repeating-conic-gradient(#111 0 12deg,#fff 12deg 24deg);display:grid;place-items
       <h1 style="margin:10px 0 2px">VED CAPITAL REWA</h1>
       <div class="sub" style="margin:0">Capital • Learning • Partner Management</div>
     </div>
-    <div class="tabs">
-      <button class="tab active" data-login="student">Student / Learner</button>
-      <button class="tab" data-login="partner">Partner</button>
-      <button class="tab" data-login="employee">Employee</button>
-      <button class="tab" data-login="admin">Admin</button>
-    </div>
-    <div id="loginForm">
-      <div class="field"><label>Mobile Number</label><input id="loginMobile" placeholder="10 digit mobile number"></div>
-      <div class="field" style="margin-top:10px"><label>Password</label><input id="loginPassword" type="password" placeholder="Password"></div>
-      <button class="btn" style="width:100%;margin-top:14px" onclick="doLogin()">Login</button>
-      <button class="btn secondary" id="signupBtn" style="width:100%;margin-top:8px" onclick="openSignup()">New Student? Sign Up</button>
-      <div class="notice" style="margin-top:13px">Demo portal: use any mobile/password. Admin approval, KYC, payment verification and real trading integrations should be connected before production.</div>
-    </div>
+    <div class="notice" style="margin:12px 0">Secure sign-in. Your role is assigned by the administrator; you cannot choose Admin/Employee access yourself.</div>
+    <form id="authForm" onsubmit="event.preventDefault();doLogin()">
+      <div class="field"><label>Email address</label><input id="loginEmail" type="email" autocomplete="username" required placeholder="you@example.com"></div>
+      <div class="field" style="margin-top:10px"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="At least 8 characters"></div>
+      <button class="btn" id="loginSubmit" type="submit" style="width:100%;margin-top:14px">Sign in</button>
+      <button class="btn secondary" type="button" style="width:100%;margin-top:8px" onclick="openSignup()">Create learner account</button>
+      <button class="btn secondary" type="button" style="width:100%;margin-top:8px" onclick="resetPassword()">Forgot password?</button>
+      <div id="authMessage" role="status" aria-live="polite" style="margin-top:12px;color:#b42318;font-size:13px"></div>
+    </form>
   </div>
 </div>
 
@@ -160,18 +156,116 @@ function openModal(t,b){document.getElementById('modalTitle').textContent=t;docu
 function closeModal(){document.getElementById('modal').classList.remove('show')}
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
- document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
- state.role=t.dataset.login;
- document.getElementById('signupBtn').style.display=state.role==='student'?'block':'none';
-});
-function doLogin(){
- document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';
- document.getElementById('rolePill').textContent=state.role==='student'?'Student/Learner':state.role[0].toUpperCase()+state.role.slice(1);
- document.getElementById('userPill').textContent=state.profile.fullName;
- renderAll(); show('home');
+function authMessage(message, isError=true){
+  const el=document.getElementById('authMessage');
+  if(el){el.textContent=message;el.style.color=isError?'#b42318':'#11845b';}
 }
-function logout(){document.getElementById('app').style.display='none';document.getElementById('login').style.display='grid'}
+function friendlyAuthError(error){
+  const codes={
+    'auth/invalid-credential':'Email or password is incorrect.',
+    'auth/user-not-found':'Email or password is incorrect.',
+    'auth/wrong-password':'Email or password is incorrect.',
+    'auth/invalid-email':'Please enter a valid email address.',
+    'auth/too-many-requests':'Too many attempts. Try again later.',
+    'auth/network-request-failed':'Network error. Check your internet connection.',
+    'auth/email-already-in-use':'This email is already registered.',
+    'auth/weak-password':'Use a password of at least 8 characters.',
+    'auth/operation-not-allowed':'Enable Email/Password sign-in in Firebase Authentication.'
+  };
+  return codes[error?.code] || 'Request could not be completed. Check Firebase setup and try again.';
+}
+async function doLogin(){
+  if(!firebaseReady){authMessage('Firebase is not configured yet. Follow FIREBASE_SETUP.md first.');return;}
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password=document.getElementById('loginPassword').value;
+  if(!email || !password){authMessage('Enter email and password.');return;}
+  const btn=document.getElementById('loginSubmit');btn.disabled=true;btn.textContent='Signing in…';
+  try{
+    const credential=await auth.signInWithEmailAndPassword(email,password);
+    const snap=await db.collection('users').doc(credential.user.uid).get();
+    if(!snap.exists){await auth.signOut();throw new Error('PROFILE_MISSING');}
+    const profile=snap.data();
+    if(profile.status && profile.status!=='active'){await auth.signOut();throw new Error('ACCOUNT_DISABLED');}
+    const allowed=['student','partner','employee','admin'];
+    if(!allowed.includes(profile.role)){await auth.signOut();throw new Error('ROLE_INVALID');}
+    state.role=profile.role;
+    state.profile={...state.profile,...profile,fullName:profile.fullName||credential.user.displayName||email,mobile:profile.mobile||''};
+    state.profile.uid=credential.user.uid;
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('rolePill').textContent=profile.role==='student'?'Student/Learner':profile.role[0].toUpperCase()+profile.role.slice(1);
+    document.getElementById('userPill').textContent=state.profile.fullName;
+    renderAll();show('home');
+  }catch(e){
+    const message=e.message==='PROFILE_MISSING'?'Account profile is missing. Contact the administrator.':
+      e.message==='ACCOUNT_DISABLED'?'This account is inactive. Contact the administrator.':
+      e.message==='ROLE_INVALID'?'Account role is invalid. Contact the administrator.':friendlyAuthError(e);
+    authMessage(message);
+  }finally{btn.disabled=false;btn.textContent='Sign in';}
+}
+async function resetPassword(){
+  if(!firebaseReady){authMessage('Configure Firebase first.');return;}
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+  if(!email){authMessage('Enter your email address first.');return;}
+  try{await auth.sendPasswordResetEmail(email);authMessage('If the account exists, a password-reset email has been sent.',false);}
+  catch(e){authMessage(friendlyAuthError(e));}
+}
+async function logout(){
+  try{if(auth)await auth.signOut();}catch(e){console.error(e);}
+  document.getElementById('app').style.display='none';
+  document.getElementById('login').style.display='grid';
+  document.getElementById('loginPassword').value='';
+  authMessage('You have signed out.',false);
+}
+function openSignup(){
+  openModal('Create learner account',`
+    <form id="signupForm" onsubmit="event.preventDefault();createStudent()">
+      <div class="form-grid">
+        <div class="field"><label>Full name *</label><input id="su_name" required maxlength="100" autocomplete="name"></div>
+        <div class="field"><label>Email *</label><input id="su_email" type="email" required maxlength="254" autocomplete="email"></div>
+        <div class="field"><label>Mobile number *</label><input id="su_mobile" type="tel" required pattern="[0-9]{10}" maxlength="10" inputmode="numeric" placeholder="10-digit mobile"></div>
+        <div class="field"><label>Village / Town</label><input id="su_village" maxlength="100"></div>
+        <div class="field"><label>District</label><input id="su_dist" maxlength="100"></div>
+        <div class="field"><label>State</label><input id="su_state" value="Madhya Pradesh" maxlength="100"></div>
+        <div class="field"><label>Password *</label><input id="su_pass" type="password" minlength="8" required autocomplete="new-password"></div>
+        <div class="field"><label>Confirm password *</label><input id="su_confirm" type="password" minlength="8" required autocomplete="new-password"></div>
+        <div class="full notice">New public accounts are created as Learners only. Admin/Partner/Employee roles must be assigned securely by an administrator.</div>
+        <div class="full"><button class="btn" id="signupSubmit" type="submit">Create learner account</button><div id="signupMessage" role="status" style="margin-top:10px;color:#b42318"></div></div>
+      </div>
+    </form>`);
+}
+async function createStudent(){
+  if(!firebaseReady){document.getElementById('signupMessage').textContent='Firebase is not configured. Follow FIREBASE_SETUP.md.';return;}
+  const name=document.getElementById('su_name').value.trim();
+  const email=document.getElementById('su_email').value.trim().toLowerCase();
+  const mobile=document.getElementById('su_mobile').value.trim();
+  const password=document.getElementById('su_pass').value;
+  const confirm=document.getElementById('su_confirm').value;
+  const msg=document.getElementById('signupMessage');
+  if(!name||!email||!/^[0-9]{10}$/.test(mobile)){msg.textContent='Check your name, email and 10-digit mobile number.';return;}
+  if(password.length<8){msg.textContent='Password must be at least 8 characters.';return;}
+  if(password!==confirm){msg.textContent='Passwords do not match.';return;}
+  const btn=document.getElementById('signupSubmit');btn.disabled=true;btn.textContent='Creating account…';
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,password);
+    await cred.user.updateProfile({displayName:name});
+    await db.collection('users').doc(cred.user.uid).set({
+      uid:cred.user.uid,fullName:name,email,mobile,
+      village:document.getElementById('su_village').value.trim(),
+      district:document.getElementById('su_dist').value.trim(),
+      state:document.getElementById('su_state').value.trim()||'Madhya Pradesh',
+      role:'student',status:'active',createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await auth.signOut();
+    closeModal();
+    document.getElementById('loginEmail').value=email;
+    authMessage('Account created. Sign in with your email and password.',false);
+  }catch(e){
+    msg.textContent=friendlyAuthError(e);
+    // If Auth succeeded but profile write failed, do not silently claim signup succeeded.
+    console.error('Signup error',e);
+  }finally{const b=document.getElementById('signupSubmit');if(b){b.disabled=false;b.textContent='Create learner account';}}
+}
 function toggleSide(){document.getElementById('side').classList.toggle('open')}
 function show(id){
  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');
@@ -304,10 +398,10 @@ function openPayment(type, presetAmount=''){
  const safeType=String(type).replace(/'/g,"\\'");
  openModal(type,`
  <div class="direct-pay">
-   <div class="kicker" style="color:#fff">DIRECT UPI PAYMENT</div>
-   <h2 style="margin:6px 0">Pay Directly</h2>
+   <div class="kicker" style="color:#fff">PAYMENT DEMO — NOT VERIFIED</div>
+   <h2 style="margin:6px 0">Payment setup required</h2>
    <p style="margin:0 0 12px">Payment will open in an available UPI app on your phone.</p>
-   <div class="upi">7489483307@ptsbi</div>
+   <div class="upi">YOUR_MERCHANT_UPI_ID</div>
    <div class="pay-note">Paytm / PhonePe / Google Pay / BHIM or another supported UPI app.</div>
  </div>
  <div class="card" style="margin-top:12px">
@@ -317,7 +411,7 @@ function openPayment(type, presetAmount=''){
    </div>
    <div class="row" style="margin-top:14px;align-items:flex-start">
      <div style="flex:0 0 240px;text-align:center">
-       <img class="pay-qr" src="assets/personal-upi-qr.jpg" alt="Personal UPI QR Code">
+       <img class="pay-qr" src="assets/merchant-qr-placeholder.png" alt="Personal UPI QR Code">
        <div class="pay-note" style="color:#687386">QR is an alternate payment method.</div>
      </div>
      <div style="flex:1;min-width:220px">
@@ -332,24 +426,30 @@ function openPayment(type, presetAmount=''){
      <button class="btn" style="margin-top:10px" onclick="submitPaymentProof('${safeType}')">Submit Payment Details</button>
    </div>
    <div class="notice" style="margin-top:12px">
-     Direct UPI opening is automatic. Payment verification itself is not automatically guaranteed by a normal personal UPI ID; the UTR is used for verification unless a compliant payment gateway/merchant API is connected later.
+     Demo only: this page does not verify or settle payments. Do not accept real funds until a compliant payment gateway, server-side webhook verification, reconciliation and refund process are implemented.
    </div>
  </div>`);
 }
 function startDirectUPIPayment(type){
+  toast('Real payments are disabled until a verified merchant gateway is configured.');
+  return;
+  /* DEMO ONLY: never trust client-side payment success. */
  const amount=Number(document.getElementById('payAmount')?.value||0);
  const purpose=encodeURIComponent(type);
  if(!amount || amount<=0){toast('Please enter a valid amount');return;}
- const upi='upi://pay?pa=7489483307%40ptsbi&pn=Pushpendra%20Kumar%20Dahiya&am='+encodeURIComponent(amount.toFixed(2))+'&cu=INR&tn='+purpose;
+ const upi='upi://pay?pa=7489483307%40ptsbi&pn=VED%20CAPITAL&am='+encodeURIComponent(amount.toFixed(2))+'&cu=INR&tn='+purpose;
  const status=document.getElementById('upiLaunchStatus');
  if(status) status.textContent='Opening your UPI app…';
  window.location.href=upi;
  setTimeout(()=>{ if(status) status.textContent='If the UPI app did not open, use the QR code or Copy UPI ID option.'; },1500);
 }
 function copyUPI(){
- navigator.clipboard?.writeText('7489483307@ptsbi').then(()=>toast('UPI ID copied')).catch(()=>toast('UPI ID: 7489483307@ptsbi'));
+ navigator.clipboard?.writeText('YOUR_MERCHANT_UPI_ID').then(()=>toast('UPI ID copied')).catch(()=>toast('UPI ID: YOUR_MERCHANT_UPI_ID'));
 }
 function submitPaymentProof(type){
+  toast('Payment proof submission is disabled in this demo. Configure a secure backend first.');
+  return;
+  /* DEMO ONLY: never credit balances from browser-submitted UTR values. */
  const amount=Number(document.getElementById('payAmount')?.value||0);
  const utr=(document.getElementById('utr')?.value||'').trim();
  if(!amount || amount<=0){toast('Enter payment amount');return;}
@@ -432,7 +532,7 @@ function renderPayments(){
  <tr><td>08/10/26</td><td>Demo Student</td><td>Add Money</td><td>${money(1000)}</td><td>UTR123456</td><td><span class=tag pending>Pending</span></td><td><button class=btn small onclick="toast('Payment verified')">Verify</button></td></tr>
  <tr><td>08/10/26</td><td>Demo Partner</td><td>Withdrawal</td><td>${money(1200)}</td><td>demo@upi</td><td><span class=tag pending>Pending</span></td><td><button class=btn small onclick="toast('Withdrawal approved')">Approve</button></td></tr>
  </tbody></table></div></div>
- <div class=section-title><h2>Admin Payment Settings</h2></div><div class=card><div class=form-grid>${field('UPI ID','upi_admin','7489483307@ptsbi')}${field('Account Name','acct','Pushpendra Kumar Dahiya')}${field('QR Code Image','qrurl','assets/personal-upi-qr.jpg')}${field('Payment Instructions','payins','Pay only to the admin-approved UPI/QR')}</div><button class=btn style="margin-top:12px" onclick="toast('Payment settings saved')">Save Payment Settings</button></div>`;
+ <div class=section-title><h2>Admin Payment Settings</h2></div><div class=card><div class=form-grid>${field('UPI ID','upi_admin','YOUR_MERCHANT_UPI_ID')}${field('Account Name','acct','Pushpendra Kumar Dahiya')}${field('QR Code Image','qrurl','assets/merchant-qr-placeholder.png')}${field('Payment Instructions','payins','Pay only to the admin-approved UPI/QR')}</div><button class=btn style="margin-top:12px" onclick="toast('Payment settings saved')">Save Payment Settings</button></div>`;
 }
 
 function renderAdmin(){
@@ -460,8 +560,8 @@ function renderAll(){renderHome();renderProfile();renderClasses();renderTasks();
 <div id="securityBanner" style="position:fixed;left:0;right:0;bottom:0;z-index:9999;
 background:#10233f;color:#fff;padding:9px 14px;font:12px/1.4 Inter,Arial,sans-serif;
 display:flex;justify-content:center;gap:8px;flex-wrap:wrap;border-top:1px solid #2f4565">
-  <strong>DEMO / FRONT-END MODE</strong>
-  <span>• No broker API • No exchange API • No live trading connection • No real-money processing</span>
+  <strong>DEMO DATA — NOT LIVE</strong>
+  <span>• Sample figures only • Firebase required • No verified payments • No live trading</span>
 </div>
 
 </body>
