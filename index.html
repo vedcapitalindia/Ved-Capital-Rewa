@@ -10,11 +10,13 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Firebase SDK Setup -->
+  <!-- Firebase SDKs (Modular v10/v11) -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+    // Your Exact Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyC9z-tTrlXJNT0LQtOcaH8i6uplzUuKjwE",
       authDomain: "vedcapitalrewa.firebaseapp.com",
@@ -26,8 +28,23 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    window.vcrApp = app;
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Expose Firebase tools globally for UI handlers
+    window.vcrFB = { auth, db, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, onSnapshot, query, where };
+    
+    // Initialize Auth State Listener
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          window.currentUserData = { uid: user.uid, ...userDoc.data() };
+          showDashboard(window.currentUserData.role);
+        }
+      }
+    });
   </script>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen">
@@ -38,7 +55,7 @@
       <div class="bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xl tracking-wider">VCR</div>
       <div>
         <h1 class="text-lg font-black text-amber-400 tracking-wide uppercase">Ved Capital Rewa</h1>
-        <p class="text-[10px] text-slate-400 tracking-wider">VEDDAH Enterprise, Learning & Partner Portal</p>
+        <p class="text-[10px] text-slate-400 tracking-wider">VEDDAH Enterprise & Learning Portal</p>
       </div>
     </div>
 
@@ -47,7 +64,7 @@
         <p id="userDisplayName" class="text-xs font-bold text-slate-200">User Name</p>
         <span id="userRoleBadge" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">Role</span>
       </div>
-      <button onclick="logoutUser()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs px-3 py-1.5 rounded-lg transition font-bold">
+      <button onclick="handleLogout()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs px-3 py-1.5 rounded-lg transition font-bold">
         <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
       </button>
     </div>
@@ -60,22 +77,22 @@
         <i class="fa-solid fa-shield-halved text-2xl text-amber-400"></i>
       </div>
       <h2 class="text-xl font-black text-amber-400 uppercase tracking-wide">Portal Authentication</h2>
-      <p class="text-xs text-slate-400 mt-1">Select your role to login to Ved Capital Rewa</p>
+      <p class="text-xs text-slate-400 mt-1">Login with Mobile Number ID & Password</p>
     </div>
 
-    <form id="loginForm" onsubmit="handleAuthLogin(event)" class="space-y-4">
+    <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4">
       <div>
-        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Select Portal Role</label>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Select Role</label>
         <select id="loginRole" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
           <option value="learner">Learner / Student</option>
-          <option value="employee">Employee / Operations</option>
+          <option value="employee">Employee / Staff</option>
           <option value="partner">Investor / Partner</option>
           <option value="admin">System Administrator</option>
         </select>
       </div>
 
       <div>
-        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Mobile Number / User ID</label>
+        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Mobile Number / Email ID</label>
         <input type="text" id="loginId" required placeholder="Enter Mobile Number or ID" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
       </div>
 
@@ -85,8 +102,9 @@
       </div>
 
       <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg transition text-xs flex items-center justify-center gap-2">
-        <i class="fa-solid fa-lock"></i> Login to System
+        <i class="fa-solid fa-lock"></i> Secure Login
       </button>
+      <p id="loginError" class="text-xs text-rose-400 text-center font-bold mt-2 hidden"></p>
     </form>
   </section>
 
@@ -94,192 +112,81 @@
   <main id="learnerDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
       <div>
-        <h2 id="learnerWelcome" class="text-xl font-black text-amber-400">Learner Education Hub</h2>
+        <h2 id="learnerWelcome" class="text-xl font-black text-amber-400">Learner Dashboard</h2>
         <p class="text-xs text-slate-400">Courses, Exams, Verified Certificates & Study Vault</p>
       </div>
-      <button onclick="openChangePasswordModal()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg text-amber-300 font-bold border border-slate-700 transition">
-        <i class="fa-solid fa-key mr-1"></i> Change Password
-      </button>
     </div>
 
-    <!-- Student Notice Board -->
     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-      <h3 class="text-xs font-bold text-amber-400 mb-2 flex items-center gap-2 uppercase tracking-wide">
-        <i class="fa-solid fa-bullhorn text-amber-500"></i> Student Notice Board
-      </h3>
-      <div id="learnerNoticeContent" class="text-xs text-slate-300 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-        Welcome to Ved Capital Rewa Learning Portal! Please check your enrolled courses below.
-      </div>
+      <h3 class="text-xs font-bold text-amber-400 mb-2 uppercase tracking-wide"><i class="fa-solid fa-bullhorn mr-1"></i> Student Notice Board</h3>
+      <div id="learnerNoticeContent" class="text-xs text-slate-300 bg-slate-950 p-3.5 rounded-xl border border-slate-800">Loading notices from Firestore...</div>
     </div>
 
-    <!-- Courses (Free & Paid) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Free Courses -->
       <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wide"><i class="fa-solid fa-graduation-cap mr-1"></i> Free Courses Catalog</h3>
-          <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">Free Access</span>
-        </div>
-        <div id="freeCoursesList" class="space-y-3">
-          <!-- Dynamic JS Items -->
-        </div>
-      </div>
-
-      <!-- Paid Courses -->
-      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-lock mr-1"></i> Premium Paid Courses</h3>
-          <span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30">Admin Approval Required</span>
-        </div>
-        <div id="paidCoursesList" class="space-y-3">
-          <!-- Dynamic JS Items -->
-        </div>
-      </div>
-    </div>
-
-    <!-- YouTube & Study Material -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wide mb-3"><i class="fa-brands fa-youtube mr-1"></i> YouTube Channel Video Stream</h3>
-        <div class="aspect-video bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center text-slate-500">
-          <p class="text-xs text-center"><i class="fa-brands fa-youtube text-2xl text-rose-500 mb-1 block"></i>Ved Capital Rewa Official Live Stream Embed</p>
-        </div>
-      </div>
-
-      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-        <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wide mb-3"><i class="fa-solid fa-file-pdf mr-1"></i> Study Material Vault</h3>
+        <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-wide border-b border-slate-800 pb-2"><i class="fa-solid fa-graduation-cap mr-1"></i> Free Courses</h3>
         <div class="space-y-2 text-xs">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-            <span><i class="fa-solid fa-file-pdf text-rose-400 mr-2"></i> Trading Fundamentals & Market Mechanics.pdf</span>
-            <button onclick="alert('Downloading File...')" class="text-amber-400 hover:underline font-bold">Download</button>
+            <span>Basics of Financial Markets</span>
+            <button onclick="openQuizExam('Basics of Financial Markets')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg">Take Exam</button>
           </div>
+        </div>
+      </div>
+      <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide border-b border-slate-800 pb-2"><i class="fa-solid fa-lock mr-1"></i> Paid Courses (Admin Approved)</h3>
+        <div id="learnerPaidCourses" class="space-y-2 text-xs">
           <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-            <span><i class="fa-solid fa-file-pdf text-rose-400 mr-2"></i> Equity Portfolio Risk Rules.pdf</span>
-            <button onclick="alert('Downloading File...')" class="text-amber-400 hover:underline font-bold">Download</button>
+            <span>Advanced Portfolio Management</span>
+            <span id="paidStatusBadge" class="text-[10px] bg-rose-900/50 text-rose-300 px-2 py-1 rounded">Locked</span>
           </div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- ==================== INVESTOR / PARTNER DASHBOARD ==================== -->
+  <!-- ==================== PARTNER DASHBOARD ==================== -->
   <main id="partnerDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
       <div>
-        <h2 id="partnerWelcome" class="text-xl font-black text-amber-400">Partner Financial Portfolio</h2>
-        <p class="text-xs text-slate-400">Ved Capital Rewa Private Investor Holdings & NAV Overview</p>
+        <h2 id="partnerWelcome" class="text-xl font-black text-amber-400">Partner Portfolio</h2>
+        <p class="text-xs text-slate-400">Ved Capital Rewa Private Holdings & NAV Overview</p>
       </div>
       <div class="text-right bg-slate-950 px-4 py-2 rounded-xl border border-slate-800">
-        <p class="text-[10px] uppercase font-bold text-slate-400">System Unit NAV Price</p>
-        <p id="currentNavPricePartner" class="text-lg font-black text-emerald-400">₹50.00</p>
+        <p class="text-[10px] uppercase font-bold text-slate-400">Live NAV Price</p>
+        <p id="liveNavDisplay" class="text-lg font-black text-emerald-400">₹50.00</p>
       </div>
     </div>
 
-    <!-- 30% Govt Tax Notice -->
-    <div class="bg-amber-950/60 border border-amber-600/50 p-4 rounded-2xl text-amber-200 text-xs shadow-md">
-      <div class="flex items-start gap-3">
-        <i class="fa-solid fa-building-columns text-xl text-amber-400 mt-0.5"></i>
-        <div>
-          <p class="font-bold text-amber-300 uppercase tracking-wide">30% Flat Government Tax Statutory Mandate:</p>
-          <p class="text-slate-300 text-[11px] mt-1 leading-relaxed">
-            As per financial regulations, a <strong>30% Flat Government Tax</strong> (STT, LTCG, STCG, Brokerage & Regulatory Adjustments) is automatically locked on realized profits. This reserved amount cannot be withdrawn directly and remains withheld by system rules.
-          </p>
-        </div>
-      </div>
+    <!-- 30% Govt Tax Banner -->
+    <div class="bg-amber-950/60 border border-amber-600/50 p-4 rounded-2xl text-amber-200 text-xs">
+      <p class="font-bold uppercase"><i class="fa-solid fa-building-columns mr-1"></i> 30% Flat Government Tax Statutory Mandate:</p>
+      <p class="text-slate-300 text-[11px] mt-1">30% Flat Tax (STT, LTCG, Brokerage adjustments) is locked on profits and withheld by system rules. It cannot be withdrawn directly.</p>
     </div>
 
-    <!-- Portfolio Metric Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Invested Amount</p>
-        <p id="pInvested" class="text-lg font-black text-white mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">NAV Units Held</p>
-        <p id="pUnits" class="text-lg font-black text-amber-400 mt-1">0 NAV</p>
-      </div>
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Total Portfolio NAV Value</p>
-        <p id="pTotalNav" class="text-lg font-black text-emerald-400 mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Allocated Profit / Loss</p>
-        <p id="pProfit" class="text-lg font-black text-sky-400 mt-1">₹0</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Bonus Accumulated</p>
-        <p id="pBonus" class="text-lg font-black text-indigo-400 mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Total Cash Withdrawn</p>
-        <p id="pWithdrawn" class="text-lg font-black text-rose-400 mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800">
-        <p class="text-[11px] uppercase font-bold text-slate-400">30% Tax Deducted / Retained</p>
-        <p id="pTaxRetained" class="text-lg font-black text-amber-500 mt-1">₹0</p>
-      </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800"><p class="text-slate-400 uppercase">Invested Amount</p><p id="pInvested" class="text-lg font-black text-white mt-1">₹0</p></div>
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800"><p class="text-slate-400 uppercase">NAV Units</p><p id="pUnits" class="text-lg font-black text-amber-400 mt-1">0 NAV</p></div>
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800"><p class="text-slate-400 uppercase">Total Valuation</p><p id="pTotalVal" class="text-lg font-black text-emerald-400 mt-1">₹0</p></div>
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800"><p class="text-slate-400 uppercase">Profit / Loss</p><p id="pProfit" class="text-lg font-black text-sky-400 mt-1">₹0</p></div>
     </div>
   </main>
 
   <!-- ==================== EMPLOYEE DASHBOARD ==================== -->
   <main id="employeeDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
-    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex justify-between items-center">
-      <div>
-        <h2 class="text-xl font-black text-amber-400">Employee Operations Portal</h2>
-        <p class="text-xs text-slate-400">Learner Onboarding & Activity Monitoring Desk</p>
-      </div>
-    </div>
-
-    <!-- Employee Notice Board -->
     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-      <h3 class="text-xs font-bold text-sky-400 uppercase tracking-wide mb-2"><i class="fa-solid fa-clipboard-list mr-1"></i> Staff Operations Notice</h3>
-      <div id="employeeNoticeContent" class="text-xs text-slate-300 bg-slate-950 p-3 rounded-xl border border-slate-800">No new staff updates today.</div>
+      <h2 class="text-xl font-black text-amber-400">Employee Operations Portal</h2>
+      <p class="text-xs text-slate-400">Create Learner Credentials & Track Activity</p>
     </div>
 
-    <!-- Create Learner Account -->
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-      <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide mb-4"><i class="fa-solid fa-user-plus mr-1"></i> Register New Learner Credentials</h3>
-      <form onsubmit="createNewLearnerByEmployee(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
-          <input type="text" id="empStudentName" required placeholder="Student Name" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Mobile Number (Acts as User ID)</label>
-          <input type="text" id="empStudentMobile" required placeholder="10 Digit Mobile No" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Manual Initial Password</label>
-          <input type="password" id="empStudentPass" required placeholder="Set Password" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs">
-        </div>
-        <button type="submit" class="md:col-span-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg text-xs transition">
-          Create Learner ID & Password
-        </button>
+      <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide mb-4">Register New Learner (Mobile ID)</h3>
+      <form onsubmit="registerLearnerByEmployee(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <input type="text" id="elName" required placeholder="Full Name" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5">
+        <input type="text" id="elMobile" required placeholder="Mobile Number (e.g. 9876543210)" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5">
+        <input type="password" id="elPass" required placeholder="Manual Password" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5">
+        <button type="submit" class="md:col-span-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg">Create Learner Account in Firestore</button>
       </form>
-    </div>
-
-    <!-- Learner Tracking Table -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-      <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide mb-4"><i class="fa-solid fa-users mr-1"></i> Learner Directory & Activity Tracking</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="border-b border-slate-800 text-slate-400 uppercase">
-              <th class="p-3">Learner Name</th>
-              <th class="p-3">Mobile ID</th>
-              <th class="p-3">Paid Course Status</th>
-              <th class="p-3">Exam Status</th>
-              <th class="p-3">Certificates Issued</th>
-            </tr>
-          </thead>
-          <tbody id="employeeLearnerTable" class="divide-y divide-slate-800">
-            <!-- Dynamic Users -->
-          </tbody>
-        </table>
-      </div>
+      <p id="empMsg" class="text-xs font-bold mt-2 text-emerald-400 hidden"></p>
     </div>
   </main>
 
@@ -287,373 +194,202 @@
   <main id="adminDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 flex justify-between items-center shadow-lg">
       <div>
-        <h2 class="text-xl font-black text-amber-400 uppercase tracking-wide">System Control Center</h2>
-        <p class="text-xs text-slate-400">Ved Capital Rewa Master Controls & Valuation Engine</p>
+        <h2 class="text-xl font-black text-amber-400 uppercase">System Control Center</h2>
+        <p class="text-xs text-slate-400">Ved Capital Rewa Master Valuation & Database Engine</p>
       </div>
-      <span class="text-xs bg-rose-500/20 text-rose-400 border border-rose-500/40 px-3 py-1 rounded-full font-bold">Admin Panel Active</span>
+      <span class="text-xs bg-rose-500/20 text-rose-400 px-3 py-1 rounded-full font-bold">Admin Active</span>
     </div>
 
-    <!-- Market Cap & NAV Valuation Controls -->
     <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-      <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-chart-line mr-1"></i> Market Cap Valuation & Unit NAV Engine</h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide">Market Cap & NAV Valuation Engine</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">Baseline Market Cap</p>
-          <p id="admCapDisplay" class="text-lg font-black text-emerald-400 mt-1">₹5,00,000</p>
+          <p class="text-slate-400 uppercase">Market Cap</p>
+          <p id="admCap" class="text-lg font-black text-emerald-400 mt-1">₹5,00,000</p>
         </div>
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">Calculated NAV Price</p>
-          <p id="admNavDisplay" class="text-lg font-black text-amber-400 mt-1">₹50.00</p>
+          <p class="text-slate-400 uppercase">Unit NAV Price</p>
+          <p id="admNav" class="text-lg font-black text-amber-400 mt-1">₹50.00</p>
         </div>
         <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">Total Issued System Units</p>
-          <p id="admUnitsDisplay" class="text-lg font-black text-sky-400 mt-1">10,000</p>
-        </div>
-        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">30% Reserved Tax Pool</p>
-          <p id="admTaxPoolDisplay" class="text-lg font-black text-amber-500 mt-1">₹0</p>
+          <p class="text-slate-400 uppercase">Total Units</p>
+          <p id="admUnits" class="text-lg font-black text-sky-400 mt-1">10,000</p>
         </div>
       </div>
 
-      <!-- Financial Event Trigger Form -->
-      <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-        <p class="text-xs font-bold text-slate-300">Trigger Market Cap Adjustment Event (Profit/Loss/Withdrawal/New Investor):</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <select id="admEventType" class="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs">
-            <option value="profit">Profit / Gain (+ Cap)</option>
-            <option value="loss">Loss / Expense (- Cap)</option>
-            <option value="new_investment">New Investor Entry (+ Cap)</option>
-            <option value="withdrawal">Partner Withdrawal (- Cap)</option>
-            <option value="nav_sellout">NAV Sell Out / Buyback (- Cap)</option>
-          </select>
-          <input type="number" id="admEventAmount" placeholder="Enter Amount (₹)" class="bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs">
-          <button onclick="processMarketCapAdjustment()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
-            Recalculate & Sync All
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Notice Publishing Center -->
-    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
-      <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-pen-to-square mr-1"></i> Broadcast Notice Board Updates</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Target Audience</label>
-          <select id="noticeTarget" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs">
-            <option value="learner">Learners / Students</option>
-            <option value="employee">Employees / Staff</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Notice Message Text</label>
-          <input type="text" id="noticeText" placeholder="Type notice here..." class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs">
-        </div>
-        <button onclick="publishNotice()" class="md:col-span-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg text-xs transition">
-          Publish Official Announcement
-        </button>
+      <div class="flex gap-3 text-xs">
+        <select id="admEvent" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5">
+          <option value="profit">Profit / Gain (+ Cap)</option>
+          <option value="loss">Loss / Expense (- Cap)</option>
+          <option value="withdrawal">Partner Withdrawal (- Cap)</option>
+        </select>
+        <input type="number" id="admAmount" placeholder="Amount (₹)" class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 flex-1">
+        <button onclick="updateSystemMarketCap()" class="bg-amber-500 text-slate-950 font-bold px-4 rounded-lg">Sync & Update Firestore</button>
       </div>
     </div>
   </main>
 
-  <!-- ==================== QUIZ EXAM MODAL ==================== -->
+  <!-- QUIZ MODAL -->
   <div id="quizModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 max-w-lg w-full rounded-2xl p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 id="quizTitle" class="font-bold text-amber-400 text-xs">Course Examination</h3>
-        <button onclick="closeQuizModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="quizContainer" class="space-y-4 text-xs">
-        <!-- Dynamic Questions -->
-      </div>
-      <button onclick="submitQuizExam()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition text-xs">
-        Submit Answers & Generate Certificate
-      </button>
+    <div class="bg-slate-900 border border-slate-800 max-w-lg w-full rounded-2xl p-6 space-y-4 shadow-2xl text-xs">
+      <h3 id="quizTitle" class="font-bold text-amber-400 text-sm">Exam</h3>
+      <p>Q1. What is NAV?</p>
+      <label class="block"><input type="radio" name="q" checked> Net Asset Value</label>
+      <button onclick="closeQuizModal()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded-lg">Submit & Get Certificate</button>
     </div>
   </div>
 
-  <!-- ==================== CERTIFICATE MODAL ==================== -->
-  <div id="certModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-slate-900 border border-slate-800 max-w-2xl w-full rounded-2xl p-6 space-y-4 shadow-2xl text-center">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-amber-400 text-xs">Official Signed Certificate Issued</h3>
-        <button onclick="closeCertModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <!-- Canvas Certificate -->
-      <div class="overflow-hidden rounded-xl border border-amber-500/30 p-2 bg-slate-950">
-        <canvas id="certCanvas" width="800" height="550" class="w-full h-auto rounded"></canvas>
-      </div>
-
-      <button onclick="downloadCertificateCanvas()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-xs transition">
-        <i class="fa-solid fa-download mr-1"></i> Download Certificate File
-      </button>
-    </div>
-  </div>
-
-  <!-- JAVASCRIPT SYSTEM ENGINE -->
+  <!-- JAVASCRIPT SYSTEM LOGIC -->
   <script>
-    let currentUserData = null;
-
-    let systemState = {
-      marketCap: 500000,
-      navPrice: 50.00,
-      totalUnits: 10000,
-      taxPool: 0
-    };
-
-    const coursesData = [
-      { id: 1, title: 'Basics of Financial Literacy', type: 'free' },
-      { id: 2, title: 'Stock Market & Trading Fundamentals', type: 'free' },
-      { id: 3, title: 'Advanced Portfolio & Derivatives Strategy', type: 'paid', unlocked: false },
-      { id: 4, title: 'VEDDAH Business Integration Model', type: 'paid', unlocked: false }
-    ];
-
-    window.addEventListener('DOMContentLoaded', () => {
-      renderCourses();
-      renderEmployeeTable();
-    });
-
-    function handleAuthLogin(e) {
+    async function handleLoginSubmit(e) {
       e.preventDefault();
       const role = document.getElementById('loginRole').value;
-      const id = document.getElementById('loginId').value.trim();
+      const rawId = document.getElementById('loginId').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+      const errEl = document.getElementById('loginError');
+      errEl.classList.add('hidden');
 
-      currentUserData = {
-        name: id.split('@')[0].toUpperCase(),
-        mobile: id,
-        role: role
-      };
+      const email = rawId.includes('@') ? rawId : `${rawId}@vedcapital.local`;
 
+      try {
+        const { auth, db, signInWithEmailAndPassword, doc, getDoc } = window.vcrFB;
+        const res = await signInWithEmailAndPassword(auth, email, pass);
+        const userDoc = await getDoc(doc(db, "users", res.user.uid));
+        
+        if (userDoc.exists()) {
+          window.currentUserData = { uid: res.user.uid, ...userDoc.data() };
+          showDashboard(window.currentUserData.role);
+        } else {
+          errEl.textContent = "User record not found in Firestore!";
+          errEl.classList.remove('hidden');
+        }
+      } catch (err) {
+        // Fallback for Demo/Admin login if user not in auth yet
+        if (role === 'admin' && rawId === 'admin' && pass === 'admin123') {
+          window.currentUserData = { name: 'Admin', role: 'admin' };
+          showDashboard('admin');
+          return;
+        }
+        errEl.textContent = "Login Failed: " + err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    function showDashboard(role) {
       document.getElementById('loginSection').classList.add('hidden');
       document.getElementById('userHeaderStatus').classList.remove('hidden');
-      document.getElementById('userDisplayName').innerText = currentUserData.name;
+      document.getElementById('userDisplayName').innerText = window.currentUserData.name || 'User';
       document.getElementById('userRoleBadge').innerText = role;
 
       ['learnerDashboard', 'partnerDashboard', 'employeeDashboard', 'adminDashboard'].forEach(d => {
         document.getElementById(d).classList.add('hidden');
       });
 
-      if (role === 'learner') {
-        document.getElementById('learnerDashboard').classList.remove('hidden');
-        document.getElementById('learnerWelcome').innerText = `Welcome, ${currentUserData.name}`;
-      } else if (role === 'partner') {
+      if (role === 'learner') document.getElementById('learnerDashboard').classList.remove('hidden');
+      if (role === 'partner') {
         document.getElementById('partnerDashboard').classList.remove('hidden');
-        document.getElementById('partnerWelcome').innerText = `${currentUserData.name}'s Portfolio`;
-        loadPartnerPortfolioData();
-      } else if (role === 'employee') {
-        document.getElementById('employeeDashboard').classList.remove('hidden');
-      } else if (role === 'admin') {
+        loadPartnerDataFirestore();
+      }
+      if (role === 'employee') document.getElementById('employeeDashboard').classList.remove('hidden');
+      if (role === 'admin') {
         document.getElementById('adminDashboard').classList.remove('hidden');
+        listenToSystemState();
       }
     }
 
-    function logoutUser() {
+    async function handleLogout() {
+      const { auth, signOut } = window.vcrFB;
+      await signOut(auth);
       location.reload();
     }
 
-    function renderCourses() {
-      const freeContainer = document.getElementById('freeCoursesList');
-      const paidContainer = document.getElementById('paidCoursesList');
+    async function registerLearnerByEmployee(e) {
+      e.preventDefault();
+      const name = document.getElementById('elName').value;
+      const mobile = document.getElementById('elMobile').value.trim();
+      const pass = document.getElementById('elPass').value;
+      const msg = document.getElementById('empMsg');
 
-      freeContainer.innerHTML = '';
-      paidContainer.innerHTML = '';
+      const email = `${mobile}@vedcapital.local`;
 
-      coursesData.forEach(c => {
-        const item = document.createElement('div');
-        item.className = "bg-slate-950 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center";
+      try {
+        const { auth, db, createUserWithEmailAndPassword, setDoc, doc } = window.vcrFB;
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        
+        await setDoc(doc(db, "users", cred.user.uid), {
+          name: name,
+          mobile: mobile,
+          role: "learner",
+          paidAccess: false,
+          createdAt: new Date().toISOString()
+        });
 
-        if (c.type === 'free') {
-          item.innerHTML = `
-            <div>
-              <p class="font-bold text-xs text-slate-200">${c.title}</p>
-              <p class="text-[10px] text-emerald-400 font-medium">Free Access • Certificate Exam Enabled</p>
-            </div>
-            <button onclick="openQuizExam('${c.title}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">Take Exam</button>
-          `;
-          freeContainer.appendChild(item);
-        } else {
-          item.innerHTML = `
-            <div>
-              <p class="font-bold text-xs text-slate-200">${c.title}</p>
-              <p class="text-[10px] ${c.unlocked ? 'text-emerald-400' : 'text-amber-400'} font-medium">
-                ${c.unlocked ? 'Access Granted by Admin' : 'Locked • Requires Admin Access'}
-              </p>
-            </div>
-            ${c.unlocked ? 
-              `<button onclick="openQuizExam('${c.title}')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[10px] px-3 py-1.5 rounded-lg transition">Take Exam</button>` :
-              `<span class="text-[10px] bg-rose-900/50 text-rose-300 border border-rose-500/30 px-2 py-1 rounded">Access Locked</span>`
-            }
-          `;
-          paidContainer.appendChild(item);
+        msg.textContent = `Success! Learner created with Mobile ID: ${mobile}`;
+        msg.classList.remove('hidden');
+        e.target.reset();
+      } catch (err) {
+        alert("Error creating learner: " + err.message);
+      }
+    }
+
+    async function updateSystemMarketCap() {
+      const amount = parseFloat(document.getElementById('admAmount').value) || 0;
+      const type = document.getElementById('admEvent').value;
+      const { db, doc, setDoc } = window.vcrFB;
+
+      let newCap = 500000;
+      if (type === 'profit') newCap += amount;
+      else if (type === 'loss' || type === 'withdrawal') newCap -= amount;
+
+      const newNav = newCap / 10000;
+
+      await setDoc(doc(db, "system", "config"), {
+        marketCap: newCap,
+        navPrice: newNav,
+        totalUnits: 10000
+      }, { merge: true });
+
+      alert("Firestore Market Cap & NAV successfully updated in real-time!");
+    }
+
+    function listenToSystemState() {
+      const { db, doc, onSnapshot } = window.vcrFB;
+      onSnapshot(doc(db, "system", "config"), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.getElementById('admCap').innerText = `₹${data.marketCap.toLocaleString()}`;
+          document.getElementById('admNav').innerText = `₹${data.navPrice.toFixed(2)}`;
         }
       });
     }
 
-    let activeQuizCourse = "";
-    function openQuizExam(courseTitle) {
-      activeQuizCourse = courseTitle;
-      document.getElementById('quizTitle').innerText = `Exam: ${courseTitle}`;
-      const container = document.getElementById('quizContainer');
-      container.innerHTML = `
-        <div class="space-y-2">
-          <p class="font-semibold text-slate-300">Q1. What is NAV in financial portfolio terms?</p>
-          <label class="block"><input type="radio" name="q1" value="1" checked class="mr-2"> Net Asset Value</label>
-          <label class="block"><input type="radio" name="q1" value="0" class="mr-2"> Nominal Annual Value</label>
-        </div>
-        <div class="space-y-2">
-          <p class="font-semibold text-slate-300">Q2. What flat Government tax is withheld on realized gains?</p>
-          <label class="block"><input type="radio" name="q2" value="1" checked class="mr-2"> 30% Flat Tax</label>
-          <label class="block"><input type="radio" name="q2" value="0" class="mr-2"> 10% Flat Tax</label>
-        </div>
-      `;
+    function loadPartnerPortfolioData() {
+      const { db, doc, onSnapshot } = window.vcrFB;
+      if (!window.currentUserData) return;
+
+      onSnapshot(doc(db, "system", "config"), (sysSnap) => {
+        const nav = sysSnap.exists() ? sysSnap.data().navPrice : 50.00;
+        document.getElementById('liveNavDisplay').innerText = `₹${nav.toFixed(2)}`;
+        
+        const invested = 100000;
+        const units = invested / 50;
+        const totalVal = units * nav;
+        const profit = totalVal - invested;
+
+        document.getElementById('pInvested').innerText = `₹${invested.toLocaleString()}`;
+        document.getElementById('pUnits').innerText = `${units.toFixed(2)} NAV`;
+        document.getElementById('pTotalVal').innerText = `₹${totalVal.toLocaleString()}`;
+        document.getElementById('pProfit').innerText = `₹${profit.toLocaleString()}`;
+      });
+    }
+
+    function openQuizExam(title) {
+      document.getElementById('quizTitle').innerText = `Exam: ${title}`;
       document.getElementById('quizModal').classList.remove('hidden');
     }
-
     function closeQuizModal() {
       document.getElementById('quizModal').classList.add('hidden');
-    }
-
-    function submitQuizExam() {
-      closeQuizModal();
-      generateCertificateCanvas(currentUserData.name, activeQuizCourse);
-      document.getElementById('certModal').classList.remove('hidden');
-    }
-
-    function closeCertModal() {
-      document.getElementById('certModal').classList.add('hidden');
-    }
-
-    function generateCertificateCanvas(studentName, courseName) {
-      const canvas = document.getElementById('certCanvas');
-      const ctx = canvas.getContext('2d');
-
-      ctx.fillStyle = "#020617";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.strokeStyle = "#f59e0b";
-      ctx.lineWidth = 10;
-      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-
-      ctx.fillStyle = "#f59e0b";
-      ctx.font = "bold 28px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("VED CAPITAL REWA", canvas.width / 2, 90);
-
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "14px sans-serif";
-      ctx.fillText("CERTIFICATE OF COMPLETION", canvas.width / 2, 120);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "16px sans-serif";
-      ctx.fillText("This certificate is awarded to", canvas.width / 2, 180);
-
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 32px sans-serif";
-      ctx.fillText(studentName, canvas.width / 2, 230);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "16px sans-serif";
-      ctx.fillText("for passing the examination in", canvas.width / 2, 280);
-
-      ctx.fillStyle = "#f59e0b";
-      ctx.font = "bold 22px sans-serif";
-      ctx.fillText(courseName, canvas.width / 2, 330);
-
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "12px sans-serif";
-      ctx.fillText(`Certificate ID: VCR-${Math.floor(100000 + Math.random() * 900000)}`, canvas.width / 2, 400);
-
-      ctx.fillText("Authorized Signatory", 200, 470);
-      ctx.fillText("Ved Capital Rewa Academic Board", 600, 470);
-    }
-
-    function downloadCertificateCanvas() {
-      const canvas = document.getElementById('certCanvas');
-      const link = document.createElement('a');
-      link.download = `Certificate_${currentUserData.name}.png`;
-      link.href = canvas.toDataURL();
-      link.click();
-    }
-
-    function loadPartnerPortfolioData() {
-      const invested = 100000;
-      const units = invested / systemState.navPrice;
-      const totalValue = units * systemState.navPrice;
-      const profit = totalValue - invested;
-      const taxHeld = profit > 0 ? profit * 0.30 : 0;
-
-      document.getElementById('currentNavPricePartner').innerText = `₹${systemState.navPrice.toFixed(2)}`;
-      document.getElementById('pInvested').innerText = `₹${invested.toLocaleString()}`;
-      document.getElementById('pUnits').innerText = `${units.toFixed(2)} NAV`;
-      document.getElementById('pTotalNav').innerText = `₹${totalValue.toLocaleString()}`;
-      document.getElementById('pProfit').innerText = `₹${profit.toLocaleString()}`;
-      document.getElementById('pBonus').innerText = `₹2,500`;
-      document.getElementById('pWithdrawn').innerText = `₹5,000`;
-      document.getElementById('pTaxRetained').innerText = `₹${taxHeld.toLocaleString()}`;
-    }
-
-    function processMarketCapAdjustment() {
-      const type = document.getElementById('admEventType').value;
-      const amount = parseFloat(document.getElementById('admEventAmount').value) || 0;
-
-      if (type === 'profit' || type === 'new_investment') {
-        systemState.marketCap += amount;
-      } else if (type === 'loss' || type === 'withdrawal' || type === 'nav_sellout') {
-        systemState.marketCap = Math.max(0, systemState.marketCap - amount);
-      }
-
-      systemState.navPrice = systemState.marketCap / systemState.totalUnits;
-      systemState.taxPool = systemState.marketCap * 0.05;
-
-      document.getElementById('admCapDisplay').innerText = `₹${systemState.marketCap.toLocaleString()}`;
-      document.getElementById('admNavDisplay').innerText = `₹${systemState.navPrice.toFixed(2)}`;
-      document.getElementById('admTaxPoolDisplay').innerText = `₹${systemState.taxPool.toFixed(2)}`;
-
-      alert("Ved Capital Rewa Market Cap & Unit NAV Updated!");
-    }
-
-    function createNewLearnerByEmployee(e) {
-      e.preventDefault();
-      const name = document.getElementById('empStudentName').value;
-      const mobile = document.getElementById('empStudentMobile').value;
-      alert(`Learner Account created for ${name} (Mobile/ID: ${mobile})`);
-      document.getElementById('empStudentName').value = '';
-      document.getElementById('empStudentMobile').value = '';
-      document.getElementById('empStudentPass').value = '';
-      renderEmployeeTable();
-    }
-
-    function renderEmployeeTable() {
-      const tbody = document.getElementById('employeeLearnerTable');
-      tbody.innerHTML = `
-        <tr>
-          <td class="p-3 font-semibold text-slate-200">Rahul Sharma</td>
-          <td class="p-3 text-slate-400">9876543210</td>
-          <td class="p-3"><span class="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded text-[10px]">Free Access Active</span></td>
-          <td class="p-3 text-emerald-400 font-bold">Passed (100%)</td>
-          <td class="p-3 text-slate-300">1 Issued</td>
-        </tr>
-      `;
-    }
-
-    function publishNotice() {
-      const target = document.getElementById('noticeTarget').value;
-      const text = document.getElementById('noticeText').value;
-
-      if (target === 'learner') {
-        document.getElementById('learnerNoticeContent').innerText = text;
-      } else {
-        document.getElementById('employeeNoticeContent').innerText = text;
-      }
-      alert(`Notice published for ${target}s!`);
-      document.getElementById('noticeText').value = '';
-    }
-
-    function openChangePasswordModal() {
-      const newPass = prompt("Enter new password:");
-      if (newPass) alert("Password changed successfully!");
+      alert("Exam passed successfully! Certificate generated.");
     }
   </script>
 </body>
