@@ -1,753 +1,250 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ved Capital Rewa - Multi-Role Enterprise Portal</title>
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Firebase SDKs (v9/v10 Modular via CDN) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    // Global Exposure for Vanilla JS Handler
-    window.firebaseModules = {
-      initializeApp, getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-      getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, onSnapshot, query, where
-    };
-  </script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ved Capital Rewa — Trade & Partner Portal</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body{background:#0b1220;color:#e5e7eb}
+  input,select,textarea{color:#f8fafc}
+  input::placeholder{color:#64748b}
+  .panel{background:#111c2e;border:1px solid #263449;border-radius:16px}
+  .field{width:100%;background:#0b1220;border:1px solid #334155;border-radius:9px;padding:10px;font-size:13px;outline:none}
+  .field:focus{border-color:#f59e0b}
+  .btn{border-radius:9px;padding:10px 14px;font-weight:700;font-size:13px}
+  .btn-primary{background:#f59e0b;color:#111827}.btn-primary:hover{background:#fbbf24}
+  .btn-muted{background:#263449;color:#e2e8f0}.btn-danger{background:#7f1d1d;color:#fee2e2}
+  .hidden{display:none!important}
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
-
-  <!-- TOP NAVIGATION BAR -->
-  <nav class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center sticky top-0 z-40 shadow-xl">
-    <div class="flex items-center space-x-3">
-      <div class="bg-amber-500 text-slate-950 font-black px-3 py-1.5 rounded-lg text-xl tracking-wider">VCR</div>
-      <div>
-        <h1 class="text-lg font-black text-amber-400 tracking-wide uppercase">Ved Capital Rewa</h1>
-        <p class="text-[10px] text-slate-400 tracking-wider">VEDDAH Enterprise & Learning Management System</p>
-      </div>
+<body class="min-h-screen font-sans">
+<header class="sticky top-0 z-20 border-b border-slate-700 bg-slate-900/95 backdrop-blur">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="rounded-xl bg-amber-400 text-slate-950 font-black px-3 py-2">VCR</div>
+      <div><h1 class="font-black text-amber-300">Ved Capital Rewa</h1><p class="text-[11px] text-slate-400">Trade Ledger & Partner Dashboard</p></div>
     </div>
-    
-    <div id="userHeaderStatus" class="hidden flex items-center space-x-4">
-      <div class="text-right">
-        <p id="userDisplayName" class="text-xs font-bold text-slate-200">User Name</p>
-        <span id="userRoleBadge" class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">Role</span>
-      </div>
-      <button onclick="logoutUser()" class="bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs px-3 py-1.5 rounded transition font-medium">
-        <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout
-      </button>
+    <div class="flex items-center gap-2">
+      <span id="modeLabel" class="text-[10px] text-slate-400 hidden sm:inline">Local demo</span>
+      <button id="exportBtn" class="btn btn-muted"><i class="fa-solid fa-file-export mr-1"></i>Export</button>
     </div>
-  </nav>
+  </div>
+</header>
 
-  <!-- LOGIN SECTION -->
-  <section id="loginSection" class="max-w-md mx-auto mt-16 p-6 bg-slate-800/90 rounded-2xl shadow-2xl border border-slate-700 backdrop-blur">
-    <div class="text-center mb-6">
-      <div class="inline-block bg-amber-500/10 p-3 rounded-full border border-amber-500/30 mb-2">
-        <i class="fa-solid fa-shield-halved text-2xl text-amber-400"></i>
-      </div>
-      <h2 class="text-xl font-black text-amber-400 uppercase tracking-wide">Portal Authentication</h2>
-      <p class="text-xs text-slate-400 mt-1">Select your role to access Ved Capital Rewa dashboard</p>
+<main class="max-w-7xl mx-auto p-4 md:p-6 space-y-5">
+  <div class="panel p-4 md:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+    <div><h2 class="text-xl font-black text-white">Trade Performance Console</h2><p class="text-xs text-slate-400 mt-1">Trade enter karein; portfolio aur partner allocation automatically recalculate honge.</p></div>
+    <div class="flex gap-2 flex-wrap">
+      <button class="btn btn-primary" id="showAdminBtn"><i class="fa-solid fa-pen-to-square mr-1"></i> Trade / Admin</button>
+      <button class="btn btn-muted" id="showPartnerBtn"><i class="fa-solid fa-chart-pie mr-1"></i> Partner Dashboard</button>
+    </div>
+  </div>
+
+  <div id="demoWarning" class="rounded-xl border border-amber-700/60 bg-amber-950/40 p-3 text-xs text-amber-100">
+    <strong>Prototype mode:</strong> data is saved in this browser only (localStorage). Yeh secure login, real Firebase sync, ya accounting/tax engine nahi hai. Real partner data publish karne se pehle authentication, Firestore rules, audit log aur backup configure karein.
+  </div>
+
+  <section id="adminView" class="space-y-5">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Closed Trade P/L</p><p id="totalRealized" class="text-xl font-black mt-2">₹0.00</p></div>
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Open Trade Unrealized P/L</p><p id="totalUnrealized" class="text-xl font-black mt-2">₹0.00</p></div>
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Trade Count</p><p id="tradeCount" class="text-xl font-black mt-2">0</p></div>
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Partner Capital (entered)</p><p id="capitalTotal" class="text-xl font-black mt-2">₹0.00</p></div>
     </div>
 
-    <form id="loginForm" onsubmit="handleAuthLogin(event)" class="space-y-4">
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Select Portal Access Role</label>
-        <select id="loginRole" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-          <option value="learner">Learner / Student</option>
-          <option value="employee">Employee / Operations</option>
-          <option value="partner">Investor / Partner</option>
-          <option value="admin">System Administrator</option>
-        </select>
-      </div>
+    <div class="panel p-4 md:p-5">
+      <h3 class="font-bold text-amber-300 mb-1"><i class="fa-solid fa-plus-circle mr-2"></i>Trade Record Add Karein</h3>
+      <p class="text-xs text-slate-400 mb-4">Buy/Sell ko position direction ke roop mein use karein. Closed trade ke liye Exit Price, open trade ke liye Current/Mark Price enter karein.</p>
+      <form id="tradeForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div><label class="text-[11px] text-slate-400">Trade Date</label><input id="tradeDate" type="date" class="field" required></div>
+        <div><label class="text-[11px] text-slate-400">Symbol / Asset</label><input id="symbol" class="field" placeholder="e.g. NIFTY, RELIANCE" maxlength="40" required></div>
+        <div><label class="text-[11px] text-slate-400">Position</label><select id="side" class="field"><option value="long">Buy / Long</option><option value="short">Sell / Short</option></select></div>
+        <div><label class="text-[11px] text-slate-400">Status</label><select id="tradeStatus" class="field"><option value="closed">Closed</option><option value="open">Open</option></select></div>
+        <div><label class="text-[11px] text-slate-400">Quantity</label><input id="qty" type="number" min="0.000001" step="any" class="field" placeholder="Quantity" required></div>
+        <div><label class="text-[11px] text-slate-400">Entry Price (₹)</label><input id="entryPrice" type="number" min="0" step="any" class="field" placeholder="Entry price" required></div>
+        <div><label id="markLabel" class="text-[11px] text-slate-400">Exit Price (₹)</label><input id="markPrice" type="number" min="0" step="any" class="field" placeholder="Exit / current price" required></div>
+        <div><label class="text-[11px] text-slate-400">Total Charges (₹)</label><input id="charges" type="number" min="0" step="any" value="0" class="field" required></div>
+        <div class="sm:col-span-2 lg:col-span-4"><label class="text-[11px] text-slate-400">Notes (optional)</label><input id="tradeNotes" class="field" maxlength="250" placeholder="Strategy / broker note"></div>
+        <div class="sm:col-span-2 lg:col-span-4 flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk mr-1"></i> Save Trade & Update Dashboard</button><button class="btn btn-muted" type="reset">Clear Form</button></div>
+      </form>
+      <p id="tradeMessage" class="text-xs mt-3" role="status"></p>
+    </div>
 
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Mobile Number / Email ID</label>
-        <input type="text" id="loginId" required placeholder="Enter Mobile Number or ID" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-      </div>
+    <div class="panel p-4 md:p-5">
+      <div class="flex items-center justify-between gap-3 mb-3"><h3 class="font-bold text-amber-300">Trade Ledger</h3><button id="clearTradesBtn" class="btn btn-danger">Clear All Trades</button></div>
+      <div class="overflow-x-auto"><table class="w-full text-left text-xs min-w-[850px]">
+        <thead class="text-slate-400 border-b border-slate-700"><tr><th class="p-3">Date</th><th class="p-3">Symbol</th><th class="p-3">Side</th><th class="p-3">Status</th><th class="p-3">Qty</th><th class="p-3">Entry</th><th class="p-3">Exit/Mark</th><th class="p-3">Charges</th><th class="p-3">Net P/L</th><th class="p-3">Action</th></tr></thead>
+        <tbody id="tradeRows"></tbody>
+      </table></div>
+      <p id="emptyTrades" class="text-xs text-slate-500 py-5 text-center">Abhi koi trade add nahi kiya gaya.</p>
+    </div>
 
-      <div>
-        <label class="block text-[11px] font-bold text-slate-400 uppercase mb-1">Password</label>
-        <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
-      </div>
-
-      <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg transition text-sm flex items-center justify-center gap-2">
-        <i class="fa-solid fa-lock"></i> Secure Login
-      </button>
-    </form>
-    <p id="loginError" class="text-xs text-rose-400 mt-3 text-center hidden font-medium"></p>
+    <div class="panel p-4 md:p-5">
+      <h3 class="font-bold text-amber-300 mb-1"><i class="fa-solid fa-users mr-2"></i>Partner Setup</h3>
+      <p class="text-xs text-slate-400 mb-4">Partner capital aur allocation percentage enter karein. Demo mein har partner ko total net P/L ka uska percentage dikhaya jayega. Percentages ka total 100% hona zaroori nahi; unallocated hissa reserve rahega.</p>
+      <form id="partnerForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div><label class="text-[11px] text-slate-400">Partner Name</label><input id="partnerName" class="field" maxlength="80" placeholder="Full name" required></div>
+        <div><label class="text-[11px] text-slate-400">Capital (₹)</label><input id="partnerCapital" type="number" min="0" step="any" class="field" placeholder="Capital" required></div>
+        <div><label class="text-[11px] text-slate-400">P/L Allocation (%)</label><input id="partnerShare" type="number" min="0" max="100" step="0.01" class="field" placeholder="e.g. 25" required></div>
+        <div class="flex items-end"><button class="btn btn-primary w-full" type="submit">Add Partner</button></div>
+      </form>
+      <div class="overflow-x-auto mt-4"><table class="w-full text-left text-xs min-w-[600px]">
+        <thead class="text-slate-400 border-b border-slate-700"><tr><th class="p-3">Partner</th><th class="p-3">Capital</th><th class="p-3">Allocation</th><th class="p-3">Allocated Net P/L*</th><th class="p-3">Action</th></tr></thead>
+        <tbody id="adminPartnerRows"></tbody>
+      </table></div>
+      <p class="text-[10px] text-slate-500 mt-2">*Dashboard calculation only; not a statement of legally payable profit, withdrawal balance, tax, or investment entitlement.</p>
+    </div>
   </section>
 
-  <!-- ==================== LEARNER DASHBOARD ==================== -->
-  <main id="learnerDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex justify-between items-center shadow-lg">
-      <div>
-        <h2 id="learnerWelcome" class="text-xl font-black text-amber-400">Learner Learning Hub</h2>
-        <p class="text-xs text-slate-400">Access your courses, exams, study material & certifications</p>
-      </div>
-      <button onclick="openChangePasswordModal()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-amber-300 font-semibold border border-slate-600 transition">
-        <i class="fa-solid fa-key mr-1"></i> Change Password
-      </button>
+  <section id="partnerView" class="hidden space-y-5">
+    <div class="panel p-4 md:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div><h2 class="text-xl font-black text-amber-300">Partner Performance Dashboard</h2><p class="text-xs text-slate-400 mt-1">Admin-entered trades ke basis par automatically calculated summary</p></div>
+      <select id="partnerSelect" class="field sm:max-w-xs"><option value="">Partner select karein</option></select>
     </div>
-
-    <!-- Learner Notice Board -->
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md">
-      <h3 class="text-sm font-bold text-amber-400 mb-2 flex items-center gap-2 uppercase tracking-wide">
-        <i class="fa-solid fa-bullhorn text-amber-500"></i> Student Notice Board
-      </h3>
-      <div id="learnerNoticeContent" class="text-xs text-slate-300 bg-slate-900/80 p-3.5 rounded-xl border border-slate-800">
-        Loading latest announcements...
-      </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Partner Capital</p><p id="vCapital" class="text-xl font-black mt-2">₹0.00</p></div>
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Allocated Closed P/L</p><p id="vRealized" class="text-xl font-black mt-2">₹0.00</p></div>
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Allocated Open P/L</p><p id="vUnrealized" class="text-xl font-black mt-2">₹0.00</p></div>
+      <div class="panel p-4"><p class="text-[11px] text-slate-400 uppercase">Illustrative Value</p><p id="vValue" class="text-xl font-black mt-2">₹0.00</p></div>
     </div>
-
-    <!-- Courses Catalogs -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Free Courses -->
-      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-          <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wide"><i class="fa-solid fa-graduation-cap mr-1"></i> Free Courses Catalog</h3>
-          <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">Instant Access</span>
-        </div>
-        <div id="freeCoursesList" class="space-y-3">
-          <!-- Dynamic rendering -->
-        </div>
-      </div>
-
-      <!-- Paid Courses -->
-      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-4">
-        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-          <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-lock mr-1"></i> Premium Paid Courses</h3>
-          <span class="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded border border-amber-500/30">Requires Admin Unlock</span>
-        </div>
-        <div id="paidCoursesList" class="space-y-3">
-          <!-- Dynamic rendering -->
-        </div>
-      </div>
+    <div class="panel p-4 md:p-5"><h3 class="font-bold text-amber-300 mb-3">Recent Trade Activity</h3>
+      <div class="overflow-x-auto"><table class="w-full text-left text-xs min-w-[700px]"><thead class="text-slate-400 border-b border-slate-700"><tr><th class="p-3">Date</th><th class="p-3">Symbol</th><th class="p-3">Side</th><th class="p-3">Status</th><th class="p-3">Quantity</th><th class="p-3">Net P/L</th><th class="p-3">Allocated P/L*</th></tr></thead><tbody id="partnerTradeRows"></tbody></table></div>
+      <p id="partnerEmpty" class="text-xs text-slate-500 py-5 text-center">Partner dashboard dikhane ke liye partner add karein aur trades enter karein.</p>
     </div>
+    <div class="text-xs text-slate-400 leading-relaxed">Important: Yeh dashboard entered trade data ka reporting view hai. Isse independently verified brokerage statement, bank balance, audited NAV, guaranteed return, ya tax calculation na samjhein.</div>
+  </section>
+  <footer class="text-[10px] text-slate-600 text-center py-3">Ved Capital Rewa • Local prototype • Export your data regularly</footer>
+</main>
 
-    <!-- YouTube & Study Material -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
-        <h3 class="text-sm font-bold text-rose-400 uppercase tracking-wide mb-3"><i class="fa-brands fa-youtube mr-1"></i> Official Learning Channel</h3>
-        <div class="aspect-video bg-slate-900 rounded-xl border border-slate-700 overflow-hidden relative flex items-center justify-center">
-          <iframe class="w-full h-full" src="https://www.youtube.com/embed/live_stream?channel=VED_CAPITAL_REWA" title="Ved Capital Rewa Stream" frameborder="0" allowfullscreen></iframe>
-        </div>
-      </div>
+<script>
+(() => {
+  'use strict';
+  const STORAGE_KEY = 'vcr_trade_portal_v1';
+  const $ = id => document.getElementById(id);
+  let state = { trades: [], partners: [] };
 
-      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
-        <h3 class="text-sm font-bold text-sky-400 uppercase tracking-wide mb-3"><i class="fa-solid fa-folder-open mr-1"></i> Study Material Vault</h3>
-        <div class="space-y-2 text-xs">
-          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-            <span><i class="fa-solid fa-file-pdf text-rose-400 mr-2"></i> Fundamentals of Financial Markets.pdf</span>
-            <button onclick="downloadResource('PDF Module 1')" class="text-amber-400 hover:underline font-semibold">Download</button>
-          </div>
-          <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-            <span><i class="fa-solid fa-file-pdf text-rose-400 mr-2"></i> NAV Calculation & Equity Rules.pdf</span>
-            <button onclick="downloadResource('PDF Module 2')" class="text-amber-400 hover:underline font-semibold">Download</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+  const money = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number.isFinite(n)?n:0);
+  const num = n => Number.isFinite(Number(n)) ? Number(n) : 0;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const tradePL = t => {
+    const direction = t.side === 'short' ? -1 : 1;
+    return (num(t.markPrice) - num(t.entryPrice)) * num(t.qty) * direction - num(t.charges);
+  };
+  const load = () => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.trades) && Array.isArray(parsed.partners)) state = parsed;
+      }
+    } catch (e) { console.error('Could not load local data', e); }
+  };
+  const save = () => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; }
+    catch(e) { alert('Browser storage mein save nahi ho saka. Export karke backup lein.'); return false; }
+  };
+  const totals = () => {
+    const realized = state.trades.filter(t=>t.status==='closed').reduce((s,t)=>s+tradePL(t),0);
+    const unrealized = state.trades.filter(t=>t.status==='open').reduce((s,t)=>s+tradePL(t),0);
+    const capital = state.partners.reduce((s,p)=>s+num(p.capital),0);
+    return {realized,unrealized,capital};
+  };
+  const signedClass = n => n > 0 ? 'text-emerald-400' : n < 0 ? 'text-rose-400' : 'text-slate-200';
+  function render() {
+    const t = totals();
+    $('totalRealized').textContent = money(t.realized);
+    $('totalUnrealized').textContent = money(t.unrealized);
+    $('capitalTotal').textContent = money(t.capital);
+    $('tradeCount').textContent = String(state.trades.length);
+    $('totalRealized').className = 'text-xl font-black mt-2 '+signedClass(t.realized);
+    $('totalUnrealized').className = 'text-xl font-black mt-2 '+signedClass(t.unrealized);
 
-  <!-- ==================== INVESTOR / PARTNER DASHBOARD ==================== -->
-  <main id="partnerDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex justify-between items-center shadow-lg">
-      <div>
-        <h2 id="partnerWelcome" class="text-xl font-black text-amber-400">Partner Financial Portfolio</h2>
-        <p class="text-xs text-slate-400">Ved Capital Rewa Private Investor Holdings & NAV Overview</p>
-      </div>
-      <div class="text-right bg-slate-900 px-4 py-2 rounded-xl border border-slate-700">
-        <p class="text-[10px] uppercase font-bold text-slate-400">Current System NAV Price</p>
-        <p id="currentNavPricePartner" class="text-lg font-black text-emerald-400">₹50.00</p>
-      </div>
-    </div>
-
-    <!-- Mandatory 30% Govt Tax Banner -->
-    <div class="bg-amber-950/60 border border-amber-600/50 p-4 rounded-2xl text-amber-200 text-xs shadow-md">
-      <div class="flex items-start gap-3">
-        <i class="fa-solid fa-building-columns text-xl text-amber-400 mt-0.5"></i>
-        <div>
-          <p class="font-bold text-amber-300 uppercase tracking-wide">30% Flat Government Tax Statutory Mandate:</p>
-          <p class="text-slate-300 text-[11px] mt-1 leading-relaxed">
-            As per financial regulations, a <strong>30% Flat Government Tax</strong> (encompassing STT, LTCG, STCG, Brokerage, and Regulatory Duties) is automatically locked on profit realizations. This amount is withheld by system rules and cannot be directly drawn out during cash withdrawals.
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Partner Metrics Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Invested Amount</p>
-        <p id="pInvested" class="text-lg font-black text-white mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Units Held</p>
-        <p id="pUnits" class="text-lg font-black text-amber-400 mt-1">0 NAV</p>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Total Valuation</p>
-        <p id="pTotalNav" class="text-lg font-black text-emerald-400 mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Profit / Loss</p>
-        <p id="pProfit" class="text-lg font-black text-sky-400 mt-1">₹0</p>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Total Bonus Accumulated</p>
-        <p id="pBonus" class="text-lg font-black text-indigo-400 mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">Total Cash Withdrawn</p>
-        <p id="pWithdrawn" class="text-lg font-black text-rose-400 mt-1">₹0</p>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-        <p class="text-[11px] uppercase font-bold text-slate-400">30% Tax Deducted / Retained</p>
-        <p id="pTaxRetained" class="text-lg font-black text-amber-500 mt-1">₹0</p>
-      </div>
-    </div>
-  </main>
-
-  <!-- ==================== EMPLOYEE DASHBOARD ==================== -->
-  <main id="employeeDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex justify-between items-center">
-      <div>
-        <h2 class="text-xl font-black text-amber-400">Employee Operations Portal</h2>
-        <p class="text-xs text-slate-400">Learner Onboarding & Activity Monitoring Desk</p>
-      </div>
-    </div>
-
-    <!-- Notice -->
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
-      <h3 class="text-sm font-bold text-sky-400 uppercase tracking-wide mb-2"><i class="fa-solid fa-clipboard-list mr-1"></i> Staff Operations Notice</h3>
-      <div id="employeeNoticeContent" class="text-xs text-slate-300 bg-slate-900 p-3 rounded-xl border border-slate-800">No active updates.</div>
-    </div>
-
-    <!-- Create Learner Form -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wide mb-4"><i class="fa-solid fa-user-plus mr-1"></i> Register New Learner Credentials</h3>
-      <form onsubmit="createNewLearnerByEmployee(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Full Name</label>
-          <input type="text" id="empStudentName" required placeholder="Student Name" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Mobile Number (Will act as ID)</label>
-          <input type="text" id="empStudentMobile" required placeholder="10 Digit Mobile No." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Set Manual Initial Password</label>
-          <input type="password" id="empStudentPass" required placeholder="Set Password" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs">
-        </div>
-        <button type="submit" class="md:col-span-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-lg text-xs transition">
-          Create Learner Account
-        </button>
-      </form>
-    </div>
-
-    <!-- Learner List & Activity Tracking -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wide mb-4"><i class="fa-solid fa-users mr-1"></i> Learner Directory & Real-Time Tracking</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="border-b border-slate-700 text-slate-400 uppercase">
-              <th class="p-3">Learner Name</th>
-              <th class="p-3">Mobile / ID</th>
-              <th class="p-3">Courses Access</th>
-              <th class="p-3">Exam Status</th>
-              <th class="p-3">Certificates Issued</th>
-            </tr>
-          </thead>
-          <tbody id="employeeLearnerTable" class="divide-y divide-slate-700/50">
-            <!-- Dynamic Users -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-
-  <!-- ==================== ADMIN DASHBOARD ==================== -->
-  <main id="adminDashboard" class="hidden p-6 max-w-7xl mx-auto space-y-6">
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex justify-between items-center shadow-lg">
-      <div>
-        <h2 class="text-xl font-black text-amber-400 uppercase tracking-wide">System Control Center</h2>
-        <p class="text-xs text-slate-400">Ved Capital Rewa Master Dashboard & Valuation Engine</p>
-      </div>
-      <span class="text-xs bg-rose-500/20 text-rose-400 border border-rose-500/40 px-3 py-1 rounded-full font-bold">Admin Privileges Active</span>
-    </div>
-
-    <!-- Market Cap & NAV Valuation Controls -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-chart-line mr-1"></i> Market Cap Valuation & NAV Dynamic Engine</h3>
-      
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">Current Market Cap</p>
-          <p id="admCapDisplay" class="text-lg font-black text-emerald-400 mt-1">₹5,00,000</p>
-        </div>
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">Calculated Unit NAV</p>
-          <p id="admNavDisplay" class="text-lg font-black text-amber-400 mt-1">₹50.00</p>
-        </div>
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">Total Issued NAV Units</p>
-          <p id="admUnitsDisplay" class="text-lg font-black text-sky-400 mt-1">10,000</p>
-        </div>
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-          <p class="text-[10px] font-bold text-slate-400 uppercase">30% Reserved Tax Pool</p>
-          <p id="admTaxPoolDisplay" class="text-lg font-black text-amber-500 mt-1">₹0</p>
-        </div>
-      </div>
-
-      <!-- Financial Triggers Form -->
-      <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-3">
-        <p class="text-xs font-bold text-slate-300">Trigger Market Cap Adjustment Event (Up / Down Factors):</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <select id="admEventType" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs">
-            <option value="profit">Profit / Gain (+ Cap)</option>
-            <option value="loss">Loss / Expense (- Cap)</option>
-            <option value="new_investment">New Investor Inflow (+ Cap)</option>
-            <option value="withdrawal">Partner Withdrawal (- Cap)</option>
-            <option value="nav_sellout">NAV Sell Out / Buyback (- Cap)</option>
-          </select>
-          <input type="number" id="admEventAmount" placeholder="Enter Amount (₹)" class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs">
-          <button onclick="processMarketCapAdjustment()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition">
-            Recalculate & Sync All
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Partner Portfolio Management -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-hand-holding-dollar mr-1"></i> Partner Holdings & Profit/Loss Allocation</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="border-b border-slate-700 text-slate-400 uppercase">
-              <th class="p-3">Partner Name</th>
-              <th class="p-3">Invested</th>
-              <th class="p-3">NAV Units</th>
-              <th class="p-3">P/L Update</th>
-              <th class="p-3">Bonus Update</th>
-              <th class="p-3">Action</th>
-            </tr>
-          </thead>
-          <tbody id="admPartnerTable" class="divide-y divide-slate-700/50">
-            <!-- Dynamic Partner List -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Notice Publishing Center -->
-    <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-      <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wide"><i class="fa-solid fa-pen-to-square mr-1"></i> Broadcast Notice Board Updates</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Target Audience</label>
-          <select id="noticeTarget" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs">
-            <option value="learner">Learners / Students</option>
-            <option value="employee">Employees / Staff</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Announcement Message</label>
-          <input type="text" id="noticeText" placeholder="Type notice here..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs">
-        </div>
-        <button onclick="publishNotice()" class="md:col-span-2 bg-sky-600 hover:bg-sky-500 text-white font-bold py-2 rounded-lg text-xs transition">
-          Publish Official Notice
-        </button>
-      </div>
-    </div>
-  </main>
-
-  <!-- ==================== QUIZ EXAM MODAL ==================== -->
-  <div id="quizModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 max-w-lg w-full rounded-2xl p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-        <h3 id="quizTitle" class="font-bold text-amber-400 text-sm">Course Examination</h3>
-        <button onclick="closeQuizModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div id="quizContainer" class="space-y-4 text-xs">
-        <!-- Dynamic Questions -->
-      </div>
-      <button onclick="submitQuizExam()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition text-xs">
-        Submit Answers & Check Result
-      </button>
-    </div>
-  </div>
-
-  <!-- ==================== CERTIFICATE MODAL ==================== -->
-  <div id="certModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-slate-800 border border-slate-700 max-w-2xl w-full rounded-2xl p-6 space-y-4 shadow-2xl text-center">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-amber-400 text-sm">Official Certification Generated</h3>
-        <button onclick="closeCertModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      
-      <!-- Canvas for Printable Certificate -->
-      <div class="overflow-hidden rounded-xl border border-amber-500/30 p-2 bg-slate-900">
-        <canvas id="certCanvas" width="800" height="550" class="w-full h-auto rounded"></canvas>
-      </div>
-
-      <button onclick="downloadCertificateCanvas()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-xs transition">
-        <i class="fa-solid fa-download mr-1"></i> Download Certificate PDF / Image
-      </button>
-    </div>
-  </div>
-
-  <!-- ==================== JAVASCRIPT SYSTEM ENGINE ==================== -->
-  <script>
-    // Firebase Initialization Container
-    let fbApp, fbAuth, fbStore;
-    let currentUserData = null;
-
-    // Default System Financial State
-    let systemState = {
-      marketCap: 500000,
-      navPrice: 50.00,
-      totalUnits: 10000,
-      taxPool: 0
-    };
-
-    // Firebase Config Placeholder (Replace with your Firebase Project Settings)
-    const firebaseConfig = {
-      apiKey: "AIzaSyYOUR_API_KEY_HERE",
-      authDomain: "ved-capital-rewa.firebaseapp.com",
-      projectId: "ved-capital-rewa",
-      storageBucket: "ved-capital-rewa.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef123456"
-    };
-
-    window.addEventListener('DOMContentLoaded', () => {
-      // Check modular SDK availability
-      const checkFirebase = setInterval(() => {
-        if (window.firebaseModules) {
-          clearInterval(checkFirebase);
-          const { initializeApp, getAuth, getFirestore } = window.firebaseModules;
-          fbApp = initializeApp(firebaseConfig);
-          fbAuth = getAuth(fbApp);
-          fbStore = getFirestore(fbApp);
-          initMockDataAndListeners();
-        }
-      }, 100);
+    const rows = $('tradeRows'); rows.innerHTML = '';
+    $('emptyTrades').classList.toggle('hidden', state.trades.length > 0);
+    [...state.trades].sort((a,b)=>b.date.localeCompare(a.date)).forEach(tr=>{
+      const pl=tradePL(tr), trEl=document.createElement('tr');
+      trEl.className='border-b border-slate-800';
+      trEl.innerHTML=`<td class="p-3">${esc(tr.date)}</td><td class="p-3 font-bold">${esc(tr.symbol)}</td><td class="p-3">${tr.side==='short'?'Short':'Long'}</td><td class="p-3">${tr.status==='closed'?'Closed':'Open'}</td><td class="p-3">${esc(tr.qty)}</td><td class="p-3">${money(tr.entryPrice)}</td><td class="p-3">${money(tr.markPrice)}</td><td class="p-3">${money(tr.charges)}</td><td class="p-3 font-bold ${signedClass(pl)}">${money(pl)}</td><td class="p-3"><button class="btn btn-danger !px-2 !py-1" data-delete-trade="${esc(tr.id)}">Delete</button></td>`;
+      rows.appendChild(trEl);
     });
 
-    // Simulated / Firebase Hydration
-    function initMockDataAndListeners() {
-      // Sample Local Courses
-      renderCourses();
-      renderEmployeeTable();
-      renderAdminPartnerTable();
+    const pr=$('adminPartnerRows'); pr.innerHTML='';
+    const select=$('partnerSelect'), old=select.value;
+    select.innerHTML='<option value="">Partner select karein</option>';
+    state.partners.forEach(p=>{
+      const opt=document.createElement('option'); opt.value=p.id; opt.textContent=p.name; select.appendChild(opt);
+      const allocated=(t.realized+t.unrealized)*num(p.share)/100;
+      const row=document.createElement('tr'); row.className='border-b border-slate-800';
+      row.innerHTML=`<td class="p-3 font-semibold">${esc(p.name)}</td><td class="p-3">${money(p.capital)}</td><td class="p-3">${num(p.share).toFixed(2)}%</td><td class="p-3 font-bold ${signedClass(allocated)}">${money(allocated)}</td><td class="p-3"><button class="btn btn-danger !px-2 !py-1" data-delete-partner="${esc(p.id)}">Delete</button></td>`;
+      pr.appendChild(row);
+    });
+    if(state.partners.some(p=>p.id===old)) select.value=old;
+    renderPartner();
+  }
+  function renderPartner() {
+    const p=state.partners.find(p=>p.id===$('partnerSelect').value);
+    const trades=state.trades.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const rows=$('partnerTradeRows'); rows.innerHTML='';
+    $('partnerEmpty').classList.toggle('hidden', !!p && trades.length>0);
+    if(!p) {
+      ['vCapital','vRealized','vUnrealized','vValue'].forEach(id=>$(id).textContent=money(0));
+      return;
     }
+    const share=num(p.share)/100;
+    const realized=trades.filter(t=>t.status==='closed').reduce((s,t)=>s+tradePL(t),0)*share;
+    const unrealized=trades.filter(t=>t.status==='open').reduce((s,t)=>s+tradePL(t),0)*share;
+    $('vCapital').textContent=money(p.capital);
+    $('vRealized').textContent=money(realized);
+    $('vUnrealized').textContent=money(unrealized);
+    $('vValue').textContent=money(num(p.capital)+realized+unrealized);
+    $('vRealized').className='text-xl font-black mt-2 '+signedClass(realized);
+    $('vUnrealized').className='text-xl font-black mt-2 '+signedClass(unrealized);
+    trades.forEach(tr=>{
+      const pl=tradePL(tr)*share, row=document.createElement('tr'); row.className='border-b border-slate-800';
+      row.innerHTML=`<td class="p-3">${esc(tr.date)}</td><td class="p-3 font-bold">${esc(tr.symbol)}</td><td class="p-3">${tr.side==='short'?'Short':'Long'}</td><td class="p-3">${tr.status==='closed'?'Closed':'Open'}</td><td class="p-3">${esc(tr.qty)}</td><td class="p-3 ${signedClass(tradePL(tr))}">${money(tradePL(tr))}</td><td class="p-3 font-bold ${signedClass(pl)}">${money(pl)}</td>`;
+      rows.appendChild(row);
+    });
+  }
 
-    // AUTHENTICATION LOGIC
-    function handleAuthLogin(e) {
-      e.preventDefault();
-      const role = document.getElementById('loginRole').value;
-      const id = document.getElementById('loginId').value.trim();
-      const pass = document.getElementById('loginPassword').value.trim();
-      const err = document.getElementById('loginError');
-
-      err.classList.add('hidden');
-
-      // Demo User Validation
-      currentUserData = {
-        name: id.split('@')[0].toUpperCase(),
-        mobile: id,
-        role: role,
-        paidAccess: true
-      };
-
-      document.getElementById('loginSection').classList.add('hidden');
-      document.getElementById('userHeaderStatus').classList.remove('hidden');
-      document.getElementById('userDisplayName').innerText = currentUserData.name;
-      document.getElementById('userRoleBadge').innerText = role;
-
-      // Switch Active Dashboard
-      ['learnerDashboard', 'partnerDashboard', 'employeeDashboard', 'adminDashboard'].forEach(d => {
-        document.getElementById(d).classList.add('hidden');
-      });
-
-      if (role === 'learner') {
-        document.getElementById('learnerDashboard').classList.remove('hidden');
-        document.getElementById('learnerWelcome').innerText = `Welcome, ${currentUserData.name}`;
-      } else if (role === 'partner') {
-        document.getElementById('partnerDashboard').classList.remove('hidden');
-        document.getElementById('partnerWelcome').innerText = `${currentUserData.name}'s Portfolio`;
-        loadPartnerPortfolioData();
-      } else if (role === 'employee') {
-        document.getElementById('employeeDashboard').classList.remove('hidden');
-      } else if (role === 'admin') {
-        document.getElementById('adminDashboard').classList.remove('hidden');
-      }
-    }
-
-    function logoutUser() {
-      location.reload();
-    }
-
-    // COURSES & QUIZ ENGINE
-    const sampleCourses = [
-      { id: 1, title: 'Basics of Financial Planning', type: 'free' },
-      { id: 2, title: 'Introduction to Stock Markets & Equity', type: 'free' },
-      { id: 3, title: 'Advanced Portfolio & Risk Management', type: 'paid' },
-      { id: 4, title: 'VEDDAH Hyper-Local Enterprise Model', type: 'paid' }
-    ];
-
-    function renderCourses() {
-      const freeContainer = document.getElementById('freeCoursesList');
-      const paidContainer = document.getElementById('paidCoursesList');
-
-      freeContainer.innerHTML = '';
-      paidContainer.innerHTML = '';
-
-      sampleCourses.forEach(c => {
-        const item = document.createElement('div');
-        item.className = "bg-slate-900 p-3.5 rounded-xl border border-slate-800 flex justify-between items-center";
-
-        if (c.type === 'free') {
-          item.innerHTML = `
-            <div>
-              <p class="font-bold text-xs text-slate-200">${c.title}</p>
-              <p class="text-[10px] text-emerald-400 font-medium">Free Access • Exam & Certificate Included</p>
-            </div>
-            <button onclick="openQuizExam('${c.title}')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition">Take Exam</button>
-          `;
-          freeContainer.appendChild(item);
-        } else {
-          item.innerHTML = `
-            <div>
-              <p class="font-bold text-xs text-slate-200">${c.title}</p>
-              <p class="text-[10px] text-amber-400 font-medium">Premium Module • Access Granted by Admin</p>
-            </div>
-            <button onclick="openQuizExam('${c.title}')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[10px] px-3 py-1.5 rounded-lg transition">Take Exam</button>
-          `;
-          paidContainer.appendChild(item);
-        }
-      });
-    }
-
-    // QUIZ MODAL & CERTIFICATE GENERATION
-    let activeQuizCourse = "";
-    function openQuizExam(courseTitle) {
-      activeQuizCourse = courseTitle;
-      document.getElementById('quizTitle').innerText = `Exam: ${courseTitle}`;
-      const container = document.getElementById('quizContainer');
-      container.innerHTML = `
-        <div class="space-y-2">
-          <p class="font-semibold text-slate-300">Q1. What does NAV stand for in investment valuation?</p>
-          <label class="block"><input type="radio" name="q1" value="1" class="mr-2"> Net Asset Value</label>
-          <label class="block"><input type="radio" name="q1" value="0" class="mr-2"> Net Annual Volume</label>
-        </div>
-        <div class="space-y-2">
-          <p class="font-semibold text-slate-300">Q2. What percentage of flat Government Tax is withheld on capital realizations?</p>
-          <label class="block"><input type="radio" name="q2" value="1" class="mr-2"> 30% Flat Tax</label>
-          <label class="block"><input type="radio" name="q2" value="0" class="mr-2"> 10% Flat Tax</label>
-        </div>
-      `;
-      document.getElementById('quizModal').classList.remove('hidden');
-    }
-
-    function closeQuizModal() {
-      document.getElementById('quizModal').classList.add('hidden');
-    }
-
-    function submitQuizExam() {
-      closeQuizModal();
-      generateCertificateCanvas(currentUserData.name, activeQuizCourse);
-      document.getElementById('certModal').classList.remove('hidden');
-    }
-
-    function closeCertModal() {
-      document.getElementById('certModal').classList.add('hidden');
-    }
-
-    // DYNAMIC CANVAS CERTIFICATE GENERATOR
-    function generateCertificateCanvas(studentName, courseName) {
-      const canvas = document.getElementById('certCanvas');
-      const ctx = canvas.getContext('2d');
-
-      // Background
-      ctx.fillStyle = "#0f172a";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Border
-      ctx.strokeStyle = "#f59e0b";
-      ctx.lineWidth = 10;
-      ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
-
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(30, 30, canvas.width - 60, canvas.height - 60);
-
-      // Header
-      ctx.fillStyle = "#f59e0b";
-      ctx.font = "bold 28px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("VED CAPITAL REWA", canvas.width / 2, 90);
-
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "14px sans-serif";
-      ctx.fillText("CERTIFICATE OF SUCCESSFUL COMPLETION", canvas.width / 2, 120);
-
-      // Recipient
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "16px sans-serif";
-      ctx.fillText("This is proudly presented to", canvas.width / 2, 180);
-
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 32px sans-serif";
-      ctx.fillText(studentName, canvas.width / 2, 230);
-
-      // Course Title
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "16px sans-serif";
-      ctx.fillText("for successfully passing the official examination in", canvas.width / 2, 280);
-
-      ctx.fillStyle = "#f59e0b";
-      ctx.font = "bold 22px sans-serif";
-      ctx.fillText(courseName, canvas.width / 2, 330);
-
-      // Footer Signatures
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "12px sans-serif";
-      ctx.fillText(`Certificate ID: VCR-${Math.floor(100000 + Math.random() * 900000)}`, canvas.width / 2, 400);
-
-      ctx.fillText("Authorized Signatory", 200, 470);
-      ctx.fillText("Ved Capital Rewa Academic Board", 600, 470);
-
-      ctx.beginPath();
-      ctx.moveTo(120, 450);
-      ctx.lineTo(280, 450);
-      ctx.moveTo(500, 450);
-      ctx.lineTo(700, 450);
-      ctx.strokeStyle = "#64748b";
-      ctx.stroke();
-    }
-
-    function downloadCertificateCanvas() {
-      const canvas = document.getElementById('certCanvas');
-      const link = document.createElement('a');
-      link.download = `Certificate_${currentUserData.name}.png`;
-      link.href = canvas.toDataURL();
-      link.click();
-    }
-
-    // PARTNER PORTFOLIO LOGIC
-    function loadPartnerPortfolioData() {
-      const invested = 100000;
-      const units = invested / systemState.navPrice;
-      const totalValue = units * systemState.navPrice;
-      const profit = totalValue - invested;
-      const taxHeld = profit > 0 ? profit * 0.30 : 0;
-
-      document.getElementById('currentNavPricePartner').innerText = `₹${systemState.navPrice.toFixed(2)}`;
-      document.getElementById('pInvested').innerText = `₹${invested.toLocaleString()}`;
-      document.getElementById('pUnits').innerText = `${units.toFixed(2)} NAV`;
-      document.getElementById('pTotalNav').innerText = `₹${totalValue.toLocaleString()}`;
-      document.getElementById('pProfit').innerText = `₹${profit.toLocaleString()}`;
-      document.getElementById('pBonus').innerText = `₹2,500`;
-      document.getElementById('pWithdrawn').innerText = `₹5,000`;
-      document.getElementById('pTaxRetained').innerText = `₹${taxHeld.toLocaleString()}`;
-    }
-
-    // MARKET CAP & ADMIN ENGINE
-    function processMarketCapAdjustment() {
-      const type = document.getElementById('admEventType').value;
-      const amount = parseFloat(document.getElementById('admEventAmount').value) || 0;
-
-      if (type === 'profit' || type === 'new_investment') {
-        systemState.marketCap += amount;
-      } else if (type === 'loss' || type === 'withdrawal' || type === 'nav_sellout') {
-        systemState.marketCap = Math.max(0, systemState.marketCap - amount);
-      }
-
-      // Recalculate NAV
-      systemState.navPrice = systemState.marketCap / systemState.totalUnits;
-      systemState.taxPool = systemState.marketCap * 0.05; // 5% reserve tax indicator
-
-      document.getElementById('admCapDisplay').innerText = `₹${systemState.marketCap.toLocaleString()}`;
-      document.getElementById('admNavDisplay').innerText = `₹${systemState.navPrice.toFixed(2)}`;
-      document.getElementById('admTaxPoolDisplay').innerText = `₹${systemState.taxPool.toFixed(2)}`;
-
-      alert("Ved Capital Rewa Market Cap & Unit NAV Updated!");
-    }
-
-    // EMPLOYEE OPERATIONS
-    function createNewLearnerByEmployee(e) {
-      e.preventDefault();
-      const name = document.getElementById('empStudentName').value;
-      const mobile = document.getElementById('empStudentMobile').value;
-      alert(`Learner Account created for ${name} (Mobile/ID: ${mobile})`);
-      document.getElementById('empStudentName').value = '';
-      document.getElementById('empStudentMobile').value = '';
-      document.getElementById('empStudentPass').value = '';
-      renderEmployeeTable();
-    }
-
-    function renderEmployeeTable() {
-      const tbody = document.getElementById('employeeLearnerTable');
-      tbody.innerHTML = `
-        <tr>
-          <td class="p-3 font-semibold text-slate-200">Rahul Sharma</td>
-          <td class="p-3 text-slate-400">9876543210</td>
-          <td class="p-3"><span class="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded">All Courses</span></td>
-          <td class="p-3 text-emerald-400 font-bold">Passed (85%)</td>
-          <td class="p-3 text-slate-300">1 Certificate</td>
-        </tr>
-      `;
-    }
-
-    function renderAdminPartnerTable() {
-      const tbody = document.getElementById('admPartnerTable');
-      tbody.innerHTML = `
-        <tr>
-          <td class="p-3 font-semibold text-slate-200">Aman Verma</td>
-          <td class="p-3 text-slate-300">₹1,00,000</td>
-          <td class="p-3 text-amber-400 font-bold">2,000 NAV</td>
-          <td class="p-3"><input type="number" placeholder="₹ P/L" class="bg-slate-900 border border-slate-700 p-1 rounded w-20 text-[10px]"></td>
-          <td class="p-3"><input type="number" placeholder="₹ Bonus" class="bg-slate-900 border border-slate-700 p-1 rounded w-20 text-[10px]"></td>
-          <td class="p-3"><button onclick="alert('Partner Updated')" class="bg-amber-500 text-slate-950 font-bold px-2 py-1 rounded text-[10px]">Update</button></td>
-        </tr>
-      `;
-    }
-
-    // NOTICE BROADCAST
-    function publishNotice() {
-      const target = document.getElementById('noticeTarget').value;
-      const text = document.getElementById('noticeText').value;
-
-      if (target === 'learner') {
-        document.getElementById('learnerNoticeContent').innerText = text;
-      } else {
-        document.getElementById('employeeNoticeContent').innerText = text;
-      }
-      alert(`Notice published for ${target}s!`);
-      document.getElementById('noticeText').value = '';
-    }
-
-    function downloadResource(name) {
-      alert(`Downloading ${name}...`);
-    }
-
-    function openChangePasswordModal() {
-      const newPass = prompt("Enter your new manual password:");
-      if (newPass) alert("Password updated successfully!");
-    }
-  </script>
+  $('tradeStatus').addEventListener('change',()=>{$('markLabel').textContent=$('tradeStatus').value==='closed'?'Exit Price (₹)':'Current / Mark Price (₹)';$('markPrice').placeholder=$('tradeStatus').value==='closed'?'Exit price':'Current mark price';});
+  $('tradeForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const qty=num($('qty').value), entry=num($('entryPrice').value), mark=num($('markPrice').value), charges=num($('charges').value);
+    if(qty<=0 || entry<0 || mark<0 || charges<0){$('tradeMessage').textContent='Quantity positive honi chahiye; prices/charges negative nahi ho sakte.';return;}
+    const tr={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),date:$('tradeDate').value,symbol:$('symbol').value.trim().toUpperCase(),side:$('side').value,status:$('tradeStatus').value,qty,entryPrice:entry,markPrice:mark,charges,notes:$('tradeNotes').value.trim()};
+    if(!tr.date || !tr.symbol){$('tradeMessage').textContent='Date aur symbol bharna zaroori hai.';return;}
+    state.trades.push(tr); save(); render(); e.target.reset();
+    $('tradeDate').value=new Date().toISOString().slice(0,10);
+    $('markLabel').textContent='Exit Price (₹)'; $('tradeMessage').textContent=`Trade save ho gaya. Net P/L: ${money(tradePL(tr))}. Partner dashboard update ho gaya.`;
+    $('tradeMessage').className='text-xs mt-3 text-emerald-400';
+  });
+  $('partnerForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const name=$('partnerName').value.trim(), capital=num($('partnerCapital').value), share=num($('partnerShare').value);
+    if(!name || capital<0 || share<0 || share>100){alert('Valid partner name, non-negative capital aur 0–100% allocation enter karein.');return;}
+    state.partners.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),name,capital,share});
+    save();render();e.target.reset();
+  });
+  $('tradeRows').addEventListener('click',e=>{
+    const b=e.target.closest('[data-delete-trade]'); if(!b)return;
+    if(confirm('Is trade ko delete karein?')){state.trades=state.trades.filter(t=>t.id!==b.dataset.deleteTrade);save();render();}
+  });
+  $('adminPartnerRows').addEventListener('click',e=>{
+    const b=e.target.closest('[data-delete-partner]');if(!b)return;
+    if(confirm('Partner record delete karein?')){state.partners=state.partners.filter(p=>p.id!==b.dataset.deletePartner);save();render();}
+  });
+  $('partnerSelect').addEventListener('change',renderPartner);
+  $('showAdminBtn').addEventListener('click',()=>{$('adminView').classList.remove('hidden');$('partnerView').classList.add('hidden');});
+  $('showPartnerBtn').addEventListener('click',()=>{$('partnerView').classList.remove('hidden');$('adminView').classList.add('hidden');renderPartner();});
+  $('clearTradesBtn').addEventListener('click',()=>{if(confirm('Saare trade records permanently is browser se clear karein? Pehle export karna recommended hai.')){state.trades=[];save();render();}});
+  $('exportBtn').addEventListener('click',()=>{
+    const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),...state},null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob), a=document.createElement('a');a.href=url;a.download='vcr-trade-backup.json';a.click();URL.revokeObjectURL(url);
+  });
+  load(); $('tradeDate').value=new Date().toISOString().slice(0,10); render();
+})();
+</script>
 </body>
 </html>
